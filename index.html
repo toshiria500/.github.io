@@ -1,14 +1,42 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-<meta charset="utf-8">
-<title>見つかりません！</title>
+  <meta charset="UTF-8">
+  <title>サイト構築中 | 503</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .message-box {
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      border-radius: 8px;
+    }
+    h1 {
+      color: #e74c3c; /* 赤系の色でエラー感を出す */
+      font-size: 3em;
+      margin-bottom: 0.2em;
+    }
+    p {
+      font-size: 1.2em;
+    }
+  </style>
 </head>
-
 <body>
-<!--基礎-->
-<h1> 404 not found </h1>
-<div class="container">
-  <div class="item">指定したページは、削除されているか、リンクが変更された可能性があります。</div>
-</div>
+  <div class="message-box">
+    <h1>503</h1>
+    <h2>Service Unavailable (サービス一時停止中)</h2>
+    <p>現在、サイトは構築中のため、一時的にご利用いただけません。</p>
+    <p>公開までしばらくお待ちください。</p>
+  </div>
 </body>
+</html>
