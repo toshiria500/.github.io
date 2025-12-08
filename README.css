@@ -1,0 +1,8 @@
+.container {
+  display: flex; /* Flexコンテナにする */
+  justify-content: center; /* 水平方向（主軸）の中央揃え */
+  align-items: center; /* 垂直方向（交差軸）の中央揃え */
+
+  /* (注意) 親要素に十分な高さを設定する必要があります */
+  height: 300px;
+}
