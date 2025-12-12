@@ -1,14 +1,75 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>404 Not Found</title>
-
-    <link rel="stylesheet" href="Display.css"> 
-    </head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>404 — ページが見つかりません</title>
+  <link rel="stylesheet" href="Display.css" />
+</head>
 <body>
-    <h1>404 Not found</h1>
-    <p>お探しのページは見つかりませんでした。<br>削除されたか、ページのリンクが変わった可能性があります。</p>
-    <p><a href="/">トップページに戻る</a></p>
+  <a class="skip-link" href="#main">本文へスキップ</a>
+
+  <header class="site-header" role="banner">
+    <a class="logo" href="/" aria-label="トップページへ">サイト名</a>
+  </header>
+
+  <main id="main" class="container" role="main" aria-labelledby="title">
+    <div class="card" aria-live="polite">
+      <div class="illustration" aria-hidden="true">
+        <!-- シンプルなSVGイラスト -->
+        <svg width="180" height="120" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg" focusable="false">
+          <rect width="180" height="120" rx="12" fill="#f3f4f6"/>
+          <text x="50%" y="44%" text-anchor="middle" font-size="28" fill="#9ca3af" font-family="sans-serif">404</text>
+          <circle cx="135" cy="80" r="18" fill="#ef4444"/>
+          <text x="135" y="84" text-anchor="middle" font-size="18" fill="#fff" font-family="sans-serif">?</text>
+        </svg>
+      </div>
+
+      <h1 id="title">お探しのページは見つかりません</h1>
+      <p class="lead">URLが間違っているか、ページが移動／削除された可能性があります。</p>
+
+      <form id="searchForm" class="search" role="search" aria-label="サイト内検索">
+        <label for="q" class="visually-hidden">サイト内検索</label>
+        <input id="q" name="q" type="search" placeholder="サイト内を検索（例：使い方）" aria-label="検索語句" />
+        <button type="submit">検索</button>
+      </form>
+
+      <nav class="links" aria-label="おすすめのページ">
+        <a href="/" class="btn">トップページへ戻る</a>
+        <a href="/about/" class="btn ghost">このサイトについて</a>
+        <a href="/sitemap.xml" class="btn ghost">サイトマップ</a>
+      </nav>
+
+      <p class="hint">問題が続く場合は <a href="/contact/">お問い合わせ</a> または <a href="mailto:YOUR-EMAIL@example.com">メールで報告</a> してください。</p>
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <small>&copy; <!-- 年は自動化する場合はJSで挿入 --> <span id="year"></span> サイト名</small>
+  </footer>
+
+  <script>
+    // 年を自動挿入
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // 検索フォーム：Googleの site: 検索にリダイレクト
+    (function(){
+      const form = document.getElementById('searchForm');
+      const input = document.getElementById('q');
+      // サイトドメインを設定（GitHub Pages の場合に合わせる）
+      const siteDomain = 'toshiria500.github.io';
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const q = (input.value || '').trim();
+        if (!q) { input.focus(); return; }
+        const url = 'https://www.google.com/search?q=' + encodeURIComponent('site:' + siteDomain + ' ' + q);
+        window.location.href = url;
+      });
+
+      // 最初のフォーカスを検索入力に当てる（ユーザーがキーボードで操作しやすい）
+      input.focus();
+    })();
+  </script>
 </body>
 </html>
