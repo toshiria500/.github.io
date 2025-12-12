@@ -1,0 +1,20 @@
+/* PCなど大きな画面に共通で適用したいスタイル */
+.container {
+    width: 960px; /* 例: PCでは固定幅 */
+    margin: 0 auto;
+}
+
+/* 画面幅が768px以下の場合に適用されるスタイル */
+@media screen and (max-width: 768px) {
+    /* 768px以下のデバイス（タブレットやスマホなど）向け */
+    .container {
+        width: 100%; /* 例: スマホでは画面いっぱいに広げる */
+        padding: 0 10px;
+    }
+    .sidebar {
+        display: none; /* 例: サイドバーを非表示にする */
+    }
+    h1 {
+        font-size: 24px; /* 例: 文字を小さくする */
+    }
+}
