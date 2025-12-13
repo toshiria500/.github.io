@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Theme Switch Sample</title>
+
+<style>
+/* ===== リセット・基本 ===== */
+* { box-sizing: border-box; }
+html,body {
+  height:100%;
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto,
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== テーマ変数（ライト） ===== */
+:root {
+  --bg: #ffffff;
+  --text: #0f172a;
+  --card-bg: #ffffff;
+  --card-shadow: 0 6px 24px rgba(2,6,23,0.06);
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --btn-bg: #111827;
+  --btn-text: #ffffff;
+}
+
+/* ===== ダークモード ===== */
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --text: #e5e7eb;
+  --card-bg: #111827;
+  --card-shadow: 0 6px 24px rgba(0,0,0,0.6);
+  --muted: #9ca3af;
+  --accent: #60a5fa;
+  --btn-bg: #e5e7eb;
+  --btn-text: #0b1220;
+}
+
+/* ===== デバイス基準 ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0b1220;
+    --text: #e5e7eb;
+    --card-bg: #111827;
+    --card-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    --muted: #9ca3af;
+    --accent: #60a5fa;
+    --btn-bg: #e5e7eb;
+    --btn-text: #0b1220;
+  }
+}
+
+/* ===== レイアウト ===== */
+.container {
+  min-height: 100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+}
+.card {
+  max-width:820px;
+  width:100%;
+  text-align:center;
+  padding:28px;
+  border-radius:12px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+h1 { font-size:28px; margin:8px 0; }
+.lead { color: var(--muted); margin-bottom:20px; }
+
+/* ===== ボタン ===== */
+.switches {
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.switches button {
+  padding:10px 14px;
+  border-radius:8px;
+  border:1px solid #e5e7eb;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  cursor:pointer;
+}
+
+/* ===== フッター ===== */
+.site-footer {
+  text-align:center;
+  padding:16px 0;
+  color: var(--muted);
+  font-size:13px;
+}
+</style>
+</head>
+<body>
+
+<main class="container">
+  <section class="card">
+    <h1>テーマ切り替えサンプル</h1>
+    <p class="lead">ライト / ダーク / デバイス基準</p>
+
+    <div class="switches">
+      <button data-set="light">ライト</button>
+      <button data-set="dark">ダーク</button>
+      <button data-set="auto">デバイス基準</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  Theme Switch Example
+</footer>
+
+<script>
+const root = document.documentElement;
+const buttons = document.querySelectorAll('[data-set]');
+
+// 保存されている設定を復元
+const saved = localStorage.getItem('theme');
+if (saved === 'light' || saved === 'dark') {
+  root.setAttribute('data-theme', saved);
+}
+
+buttons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.set;
+
+    if (mode === 'auto') {
+      root.removeAttribute('data-theme');
+      localStorage.removeItem('theme');
+    } else {
+      root.setAttribute('data-theme', mode);
+      localStorage.setItem('theme', mode);
+    }
+  });
+});
+</script>
+
+</body>
+</html>
