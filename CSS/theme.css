@@ -1,43 +1,166 @@
-/* ===== テーマ変数（ライト） ===== */
-:root {
+/* =========================================
+   テーマ変数：ライト（全ページ共通・基準）
+========================================= */
+html {
   --bg: #ffffff;
   --text: #0f172a;
+  --heading: #020617;
+
   --card-bg: #ffffff;
   --card-shadow: 0 6px 24px rgba(2,6,23,0.06);
+
   --muted: #6b7280;
+  --border: #e5e7eb;
+
   --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+
   --btn-bg: #111827;
   --btn-text: #ffffff;
+
+  --link: #2563eb;
+  --link-hover: #1d4ed8;
+
+  --code-bg: #f1f5f9;
 }
 
-/* ===== ダークモード ===== */
-[data-theme="dark"] {
+/* =========================================
+   手動ダークモード（html に付与）
+========================================= */
+html[data-theme="dark"] {
   --bg: #0b1220;
   --text: #e5e7eb;
+  --heading: #f1f5f9;
+
   --card-bg: #111827;
   --card-shadow: 0 6px 24px rgba(0,0,0,0.6);
+
   --muted: #9ca3af;
+  --border: #1f2937;
+
   --accent: #60a5fa;
+  --accent-hover: #3b82f6;
+
   --btn-bg: #e5e7eb;
   --btn-text: #0b1220;
+
+  --link: #60a5fa;
+  --link-hover: #93c5fd;
+
+  --code-bg: #020617;
 }
 
-/* ===== デバイス基準 ===== */
+/* =========================================
+   OS ダーク（手動指定がない場合のみ）
+========================================= */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  html:not([data-theme]) {
     --bg: #0b1220;
     --text: #e5e7eb;
+    --heading: #f1f5f9;
+
     --card-bg: #111827;
     --card-shadow: 0 6px 24px rgba(0,0,0,0.6);
+
     --muted: #9ca3af;
+    --border: #1f2937;
+
     --accent: #60a5fa;
+    --accent-hover: #3b82f6;
+
     --btn-bg: #e5e7eb;
     --btn-text: #0b1220;
+
+    --link: #60a5fa;
+    --link-hover: #93c5fd;
+
+    --code-bg: #020617;
   }
 }
 
-/* ===== 全ページ共通の基本反映 ===== */
-html, body {
-  background: var(--bg);
+/* =========================================
+   全ページ共通反映
+========================================= */
+html,
+body {
+  background-color: var(--bg);
   color: var(--text);
+}
+
+/* =========================================
+   見出し（h1〜h6）
+========================================= */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 0.6em;
+}
+
+/* =========================================
+   テキスト系
+========================================= */
+p {
+  margin: 0 0 1em;
+}
+
+small,
+.muted {
+  color: var(--muted);
+}
+
+/* =========================================
+   リンク
+========================================= */
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* =========================================
+   ボタン
+========================================= */
+button {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  padding: 0.6em 1em;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* =========================================
+   カード・枠
+========================================= */
+.card {
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  border-radius: 12px;
+}
+
+/* =========================================
+   区切り線
+========================================= */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* =========================================
+   コード表示
+========================================= */
+code,
+pre {
+  background: var(--code-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
 }
