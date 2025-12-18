@@ -52,3 +52,17 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+main.container {
+  flex: 1; /* headerとfooterを除いた残り全部 */
+  display: flex;
+  align-items: center;      /* 縦中央 */
+  justify-content: center;  /* 横中央 */
+  padding: 1rem;
+}
+
+.card {
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
