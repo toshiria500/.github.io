@@ -42,3 +42,13 @@ h1 { font-size:28px; margin:8px 0; color:#0b1220; }
   h1 { font-size:22px; }
   .search input[type="search"] { min-width:120px; }
 }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
