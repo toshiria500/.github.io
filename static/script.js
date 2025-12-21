@@ -1,4 +1,3 @@
-
 const form = document.getElementById("storyForm");
 const chat = document.getElementById("chat");
 const requiredFields = ["name", "action", "item", "companion"];
@@ -19,20 +18,20 @@ form.addEventListener("submit", async (e) => {
   });
   if (hasError) return alert("必須項目が入力されていません");
 
-  // 入力値取得
+  // 入力値
   const name = document.getElementById("name").value.trim();
   const action = document.getElementById("action").value.trim();
   const item = document.getElementById("item").value.trim();
   const companion = document.getElementById("companion").value.trim();
   const enemy = document.getElementById("enemy").value.trim() || "なし";
 
-  // ユーザーバブルを表示
+  // ユーザー吹き出し
   const userBubble = document.createElement("div");
   userBubble.className = "bubble user";
   userBubble.textContent = `名前: ${name}\n行動: ${action}\n持ち物: ${item}\nお供: ${companion}\n敵: ${enemy}`;
   chat.appendChild(userBubble);
 
-  // ボットバブル（生成中）
+  // ボット吹き出し（生成中）
   const botContainer = document.createElement("div");
   botContainer.className = "botContainer";
 
@@ -49,7 +48,7 @@ form.addEventListener("submit", async (e) => {
   chat.appendChild(botContainer);
   chat.scrollTop = chat.scrollHeight;
 
-  // Gemini API 呼び出し
+  // API呼び出し
   try {
     const res = await fetch("/api/gensokyo", {
       method: "POST",
@@ -60,14 +59,14 @@ form.addEventListener("submit", async (e) => {
     if (!res.ok) throw new Error(`APIエラー: ${res.status}`);
 
     const data = await res.json();
-    await typeText(botText, data.text); // 一文字ずつ表示
+    await typeText(botText, data.text);
   } catch(err) {
     botText.textContent = "エラーが発生しました";
     console.error(err);
   }
 });
 
-// 一文字ずつ表示
+// 1文字ずつ表示
 function typeText(el, text, delay=25) {
   return new Promise(resolve => {
     el.classList.remove("loading");
