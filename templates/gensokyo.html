@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>幻想郷ジェネレーター</title>
+<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="../css/Display.css">
+<link rel="stylesheet" href="../css/theme.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>幻想郷ストーリー生成</h2>
+
+  <!-- Bot紹介吹き出し（フォーム上） -->
+  <div id="chat">
+    <div class="botContainer">
+      <img src="../static/bot_icon.png" class="botIcon">
+      <div class="botText">
+        こんにちは、私は幻想郷ジェネレーターの案内役の、八雲紫ですわ。
+      </div>
+    </div>
+  </div>
+
+  <!-- 入力フォーム -->
+  <form id="storyForm">
+    <input id="name" placeholder="名前">
+    <input id="action" placeholder="行動">
+    <input id="item" placeholder="持ち物">
+    <input id="companion" placeholder="お供">
+    <input id="enemy" placeholder="敵（任意）">
+    <button type="submit">送信</button>
+  </form>
+
+  <!-- 生成文表示エリア -->
+  <div id="generated"></div>
+</div>
+
+<!-- フッター注記 -->
+<footer class="site-footer">
+  <small>
+    Powered by Gemini<br>
+    ※このサイトはGeminiのエンジンを利用しています。Geminiの利用規約およびプライバシーポリシー、Googleの利用規約およびプライバシーポリシーをご確認ください。
+  </small><br>
+  Copyright &copy; <span id="year"></span> toshiria All Rights Reserved.
+</footer>
+
+<script src="../static/script.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

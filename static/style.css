@@ -1,0 +1,88 @@
+body {
+  background:#0b1020;
+  color:#e5e7eb;
+  font-family: system-ui, sans-serif;
+  padding:20px;
+}
+
+.container {
+  max-width:720px;
+  margin:auto;
+}
+
+input, button {
+  width:100%;
+  margin-top:4px;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid transparent;
+  background:#111827;
+  color:#e5e7eb;
+}
+
+input.error {
+  border-color:#ef4444;
+}
+
+button {
+  background:#6366f1;
+  border:none;
+  margin-top:14px;
+  cursor:pointer;
+}
+
+.bubble {
+  padding:12px 14px;
+  border-radius:14px;
+  margin-bottom:10px;
+  white-space:pre-wrap;
+  display: inline-block; /* 内容に合わせて幅自動 */
+  max-width: 80%; /* 最大幅 */
+}
+
+.user {
+  background:#1f2937;
+  margin-left:auto; /* 右端に寄せる */
+}
+
+.botContainer {
+  display: flex;
+  align-items: flex-start; /* 上揃え */
+  margin-bottom: 10px;
+}
+
+.botIcon {
+  width: 50px;
+  height: 50px;
+  margin-right: 12px;
+  border-radius: 50%;
+  object-fit: cover;   /* カバー表示 */
+  object-position: top; /* 画像の上側を優先表示 */
+}
+
+
+.botText {
+  background:#312e81;
+  border-radius:14px;
+  padding:12px 14px;
+  max-width: calc(100% - 62px);
+  word-break: break-word;
+  white-space: pre-wrap; /* 改行を反映 */
+}
+
+
+.footer {
+  font-size:12px;
+  opacity:0.6;
+  text-align:right;
+}
+
+.loading {
+  animation: float 1s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform:translateX(0); }
+  50% { transform:translateX(6px); }
+  100% { transform:translateX(0); }
+}
