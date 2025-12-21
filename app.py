@@ -5,6 +5,8 @@ api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise RuntimeError("GEMINI_API_KEY が読み込めていません")
 
+load_dotenv()  # カレントディレクトリの .env を読み込む
+
 # from google import genai
 # client = genai.Client(api_key=api_key)
 
