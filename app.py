@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify, render_template
-from google import genai
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Google Gemini Client は必要に応じて import
+# from google import genai
+
+# APIキーは環境変数から取得
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("GEMINI_API_KEY が読み込めていません")
 
-client = genai.Client(api_key=API_KEY)
+# client = genai.Client(api_key=API_KEY)
 
 app = Flask(__name__)
 
@@ -32,17 +33,16 @@ def gensokyo():
 あなたのお供: {companion}
 あなたの敵: {enemy}
 
-八雲紫として幻想郷での冒険を描写してください。
-- 生存率を明記
-- 生存／死亡を明確
-- 生存時は帰還可能か記載
+幻想郷での冒険を八雲紫風の口調で生成してください。
+生存率、帰還可能かなども明示してください。
 """
 
-    res = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    return jsonify({"text": res.text})
+    # Gemini で生成（ダミーで戻す場合）
+    # res = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    # return jsonify({"text": res.text})
+
+    # デバッグ用ダミー
+    return jsonify({"text": f"{name}の冒険結果です。\n{action}をしました。生存率は95.0%。帰還可能です。"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
