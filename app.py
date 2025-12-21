@@ -1,15 +1,12 @@
 from flask import Flask, request, jsonify, render_template
 import os
 
-# Google Gemini Client は必要に応じて import
-# from google import genai
-
-# APIキーは環境変数から取得
 api_key = os.getenv("GEMINI_API_KEY")
-if not API_KEY:
+if not api_key:
     raise RuntimeError("GEMINI_API_KEY が読み込めていません")
 
-# client = genai.Client(api_key=API_KEY)
+# from google import genai
+# client = genai.Client(api_key=api_key)
 
 app = Flask(__name__)
 
@@ -20,11 +17,11 @@ def index():
 @app.route("/api/gensokyo", methods=["POST"])
 def gensokyo():
     data = request.json
-    name = data.get("name", "")
-    action = data.get("action", "")
-    item = data.get("item", "")
-    companion = data.get("companion", "")
-    enemy = data.get("enemy", "なし")
+    name = data.get("name","")
+    action = data.get("action","")
+    item = data.get("item","")
+    companion = data.get("companion","")
+    enemy = data.get("enemy","なし")
 
     prompt = f"""
 あなたの名前: {name}
@@ -37,11 +34,11 @@ def gensokyo():
 生存率、帰還可能かなども明示してください。
 """
 
-    # Gemini で生成（ダミーで戻す場合）
+    # Gemini 実際呼び出しはここ
     # res = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
     # return jsonify({"text": res.text})
 
-    # デバッグ用ダミー
+    # ダミー
     return jsonify({"text": f"{name}の冒険結果です。\n{action}をしました。生存率は95.0%。帰還可能です。"})
 
 if __name__ == "__main__":
