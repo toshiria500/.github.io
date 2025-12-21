@@ -5,7 +5,7 @@ import os
 # from google import genai
 
 # APIキーは環境変数から取得
-API_KEY = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("GEMINI_API_KEY が読み込めていません")
 
