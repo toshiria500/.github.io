@@ -1,53 +1,57 @@
 body {
-  background:#0b1020;
-  color:#e5e7eb;
+  background: #0b1020;
+  color: #e5e7eb;
   font-family: system-ui, sans-serif;
-  padding:20px;
+  margin: 0;
+  padding: 20px;
 }
 
 .container {
-  max-width:720px;
-  margin:auto;
+  max-width: 720px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 input, button {
-  width:100%;
-  margin-top:4px;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid transparent;
-  background:#111827;
-  color:#e5e7eb;
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: #111827;
+  color: #e5e7eb;
+  box-sizing: border-box;
 }
 
 input.error {
-  border-color:#ef4444;
+  border-color: #ef4444;
 }
 
 button {
-  background:#6366f1;
-  border:none;
-  margin-top:14px;
-  cursor:pointer;
+  background: #6366f1;
+  border: none;
+  cursor: pointer;
+  margin-top: 12px;
 }
 
 .bubble {
-  padding:12px 14px;
-  border-radius:14px;
-  margin-bottom:10px;
-  white-space:pre-wrap;
-  display: inline-block; /* 内容に合わせて幅自動 */
-  max-width: 80%; /* 最大幅 */
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  max-width: 90%;
+  white-space: pre-wrap;
 }
 
 .user {
-  background:#1f2937;
-  margin-left:auto; /* 右端に寄せる */
+  background: #1f2937;
+  margin-left: auto;
 }
 
 .botContainer {
   display: flex;
-  align-items: flex-start; /* 上揃え */
+  align-items: flex-start;
   margin-bottom: 10px;
 }
 
@@ -56,33 +60,38 @@ button {
   height: 50px;
   margin-right: 12px;
   border-radius: 50%;
-  object-fit: cover;   /* カバー表示 */
-  object-position: top; /* 画像の上側を優先表示 */
+  object-fit: cover;
 }
-
 
 .botText {
-  background:#312e81;
-  border-radius:14px;
-  padding:12px 14px;
+  background: #312e81;
+  border-radius: 14px;
+  padding: 12px 14px;
   max-width: calc(100% - 62px);
   word-break: break-word;
-  white-space: pre-wrap; /* 改行を反映 */
 }
 
-
-.footer {
-  font-size:12px;
-  opacity:0.6;
-  text-align:right;
+/* フッター */
+.site-footer {
+  margin-top: 20px;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
-.loading {
-  animation: float 1s ease-in-out infinite;
-}
+/* ===================================
+   レスポンシブ対応
+=================================== */
+@media screen and (max-width: 480px) {
+  .botIcon {
+    width: 40px;
+    height: 40px;
+  }
 
-@keyframes float {
-  0% { transform:translateX(0); }
-  50% { transform:translateX(6px); }
-  100% { transform:translateX(0); }
+  .botText, .bubble {
+    font-size: 14px;
+  }
+
+  input, button {
+    padding: 8px;
+  }
 }
