@@ -62,12 +62,11 @@ button {
   border-color: transparent transparent transparent #1f2937;
 }
 
-/* ボット吹き出し（左側） */
 .botContainer {
   display: flex;
   align-items: flex-start; /* 上揃え */
   gap: 12px;
-  margin-bottom: 10px; /* 吹き出し間の余白 */
+  margin-bottom: 10px;
 }
 
 .botIcon {
@@ -76,7 +75,7 @@ button {
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  margin-top: 0; /* 上にずれないように */
+  margin-top: 0;
 }
 
 .botText {
@@ -86,25 +85,23 @@ button {
   max-width: calc(100% - 62px);
   word-break: break-word;
   position: relative;
-  margin-top: 0; /* アイコンと揃える */
+  /* アイコンと上を揃えるためにマイナスマージン */
+  margin-top: 0; 
+  display: inline-block;
 }
 
-/* 吹き出しの突起 */
 .botText::after {
   content: "";
   position: absolute;
   left: -8px;
-  top: 10px;
+  top: 12px; /* アイコンに合わせる */
   border-width: 8px 8px 8px 0;
   border-style: solid;
   border-color: transparent #312e81 transparent transparent;
 }
 
-/* レスポンシブ */
+/* スマホ用 */
 @media screen and (max-width: 480px) {
   .botIcon { width: 40px; height: 40px; margin-top: 0; }
-  .botText, .bubble { font-size: 14px; }
-  input, button { padding: 8px; }
-  .botText::after { left: -6px; border-width: 6px 6px 6px 0; }
-  .user::after { right: -6px; border-width: 6px 0 6px 6px; }
+  .botText::after { top: 8px; left: -6px; border-width: 6px 6px 6px 0; }
 }
