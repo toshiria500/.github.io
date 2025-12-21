@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("gensokyo.html")
+    return render_template("index.html")
 
 @app.route("/api/gensokyo", methods=["POST"])
 def gensokyo():
@@ -32,18 +32,9 @@ def gensokyo():
 あなたのお供: {companion}
 あなたの敵: {enemy}
 
-東方projectの八雲紫として、あなたは幻想郷に迷い込んだ冒険者の運命を決定します。
-以下の彼女の原作のセリフは参考程度で、生成結果として使用する必要はありません。
-- 「幻想郷はすべてを受け入れるのよ。それはそれは残酷な話ですわ。」
-- 「博麗神社のおめでたい人じゃないかしら」
-- 「美しく残酷にこの大地から往ね！」
-
-セリフは、八雲紫のような口調で生成してください。
-また、生成文に関してはうまく改行を生かしてください
-
-以下の条件に基づいて、幻想郷での冒険の結果を生成してください。
-- 生存率は0〜100で小数第一位
-- 生存／死亡を明確に
+八雲紫として幻想郷での冒険を描写してください。
+- 生存率を明記
+- 生存／死亡を明確
 - 生存時は帰還可能か記載
 """
 
@@ -54,4 +45,5 @@ def gensokyo():
     return jsonify({"text": res.text})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
