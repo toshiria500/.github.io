@@ -100,8 +100,11 @@ button {
   border-color: transparent #312e81 transparent transparent;
 }
 
-/* スマホ用 */
+
 @media screen and (max-width: 480px) {
-  .botIcon { width: 40px; height: 40px; margin-top: 0; }
-  .botText::after { top: 8px; left: -6px; border-width: 6px 6px 6px 0; }
+  .botIcon { 
+    width: 40px; 
+    height: 40px; 
+    object-position: top;   /* スマホでも上寄せ */
+  }
 }
