@@ -1,12 +1,12 @@
+
 const form = document.getElementById("storyForm");
 const chat = document.getElementById("chat");
-const generated = document.getElementById("generated");
 const requiredFields = ["name", "action", "item", "companion"];
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // エラーチェック
+  // 必須入力チェック
   let hasError = false;
   requiredFields.forEach(id => {
     const el = document.getElementById(id);
@@ -17,26 +17,22 @@ form.addEventListener("submit", async (e) => {
       el.classList.remove("error");
     }
   });
-  if (hasError) {
-    alert("必須項目が入力されていません");
-    return;
-  }
+  if (hasError) return alert("必須項目が入力されていません");
 
+  // 入力値取得
   const name = document.getElementById("name").value.trim();
   const action = document.getElementById("action").value.trim();
   const item = document.getElementById("item").value.trim();
   const companion = document.getElementById("companion").value.trim();
   const enemy = document.getElementById("enemy").value.trim() || "なし";
 
-  // ユーザーバブル
+  // ユーザーバブルを表示
   const userBubble = document.createElement("div");
   userBubble.className = "bubble user";
-  userBubble.textContent =
-    `名前: ${name}\n行動: ${action}\n持ち物: ${item}\nお供: ${companion}\n敵: ${enemy}`;
-  generated.appendChild(userBubble);
-  generated.scrollTop = generated.scrollHeight;
+  userBubble.textContent = `名前: ${name}\n行動: ${action}\n持ち物: ${item}\nお供: ${companion}\n敵: ${enemy}`;
+  chat.appendChild(userBubble);
 
-  // ボット生成文表示
+  // ボットバブル（生成中）
   const botContainer = document.createElement("div");
   botContainer.className = "botContainer";
 
@@ -50,18 +46,21 @@ form.addEventListener("submit", async (e) => {
   botText.textContent = "🤖 生成中…";
   botContainer.appendChild(botText);
 
-  generated.appendChild(botContainer);
-  generated.scrollTop = generated.scrollHeight;
+  chat.appendChild(botContainer);
+  chat.scrollTop = chat.scrollHeight;
 
-  // API呼び出し
+  // Gemini API 呼び出し
   try {
     const res = await fetch("/api/gensokyo", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, action, item, companion, enemy })
     });
+
+    if (!res.ok) throw new Error(`APIエラー: ${res.status}`);
+
     const data = await res.json();
-    await typeText(botText, data.text);
+    await typeText(botText, data.text); // 一文字ずつ表示
   } catch(err) {
     botText.textContent = "エラーが発生しました";
     console.error(err);
@@ -75,9 +74,9 @@ function typeText(el, text, delay=25) {
     el.textContent = "";
     let i=0;
     function nextChar() {
-      if(i < text.length){
+      if (i < text.length) {
         el.textContent += text[i];
-        generated.scrollTop = generated.scrollHeight;
+        chat.scrollTop = chat.scrollHeight;
         i++;
         setTimeout(nextChar, delay);
       } else resolve();
