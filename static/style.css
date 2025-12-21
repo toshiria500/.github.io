@@ -36,23 +36,37 @@ button {
   margin-top: 12px;
 }
 
+/* 共通吹き出し */
 .bubble {
   padding: 12px 14px;
   border-radius: 14px;
   margin-bottom: 10px;
   max-width: 90%;
   white-space: pre-wrap;
+  position: relative;
 }
 
+/* ユーザー吹き出し（右側） */
 .user {
   background: #1f2937;
   margin-left: auto;
 }
 
+.user::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 10px;
+  border-width: 8px 0 8px 8px;
+  border-style: solid;
+  border-color: transparent transparent transparent #1f2937;
+}
+
+/* ボット吹き出し（左側） */
 .botContainer {
   display: flex;
-  align-items: flex-start; /* 上揃え */
-  gap: 12px; /* アイコンと吹き出しの間隔 */
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .botIcon {
@@ -60,7 +74,6 @@ button {
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
-  object-position: top; /* 画像の上側を表示 */
   flex-shrink: 0;
 }
 
@@ -70,6 +83,17 @@ button {
   padding: 12px 14px;
   max-width: calc(100% - 62px);
   word-break: break-word;
+  position: relative;
+}
+
+.botText::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  border-width: 8px 8px 8px 0;
+  border-style: solid;
+  border-color: transparent #312e81 transparent transparent;
 }
 
 /* フッター */
@@ -79,21 +103,11 @@ button {
   opacity: 0.8;
 }
 
-/* ===================================
-   レスポンシブ対応
-=================================== */
+/* レスポンシブ */
 @media screen and (max-width: 480px) {
-  .botIcon {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-  .botText, .bubble {
-    font-size: 14px;
-  }
-
-  input, button {
-    padding: 8px;
-  }
+  .botIcon { width: 40px; height: 40px; }
+  .botText, .bubble { font-size: 14px; }
+  input, button { padding: 8px; }
+  .botText::after { left: -6px; border-width: 6px 6px 6px 0; }
+  .user::after { right: -6px; border-width: 6px 0 6px 6px; }
 }
