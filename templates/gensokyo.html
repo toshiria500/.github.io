@@ -4,61 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>幻想郷ジェネレーター</title>
+
+
 <link rel="stylesheet" href="../static/style.css">
-<script src="../static/script.js" defer></script>
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="幻想郷した時にゆかりん(八雲紫)が何が起こるか教えてくれます。">
-<meta name="keywords" content="幻想郷探索, gensokyo Survivor">
 
-<!--Open Graph-->
+<meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
+
+<!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo">
+<meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo.html">
 <meta property="og:title" content="幻想郷ジェネレーター">
-<meta property="og:description" content="幻想郷した時にゆかりん(八雲紫)が何が起こるか教えてくれます。">
+<meta property="og:description" content="幻想郷に迷い込んだ時の運命をAI（Gemini）が語ります。">
+<meta property="og:image" content="https://toshiria500.f5.si/static/ogp.png">
 
-<!--twitter-->
+<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="幻想郷ジェネレーター">
+<meta name="twitter:description" content="幻想郷に迷い込んだ時の運命をAIが語ります。">
+<meta name="twitter:image" content="https://toshiria500.f5.si/static/ogp.png">
 </head>
 <body>
 
 <div class="container">
   <h2>幻想郷ストーリー生成</h2>
 
-  <!-- Bot紹介吹き出し（フォームの上） -->
   <div id="chat">
     <div class="botContainer">
       <img src="../static/bot_icon.png" class="botIcon">
       <div class="botText">
-        現在、当ジェネレーターは、不調によって利用できないの。<br>
-        ごめんね…
+        幻想郷へようこそ。あなたの運命を教えるわ。
       </div>
     </div>
   </div>
 
-  <form id="storyForm" autocomplete="off">
-    <input id="name" placeholder="名前" autocomplete="off">
-    <input id="action" placeholder="行動" autocomplete="off">
-    <input id="item" placeholder="持ち物" autocomplete="off">
-    <input id="companion" placeholder="お供" autocomplete="off">
-    <input id="enemy" placeholder="敵（任意）" autocomplete="off">
+  <form id="storyForm">
+    <input id="name" placeholder="名前">
+    <input id="action" placeholder="行動">
+    <input id="item" placeholder="持ち物">
+    <input id="companion" placeholder="お供">
+    <input id="enemy" placeholder="敵（任意）">
     <button type="submit">送信</button>
   </form>
+
+  <p class="note">
+    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    元ネタ：
+    <a href="https://shindanmaker.com/1208379?c=1" target="_blank">
+      もし幻想郷に行った時の生存率診断
+    </a>
+  </p>
 </div>
 
 <footer class="site-footer">
-  <small>
-    Powered by Gemini<br>
-    ※このサイトはGeminiのエンジンを利用しています。Geminiの利用規約およびプライバシーポリシー、Googleの利用規約とプライバシーポリシーをご確認ください。
-
-このサイトは、<a href="https://shindanmaker.com/1208379?c=1">もし幻想郷に行った時の生存率をAIが教えてくれます！<i class="fas fa-external-link-alt"></i></a>の二番煎じです。
-  </small>
-  <br>Copyright &copy; toshiria <span id="year"></span> All Rights Reserved.
+  Powered by Gemini<br>
+  Copyright © toshiria
 </footer>
 
-<script src="../static/script.js"></script>
-<script>
-document.getElementById('year').textContent = new Date().getFullYear();
-</script>
+<script src="../static/gensokyo.js"></script>
 </body>
 </html>
