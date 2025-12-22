@@ -3,44 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>設定 - 幻想郷ジェネレーター</title>
-
-<link rel="stylesheet" href="../static/style.css">
+<title>設定</title>
+<link rel="stylesheet" href="../../static/style.css">
 </head>
 <body>
 
 <div class="container">
   <h2>設定</h2>
 
+  <label class="setting-label">
+    Gemini API Key
+    <input id="apiKey" type="password" placeholder="APIキーを入力">
+  </label>
+
+  <button id="saveKey">保存</button>
+
   <p class="note">
-    Gemini APIキーを入力してください。<br>
-    ※この情報は<strong>この端末のブラウザ内</strong>にのみ保存されます。
+    ※ このキーはこの端末のみに保存されます。<br>
+    別の端末では再入力が必要です。
   </p>
-<form id="settingForm">
 
-  <div class="form-group">
-    <input
-      id="apiKey"
-      name="apiKey"
-      placeholder="APIキーを入力"
-      required
-    >
-  </div>
-
-  <div class="form-group">
-    <textarea
-      id="systemPrompt"
-      name="systemPrompt"
-      placeholder="システムプロンプト（任意）"
-    ></textarea>
-  </div>
-
-  <button type="submit">保存</button>
-</form>
-
-  <a href="./gensokyo.html">← 戻る</a>
+  <a href="../gensokyo.html" class="back-link">← 戻る</a>
 </div>
 
-<script src="../static/Setting.js"></script>
+<script src="../../static/Setting.js"></script>
 </body>
 </html>
