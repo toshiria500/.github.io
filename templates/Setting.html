@@ -16,10 +16,27 @@
     Gemini APIキーを入力してください。<br>
     ※この情報は<strong>この端末のブラウザ内</strong>にのみ保存されます。
   </p>
+<form id="settingForm">
 
-<input id="apiKey" type="password" placeholder="GEMINI_API_KEY">
-<button id="save" type="button">保存</button>
-<p id="status"></p>
+  <div class="form-group">
+    <input
+      id="apiKey"
+      name="apiKey"
+      placeholder="APIキーを入力"
+      required
+    >
+  </div>
+
+  <div class="form-group">
+    <textarea
+      id="systemPrompt"
+      name="systemPrompt"
+      placeholder="システムプロンプト（任意）"
+    ></textarea>
+  </div>
+
+  <button type="submit">保存</button>
+</form>
 
   <a href="./gensokyo.html">← 戻る</a>
 </div>
