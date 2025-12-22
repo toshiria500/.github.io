@@ -32,14 +32,30 @@
     </div>
   </div>
 
-  <form id="storyForm">
-    <input id="name" placeholder="名前">
-    <input id="action" placeholder="行動">
-    <input id="item" placeholder="持ち物">
-    <input id="companion" placeholder="お供">
-    <input id="enemy" placeholder="敵（任意）">
-    <button type="submit">送信</button>
-  </form>
+ <form id="storyForm">
+
+  <div class="form-group">
+    <input id="name" name="name" placeholder="名前" required>
+  </div>
+
+  <div class="form-group">
+    <input id="action" name="action" placeholder="行動" required>
+  </div>
+
+  <div class="form-group">
+    <input id="item" name="item" placeholder="持ち物" required>
+  </div>
+
+  <div class="form-group">
+    <input id="companion" name="companion" placeholder="お供" required>
+  </div>
+
+  <div class="form-group">
+    <input id="enemy" name="enemy" placeholder="敵（任意）">
+  </div>
+
+  <button type="submit">送信</button>
+</form>
 
   <p class="note">
     <i class="fa-solid fa-arrow-up-right-from-square"></i>
