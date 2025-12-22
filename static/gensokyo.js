@@ -33,22 +33,56 @@ form.addEventListener("submit", async (e) => {
   chat.appendChild(bot);
   chat.scrollTop = chat.scrollHeight;
 
-  const prompt = `
-あなたは幻想郷の語り部です。
+const enemyText =
+  data.enemy && data.enemy !== "なし"
+    ? `- 敵：${data.enemy}`
+    : `- 敵：なし`;
 
-名前: ${data.name}
-行動: ${data.action}
-持ち物: ${data.item}
-お供: ${data.companion}
-敵: ${data.enemy}
+const prompt = `
+あなたは「幻想郷」を舞台に運命を語る語り部です。
+以下の入力情報を元に、物語形式で結果を生成してください。
 
-以下の構成でMarkdown形式で出力してください。
+【入力情報】
+- 名前：${data.name}
+- 行動：${data.action}
+- 持ち物：${data.item}
+- お供：${data.companion}
+${enemyText}
+
+【生成ルール】
+1. 出力は Markdown 形式で記述すること
+2. 生存率を 0.1〜100 の範囲で算出すること
+   - 小数点以下が .0 の場合は整数で表示する
+3. 以下の構成を必ず守ること
 
 ## 🧭 行動の結果
-## ⚔ 敵の行動
-## 📊 生存率（0.1〜100）
-## ☯ 結末（生存 or 死亡）
+- 何が起きたのか
+- お供と何をしたのか
+- 持ち物がどう役立ったのか（または役立たなかったのか）
+
+${
+  data.enemy && data.enemy !== "なし"
+    ? `## ⚔ 敵の行動
+- 敵が何を企んだか
+- 主人公に対して何をしてきたか`
+    : ``
+}
+
+## 📊 生存率
+- 数値で明示する
+
+## ☯ 結末
+- 結果は以下のどちらかのみ
+  - **生存**
+  - **死亡**
+- 理由を必ず書くこと
+
 ## 🌸 その後（生存時のみ）
+- 元の世界に帰れるのか
+- 幻想郷に留まるのか
+- どちらか一方のみを書くこと
+
+全体の文体は、幻想的で落ち着いた語り口とする。
 `;
 
   try {
