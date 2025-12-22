@@ -2,48 +2,29 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>設定 | 幻想郷ジェネレーター</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設定｜幻想郷ジェネレーター</title>
 <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
 
 <div class="container">
-  <h2>設定</h2>
+  <h2>APIキー設定</h2>
 
   <p class="note">
-    Gemini APIキーは、この端末のブラウザにのみ保存されます。<br>
-    他の端末では、再入力が必要です。
+    このサイトは <strong>あなた自身の Gemini APIキー</strong> を使用します。<br>
+    キーはこの端末内（localStorage）のみに保存され、サーバーには送信されません。<br>
+    他の端末で利用する場合は、同じキーを再入力してください。
   </p>
 
   <input id="apiKey" type="password" placeholder="GEMINI_API_KEY">
   <button id="saveKey">保存</button>
 
-  <div id="status"></div>
+  <p id="status"></p>
 
   <a href="./gensokyo.html">← ジェネレーターへ戻る</a>
 </div>
 
-<script>
-const input = document.getElementById("apiKey");
-const status = document.getElementById("status");
-
-const saved = localStorage.getItem("GEMINI_API_KEY");
-if (saved) {
-  input.value = "***************";
-}
-
-document.getElementById("saveKey").addEventListener("click", () => {
-  const val = input.value.trim();
-  if (!val || val.startsWith("*")) {
-    status.textContent = "新しいキーを入力してください";
-    return;
-  }
-  localStorage.setItem("GEMINI_API_KEY", val);
-  input.value = "***************";
-  status.textContent = "保存しました";
-});
-</script>
-
+<script src="../static/setting.js"></script>
 </body>
 </html>
