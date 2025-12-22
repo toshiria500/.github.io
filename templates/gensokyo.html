@@ -14,8 +14,7 @@
 <meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo">
 
 <link rel="stylesheet" href="../static/style.css">
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
@@ -32,33 +31,16 @@
     </div>
   </div>
 
- <form id="storyForm">
-
-  <div class="form-group">
-    <input id="name" name="name" placeholder="名前" required>
-  </div>
-
-  <div class="form-group">
-    <input id="action" name="action" placeholder="行動" required>
-  </div>
-
-  <div class="form-group">
-    <input id="item" name="item" placeholder="持ち物" required>
-  </div>
-
-  <div class="form-group">
-    <input id="companion" name="companion" placeholder="お供" required>
-  </div>
-
-  <div class="form-group">
-    <input id="enemy" name="enemy" placeholder="敵（任意）">
-  </div>
-
-  <button type="submit">送信</button>
-</form>
+  <form id="storyForm">
+    <input id="name" placeholder="名前" required>
+    <input id="action" placeholder="行動" required>
+    <input id="item" placeholder="持ち物" required>
+    <input id="companion" placeholder="お供" required>
+    <input id="enemy" placeholder="敵（任意）">
+    <button type="submit">送信</button>
+  </form>
 
   <p class="note">
-    <i class="fa-solid fa-arrow-up-right-from-square"></i>
     元ネタ：
     <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">
       もし幻想郷に行った時の生存率診断
@@ -67,16 +49,12 @@
 </div>
 
 <footer class="site-footer">
-  <a href="https://toshiria500.f5.si/templates/Setting" class="setting-link">
-    <i class="fa-solid fa-gear"></i> 設定
-  </a>
+  <a href="./Setting.html" class="setting-link">⚙ 設定</a>
 
-  <small>
-    Powered by Gemini
-  </small>
+  <small>Powered by Gemini</small>
 
   <div class="copyright">
-    Copyright © toshiria <span id="year"></span>  
+    Copyright © toshiria <span id="year"></span>
     All Rights Reserved.
   </div>
 </footer>
