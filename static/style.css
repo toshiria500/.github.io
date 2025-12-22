@@ -75,3 +75,38 @@ body {
   font-size: 0.9em;
   opacity: 0.8;
 }
+
+/* ===== 入力フォーム共通 ===== */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #a88fdc;
+  box-shadow: 0 0 0 2px rgba(168, 143, 220, 0.2);
+}
+
+/* 高さを少し大きめに */
+.form-group textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* エラー */
+.input-error {
+  border-color: #e06666;
+  background: #fff2f2;
+}
