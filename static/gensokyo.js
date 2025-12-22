@@ -4,11 +4,20 @@ const chat = document.getElementById("chat");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const apiKey = localStorage.getItem("GEMINI_API_KEY");
-  if (!apiKey) {
-    alert("先に設定画面でAPIキーを登録してください");
-    return;
-  }
+ if (!apiKey) {
+  const msg = document.createElement("div");
+  msg.className = "botContainer";
+  msg.innerHTML = `
+    <img src="../static/bot_icon.png" class="botIcon">
+    <div class="botText">
+      鍵の気配が感じられないわ。<br>
+      先に設定画面で契約を結んできて。
+    </div>
+  `;
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  return;
+}
 
   const data = {
     name: name.value.trim(),
