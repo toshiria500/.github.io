@@ -110,3 +110,27 @@ button {
     object-position: top;   /* スマホでも上寄せ */
   }
 }
+
+.site-footer a {
+  color: #93c5fd;              /* 通常リンク */
+  text-decoration: underline;
+}
+
+.site-footer a:hover {
+  color: #bfdbfe;
+}
+
+.site-footer a:visited {
+  color: #a5b4fc;              /* 訪問後 */
+}
+
+.external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ext-icon {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
