@@ -20,8 +20,8 @@ form.addEventListener("submit", async (e) => {
 
   const user = document.createElement("div");
   user.className = "bubble user";
-  user.textContent =
-    `名前:${data.name}\n行動:${data.action}\n持ち物:${data.item}\nお供:${data.companion}\n敵:${data.enemy}`;
+  user.textContent = Object.entries(data)
+    .map(([k,v]) => `${k}: ${v}`).join("\n");
   chat.appendChild(user);
 
   const bot = document.createElement("div");
@@ -33,21 +33,21 @@ form.addEventListener("submit", async (e) => {
   chat.appendChild(bot);
 
   const prompt = `
-あなたは幻想郷の境界を知る存在、八雲紫(東方Project)です。
-以下の人物が幻想郷に迷い込んだ場合の出来事と生存率を、
-やや神秘的かつ優しい口調で語ってください。
-基本的に、相手に対する呼び方は呼び捨てです。
+あなたは八雲紫です。
+幻想郷での出来事を語ってください。
 
-名前:${data.name}
-行動:${data.action}
-持ち物:${data.item}
-お供:${data.companion}
-敵:${data.enemy}
+名前: ${data.name}
+行動: ${data.action}
+持ち物: ${data.item}
+お供: ${data.companion}
+敵: ${data.enemy}
+
+生存率と帰還可能かも明示してください。
 `;
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,9 +59,10 @@ form.addEventListener("submit", async (e) => {
 
     const json = await res.json();
     bot.querySelector(".botText").textContent =
-      json.candidates[0].content.parts[0].text;
+      json.candidates?.[0]?.content?.parts?.[0]?.text
+      || "生成に失敗したわ…";
 
-  } catch (e) {
-    bot.querySelector(".botText").textContent = "生成に失敗したわ…";
+  } catch {
+    bot.querySelector(".botText").textContent = "通信エラーよ";
   }
 });
