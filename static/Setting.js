@@ -1,16 +1,21 @@
-document.getElementById("settingForm").addEventListener("submit", e => {
-  e.preventDefault();
+const input = document.getElementById("apiKey");
+const saveBtn = document.getElementById("saveKey");
 
-  const apiKey = document.getElementById("apiKey").value.trim();
-  const systemPrompt = document.getElementById("systemPrompt").value.trim();
+// 既存キーがあれば伏せ字表示
+const saved = localStorage.getItem("GEMINI_API_KEY");
+if (saved) {
+  input.value = "********";
+}
 
-  if (!apiKey) {
-    document.getElementById("apiKey").classList.add("input-error");
+saveBtn.addEventListener("click", () => {
+  const value = input.value.trim();
+
+  if (!value || value === "********") {
+    alert("新しいAPIキーを入力してください");
     return;
   }
 
-  localStorage.setItem("gensokyo_api_key", apiKey);
-  localStorage.setItem("gensokyo_prompt", systemPrompt);
-
-  alert("設定を保存しました");
+  localStorage.setItem("GEMINI_API_KEY", value);
+  alert("保存しました");
+  input.value = "********";
 });
