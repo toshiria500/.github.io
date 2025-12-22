@@ -3,100 +3,41 @@
 body {
   background: #0b1020;
   color: #e5e7eb;
-  font-family: system-ui, sans-serif;
-  margin: 0;
+  font-family: system-ui;
   padding: 20px;
 }
 
 .container {
   max-width: 720px;
   margin: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: #111827;
-  color: #e5e7eb;
-  box-sizing: border-box;
-}
-
-input.error {
-  border-color: #ef4444;
-}
-
-button {
-  background: #6366f1;
-  border: none;
-  cursor: pointer;
-  margin-top: 12px;
-}
-
-/* 共通吹き出し */
-.bubble {
-  padding: 12px 14px;
-  border-radius: 14px;
-  margin-bottom: 10px;
-  max-width: 90%;
-  white-space: pre-wrap;
-  position: relative;
-}
-
-/* ユーザー吹き出し（右側） */
-.user {
-  background: #1f2937;
-  margin-left: auto;
-}
-
-.user::after {
-  content: "";
-  position: absolute;
-  right: -8px;
-  top: 10px;
-  border-width: 8px 0 8px 8px;
-  border-style: solid;
-  border-color: transparent transparent transparent #1f2937;
 }
 
 .botContainer {
   display: flex;
-  align-items: flex-start; /* 上揃え */
+  align-items: flex-start;
   gap: 12px;
-  margin-bottom: 10px;
 }
 
 .botIcon {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  object-fit: cover;        /* 画像は枠に合わせて拡大縮小 */
-  object-position: top;     /* 上端を表示 */
-  flex-shrink: 0;
+  object-fit: cover;
+  object-position: 50% 10%;
 }
 
 .botText {
   background: #312e81;
+  padding: 12px;
   border-radius: 14px;
-  padding: 12px 14px;
-  max-width: calc(100% - 62px);
-  word-break: break-word;
   position: relative;
-  /* アイコンと上を揃えるためにマイナスマージン */
-  margin-top: 0; 
-  display: inline-block;
 }
 
 .botText::after {
   content: "";
   position: absolute;
   left: -8px;
-  top: 12px; /* アイコンに合わせる */
+  top: 12px;
   border-width: 8px 8px 8px 0;
   border-style: solid;
   border-color: transparent #312e81 transparent transparent;
