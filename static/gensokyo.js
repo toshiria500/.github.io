@@ -6,16 +6,16 @@ form.addEventListener("submit", async (e) => {
 
   const apiKey = localStorage.getItem("GEMINI_API_KEY");
   if (!apiKey) {
-    alert("先に設定画面で APIキーを登録してください");
+    alert("先に設定画面でAPIキーを登録してください");
     return;
   }
 
   const data = {
-    name: name.value,
-    action: action.value,
-    item: item.value,
-    companion: companion.value,
-    enemy: enemy.value || "なし"
+    name: name.value.trim(),
+    action: action.value.trim(),
+    item: item.value.trim(),
+    companion: companion.value.trim(),
+    enemy: enemy.value.trim() || "なし"
   };
 
   const user = document.createElement("div");
@@ -31,10 +31,10 @@ form.addEventListener("submit", async (e) => {
     <div class="botText">生成中…</div>
   `;
   chat.appendChild(bot);
+  chat.scrollTop = chat.scrollHeight;
 
   const prompt = `
-あなたは八雲紫です。
-幻想郷での出来事を語ってください。
+あなたは幻想郷の語り部です。
 
 名前: ${data.name}
 行動: ${data.action}
@@ -42,12 +42,18 @@ form.addEventListener("submit", async (e) => {
 お供: ${data.companion}
 敵: ${data.enemy}
 
-生存率と帰還可能かも明示してください。
+以下の構成でMarkdown形式で出力してください。
+
+## 🧭 行動の結果
+## ⚔ 敵の行動
+## 📊 生存率（0.1〜100）
+## ☯ 結末（生存 or 死亡）
+## 🌸 その後（生存時のみ）
 `;
 
   try {
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,11 +64,14 @@ form.addEventListener("submit", async (e) => {
     );
 
     const json = await res.json();
-    bot.querySelector(".botText").textContent =
-      json.candidates?.[0]?.content?.parts?.[0]?.text
-      || "生成に失敗したわ…";
+    const text = json.candidates[0].content.parts[0].text;
 
-  } catch {
-    bot.querySelector(".botText").textContent = "通信エラーよ";
+    bot.querySelector(".botText").innerHTML =
+      marked.parse(text);
+
+  } catch (err) {
+    bot.querySelector(".botText").textContent =
+      "生成中にエラーが発生しました";
+    console.error(err);
   }
 });
