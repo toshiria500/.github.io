@@ -3,28 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>幻想郷ジェネレーター</title>
 
+<title>幻想郷ジェネレーター</title>
+<meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
+
+<!-- OGP -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="幻想郷ジェネレーター">
+<meta property="og:description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
+<meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo">
 
 <link rel="stylesheet" href="../static/style.css">
 <link rel="stylesheet"
  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-
-<meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
-
-<!-- Open Graph -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo.html">
-<meta property="og:title" content="幻想郷ジェネレーター">
-<meta property="og:description" content="幻想郷に迷い込んだ時の運命をAI（Gemini）が語ります。">
-<meta property="og:image" content="https://toshiria500.f5.si/static/ogp.png">
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="幻想郷ジェネレーター">
-<meta name="twitter:description" content="幻想郷に迷い込んだ時の運命をAIが語ります。">
-<meta name="twitter:image" content="https://toshiria500.f5.si/static/ogp.png">
 </head>
 <body>
 
@@ -35,7 +26,8 @@
     <div class="botContainer">
       <img src="../static/bot_icon.png" class="botIcon">
       <div class="botText">
-        幻想郷へようこそ。あなたの運命を教えるわ。
+        幻想郷へようこそ。<br>
+        あなたの運命を、私が見てあげる。
       </div>
     </div>
   </div>
@@ -52,17 +44,30 @@
   <p class="note">
     <i class="fa-solid fa-arrow-up-right-from-square"></i>
     元ネタ：
-    <a href="https://shindanmaker.com/1208379?c=1" target="_blank">
+    <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">
       もし幻想郷に行った時の生存率診断
     </a>
   </p>
 </div>
 
 <footer class="site-footer">
-  Powered by Gemini<br>
-  Copyright © toshiria
+  <a href="./setting.html" class="setting-link">
+    <i class="fa-solid fa-gear"></i> 設定
+  </a>
+
+  <small>
+    Powered by Gemini
+  </small>
+
+  <div class="copyright">
+    Copyright © <span id="year"></span> toshiria  
+    All Rights Reserved.
+  </div>
 </footer>
 
 <script src="../static/gensokyo.js"></script>
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
