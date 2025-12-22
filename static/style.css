@@ -3,7 +3,8 @@
 body {
   background: #0b1020;
   color: #e5e7eb;
-  font-family: system-ui;
+  font-family: system-ui, sans-serif;
+  margin: 0;
   padding: 20px;
 }
 
@@ -12,37 +13,48 @@ body {
   margin: auto;
 }
 
+input, button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  font-size: 16px;
+  border-radius: 10px;
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+}
+
+button {
+  background: #6366f1;
+  border: none;
+  cursor: pointer;
+}
+
+.bubble.user {
+  background: #1f2937;
+  margin-left: auto;
+  padding: 12px;
+  border-radius: 14px;
+  white-space: pre-wrap;
+}
+
 .botContainer {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .botIcon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  object-fit: cover;
-  object-position: 50% 10%;
 }
 
 .botText {
   background: #312e81;
   padding: 12px;
   border-radius: 14px;
-  position: relative;
 }
-
-.botText::after {
-  content: "";
-  position: absolute;
-  left: -8px;
-  top: 12px;
-  border-width: 8px 8px 8px 0;
-  border-style: solid;
-  border-color: transparent #312e81 transparent transparent;
-}
-
 
 @media screen and (max-width: 480px) {
   .botIcon { 
