@@ -7,7 +7,6 @@
 <title>幻想郷ジェネレーター</title>
 <meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
 
-<!-- OGP -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="幻想郷ジェネレーター">
 <meta property="og:description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
@@ -31,12 +30,13 @@
     </div>
   </div>
 
-  <form id="storyForm">
-    <input id="name" placeholder="名前" required>
-    <input id="action" placeholder="行動" required>
-    <input id="item" placeholder="持ち物" required>
-    <input id="companion" placeholder="お供" required>
-    <input id="enemy" placeholder="敵（任意）">
+  <!-- autocomplete を止める -->
+  <form id="storyForm" autocomplete="off">
+    <input id="name" placeholder="名前" autocomplete="off" required>
+    <input id="action" placeholder="行動" autocomplete="off" required>
+    <input id="item" placeholder="持ち物" autocomplete="off" required>
+    <input id="companion" placeholder="お供" autocomplete="off" required>
+    <input id="enemy" placeholder="敵（任意）" autocomplete="off">
     <button type="submit">送信</button>
   </form>
 
@@ -50,9 +50,7 @@
 
 <footer class="site-footer">
   <a href="./Setting.html" class="setting-link">⚙ 設定</a>
-
   <small>Powered by Gemini</small>
-
   <div class="copyright">
     Copyright © toshiria <span id="year"></span>
     All Rights Reserved.
