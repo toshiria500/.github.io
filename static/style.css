@@ -1,11 +1,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Kaisei+Opti&display=swap');
 
+/* === テーマ設定 === */
+:root {
+  /* デフォルト（ダークモード寄り） */
+  --bg-color: #0b1020;
+  --text-color: #e5e7eb;
+  --input-bg: #111827;
+  --input-border: #374151;
+  --input-text: #e5e7eb;
+  --bubble-user-bg: #1f2937;
+  --bubble-bot-bg: #312e81;
+  --bubble-bot-text: #ffffff;
+  --accent-color: #6366f1;
+  --link-color: #93c5fd;
+  --error-border: #ef4444;
+  --error-bg: #450a0a;
+}
+
+/* ライトモード設定 */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-color: #f3f4f6;
+    --text-color: #1f2937;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+    --input-text: #111827;
+    --bubble-user-bg: #e5e7eb;
+    --bubble-bot-bg: #e0e7ff; /* 薄い青 */
+    --bubble-bot-text: #1e1b4b;
+    --accent-color: #4f46e5;
+    --link-color: #2563eb;
+    --error-border: #ef4444;
+    --error-bg: #fef2f2;
+  }
+}
+
 body {
-  background: #0b1020;
-  color: #e5e7eb;
-  font-family: system-ui, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Helvetica Neue', Arial, system-ui, sans-serif;
   margin: 0;
   padding: 20px;
+  line-height: 1.6;
 }
 
 .container {
@@ -13,112 +49,125 @@ body {
   margin: auto;
 }
 
+h2 {
+  text-align: center;
+  font-family: 'Kaisei Opti', serif;
+}
+
+/* フォーム周り */
+.form-group {
+  margin-bottom: 12px;
+}
+
 input, button {
   width: 100%;
   padding: 14px;
-  margin-top: 10px;
   font-size: 16px;
   border-radius: 10px;
-  background: #111827;
-  color: #e5e7eb;
-  border: 1px solid #374151;
+  box-sizing: border-box; /* 枠線を含めたサイズ計算 */
+}
+
+input {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* 必須エラー時のスタイル */
+input.error {
+  border-color: var(--error-border);
+  background: var(--error-bg);
 }
 
 button {
-  background: #6366f1;
+  background: var(--accent-color);
+  color: #fff;
   border: none;
   cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-.bubble.user {
-  background: #1f2937;
-  margin-left: auto;
-  padding: 12px;
-  border-radius: 14px;
-  white-space: pre-wrap;
+button:hover {
+  opacity: 0.9;
+}
+
+/* チャットエリア */
+#chat {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .botContainer {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .botIcon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
+  flex-shrink: 0;
+  background: #fff; /* アイコン背景 */
 }
 
 .botText {
-  background: #312e81;
-  padding: 12px;
+  background: var(--bubble-bot-bg);
+  color: var(--bubble-bot-text);
+  padding: 16px;
   border-radius: 14px;
+  border-top-left-radius: 0; /* 吹き出しっぽく */
+  max-width: 85%;
+  word-wrap: break-word;
 }
 
-@media screen and (max-width: 480px) {
-  .botIcon { 
-    width: 40px; 
-    height: 40px; 
-    object-position: top;   /* スマホでも上寄せ */
-  }
+/* Markdown内のスタイル調整 */
+.botText h2 {
+  font-size: 1.2em;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding-bottom: 4px;
+  margin-top: 0;
+}
+.botText ul {
+  padding-left: 20px;
+}
+
+.userBubble {
+  background: var(--bubble-user-bg);
+  color: var(--text-color);
+  padding: 12px 16px;
+  border-radius: 14px;
+  border-bottom-right-radius: 0;
+  align-self: flex-end; /* 右寄せ */
+  max-width: 80%;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.note {
+  font-size: 0.8em;
+  text-align: center;
+  margin-top: 40px;
+  opacity: 0.7;
+}
+
+.site-footer {
+  margin-top: 50px;
+  text-align: center;
+  border-top: 1px solid var(--input-border);
+  padding-top: 20px;
 }
 
 .site-footer a {
-  color: #93c5fd;              /* 通常リンク */
-  text-decoration: underline;
-}
-
-.site-footer a:hover {
-  color: #bfdbfe;
-}
-
-.site-footer a:visited {
-  color: #a5b4fc;              /* 訪問後 */
-}
-
-.external-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.ext-icon {
-  font-size: 0.9em;
-  opacity: 0.8;
-}
-
-/* ===== 入力フォーム共通 ===== */
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group input,
-.form-group textarea {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #bbb;
-  background: #fff;
-  box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #a88fdc;
-  box-shadow: 0 0 0 2px rgba(168, 143, 220, 0.2);
-}
-
-/* 高さを少し大きめに */
-.form-group textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-/* エラー */
-.input-error {
-  border-color: #e06666;
-  background: #fff2f2;
+  color: var(--link-color);
+  text-decoration: none;
 }
