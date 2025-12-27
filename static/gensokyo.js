@@ -3,22 +3,42 @@ const apiKey = localStorage.getItem("GEMINI_API_KEY");
 const form = document.getElementById("storyForm");
 const chat = document.getElementById("chat");
 
-// 【修正点1】HTMLの入力欄をIDを使って明示的に取得します
+// 入力要素の取得
 const nameInput = document.getElementById("name");
 const actionInput = document.getElementById("action");
 const itemInput = document.getElementById("item");
 const companionInput = document.getElementById("companion");
 const enemyInput = document.getElementById("enemy");
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault(); // フォーム送信によるページリロードを防止
+// 必須項目のリスト
+const requiredInputs = [nameInput, actionInput, itemInput, companionInput];
 
-  if (!apiKey) {
-    pushBotMessage("鍵の気配が感じられないわ。<br>先に設定画面で契約を結んできて。");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // 1. 必須チェック
+  let hasError = false;
+  requiredInputs.forEach(input => {
+    if (!input.value.trim()) {
+      input.classList.add("error"); // CSSで赤くする
+      hasError = true;
+    } else {
+      input.classList.remove("error");
+    }
+  });
+
+  if (hasError) {
+    alert("必須項目を入力してください");
     return;
   }
 
-  // 【修正点2】取得した要素（○○Input）から .value を読み取ります
+  // 2. APIキーチェック
+  if (!apiKey) {
+    pushBotMessage("鍵の気配が感じられないわ。<br>下の「設定」からAPIキーを保存してきて。");
+    return;
+  }
+
+  // 3. ユーザーの入力内容を取得
   const data = {
     name: nameInput.value.trim(),
     action: actionInput.value.trim(),
@@ -27,51 +47,53 @@ form.addEventListener("submit", async (e) => {
     enemy: enemyInput.value.trim() || "なし"
   };
 
-  pushBotMessage("運命を覗いているわ…");
+  // 4. ユーザーの入力をチャット欄に表示（右側）
+  pushUserMessage(`【挑戦者】${data.name}
+行動：${data.action}
+持ち物：${data.item}
+お供：${data.companion}
+敵：${data.enemy}`);
 
-  const enemyText =
-    data.enemy !== "なし"
-      ? `## ⚔ 敵の行動
-- 敵が何を企んだか
-- 主人公に対して何をしてきたか`
-      : "";
+  // 5. Botの「生成中...」を表示
+  const loadingId = pushBotMessage("運命の糸を紡いでいるわ…（生成中）");
+
+  // プロンプト作成
+  const enemyText = data.enemy !== "なし"
+    ? `## ⚔ 敵の行動\n- 敵(${data.enemy})が何を企んだか\n- 主人公に対して何をしてきたか`
+    : "";
 
   const prompt = `
-あなたは幻想郷を語る語り部です。
+あなたは東方Projectの世界「幻想郷」の語り部です。以下のシチュエーションでストーリーを作成してください。
 
-## 入力
+## 入力情報
 - 名前：${data.name}
 - 行動：${data.action}
 - 持ち物：${data.item}
 - お供：${data.companion}
 - 敵：${data.enemy}
 
-## ルール
-- Markdown形式
-- 生存率は0.1〜100
-- .0なら整数表示
+## 出力ルール
+- Markdown形式で出力
+- ユーモアとシリアスを交える
+- 幻想郷の住人の口調で語る
 
 ## 🧭 行動の結果
-- 何が起きたか
-- お供との行動
-- 持ち物の影響
+- 何が起きたか具体的に描写
+- お供キャラの反応や活躍
+- 持ち物がどう役に立ったか（あるいは役に立たなかったか）
 
 ${enemyText}
 
 ## 📊 生存率
-- 数値のみ
+- 0% 〜 100% の数値とその理由を一言で
 
 ## ☯ 結末
-- **生存** or **死亡**
-- 理由必須
-
-## 🌸 その後（生存時のみ）
-- 元の世界に帰る
-- 幻想郷に留まる
-- どちらか一方
+- **生存** または **死亡** （太字で）
+- 幻想郷に残るか、帰還するか、消滅するか
 `;
 
   try {
+    // 6. Gemini APIへ送信
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
       {
@@ -84,31 +106,61 @@ ${enemyText}
     );
 
     const json = await res.json();
-    
-    // APIからのレスポンス構造チェック（エラーハンドリング強化）
-    if (!json.candidates || !json.candidates[0] || !json.candidates[0].content) {
-       throw new Error("Geminiからの応答が不正です（APIキーが無効か、リクエスト制限の可能性があります）");
+
+    if (!json.candidates || !json.candidates[0].content) {
+      throw new Error("Geminiからの応答が空でした。APIキーを確認するか、少し待ってから試してください。");
     }
 
     const text = json.candidates[0].content.parts[0].text;
 
-    pushBotMessage(marked.parse(text), true);
+    // 7. 生成中のメッセージを削除して、結果を表示
+    removeMessage(loadingId);
+    pushBotMessage(marked.parse(text), true); // markedでMarkdownをHTMLに変換
 
   } catch (err) {
-    pushBotMessage("運命の糸が乱れたわ。もう一度試して。<br><small>" + err.message + "</small>", true);
+    removeMessage(loadingId);
+    pushBotMessage(`運命が見えないわ…エラーが起きたみたい。<br><small>${err.message}</small>`, true);
     console.error(err);
   }
 });
 
+// Botのメッセージを表示する関数（HTML許可フラグ付き）
 function pushBotMessage(text, isHtml = false) {
+  const msgId = "msg-" + Date.now();
   const box = document.createElement("div");
   box.className = "botContainer";
-  // isHtmlがtrueならinnerHTML、falseならtextContentを使うことでXSS対策と改行の両立を図るのが一般的ですが
-  // 今回はmarked.jsの出力を信用してinnerHTMLを使います
+  box.id = msgId;
+  
   box.innerHTML = `
     <img src="../static/bot_icon.png" class="botIcon">
-    <div class="botText">${text}</div>
+    <div class="botText">${isHtml ? text : text}</div>
   `;
+  
   chat.appendChild(box);
-  chat.scrollTop = chat.scrollHeight;
+  scrollToBottom();
+  return msgId; // IDを返す（後で消すため）
+}
+
+// ユーザーのメッセージを表示する関数
+function pushUserMessage(text) {
+  const box = document.createElement("div");
+  box.className = "userBubble";
+  box.textContent = text;
+  chat.appendChild(box);
+  scrollToBottom();
+}
+
+// 特定のメッセージを消す関数（ローディング表示消去用）
+function removeMessage(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// 一番下へスクロール
+function scrollToBottom() {
+  // ページ全体を下にスクロールさせるのが自然
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: 'smooth'
+  });
 }
