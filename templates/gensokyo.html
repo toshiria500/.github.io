@@ -3,16 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>幻想郷ジェネレーター</title>
 <meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="幻想郷ジェネレーター">
-<meta property="og:description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
-<meta property="og:url" content="https://toshiria500.f5.si/templates/gensokyo">
-
+<!-- CSSのパスは環境に合わせてください -->
 <link rel="stylesheet" href="../static/style.css">
+<!-- Markdown変換用ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
@@ -20,25 +15,40 @@
 <div class="container">
   <h2>幻想郷ストーリー生成</h2>
 
-  <div id="chat">
-    <div class="botContainer">
-      <img src="../static/bot_icon.png" class="botIcon">
-      <div class="botText">
-        幻想郷へようこそ。<br>
-        あなたの運命を、私が見てあげる。
-      </div>
+  <!-- 1. 挨拶エリア（固定表示） -->
+  <div id="greeting" class="botContainer">
+    <img src="../static/bot_icon.png" class="botIcon" alt="Bot">
+    <div class="botText">
+      幻想郷へようこそ。<br>
+      あなたの運命を、私が見てあげる。<br>
+      名前や持ち物を教えてちょうだい。
     </div>
   </div>
 
-  <!-- autocomplete を止める -->
+  <!-- 2. 入力フォーム -->
   <form id="storyForm" autocomplete="off">
-    <input id="name" placeholder="名前" autocomplete="off" required>
-    <input id="action" placeholder="行動" autocomplete="off" required>
-    <input id="item" placeholder="持ち物" autocomplete="off" required>
-    <input id="companion" placeholder="お供" autocomplete="off" required>
-    <input id="enemy" placeholder="敵（任意）" autocomplete="off">
+    <div class="form-group">
+      <input id="name" placeholder="名前" required>
+    </div>
+    <div class="form-group">
+      <input id="action" placeholder="行動" required>
+    </div>
+    <div class="form-group">
+      <input id="item" placeholder="持ち物" required>
+    </div>
+    <div class="form-group">
+      <input id="companion" placeholder="お供" required>
+    </div>
+    <div class="form-group">
+      <input id="enemy" placeholder="敵（任意）">
+    </div>
     <button type="submit">送信</button>
   </form>
+
+  <!-- 3. 結果表示エリア（フォームの下に追加されていく） -->
+  <div id="chat">
+    <!-- ここに結果が追加されます -->
+  </div>
 
   <p class="note">
     元ネタ：
@@ -57,6 +67,7 @@
   </div>
 </footer>
 
+<!-- JSの読み込み -->
 <script src="../static/gensokyo.js"></script>
 <script>
 document.getElementById("year").textContent = new Date().getFullYear();
