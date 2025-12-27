@@ -1,0 +1,30 @@
+/* =========================================
+   フォント専用設定ファイル (fonts.css)
+   Windows/Android => Noto Sans JP
+   Apple (Mac/iOS) => ヒラギノ角ゴ
+   ========================================= */
+
+/* Noto Sans JP を Google Fonts から読み込み */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+body, input, button, textarea, select {
+  font-family: 
+    /* 1. 英数字用 (欧文フォント) */
+    "Helvetica Neue", "Arial", 
+    
+    /* 2. Apple製品 (Mac, iPhone, iPad) 優先 */
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", 
+    
+    /* 3. Windows, Android 優先 (Webフォント) */
+    "Noto Sans JP", 
+    
+    /* 4. Windows 予備 (メイリオ) */
+    "Meiryo", 
+    
+    /* 5. 最終バックアップ */
+    sans-serif;
+    
+  /* 文字のギザギザ軽減（アンチエイリアス） */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
