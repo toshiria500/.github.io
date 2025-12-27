@@ -3,20 +3,28 @@ const apiKey = localStorage.getItem("GEMINI_API_KEY");
 const form = document.getElementById("storyForm");
 const chat = document.getElementById("chat");
 
+// 【修正点1】HTMLの入力欄をIDを使って明示的に取得します
+const nameInput = document.getElementById("name");
+const actionInput = document.getElementById("action");
+const itemInput = document.getElementById("item");
+const companionInput = document.getElementById("companion");
+const enemyInput = document.getElementById("enemy");
+
 form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  e.preventDefault(); // フォーム送信によるページリロードを防止
 
   if (!apiKey) {
     pushBotMessage("鍵の気配が感じられないわ。<br>先に設定画面で契約を結んできて。");
     return;
   }
 
+  // 【修正点2】取得した要素（○○Input）から .value を読み取ります
   const data = {
-    name: name.value.trim(),
-    action: action.value.trim(),
-    item: item.value.trim(),
-    companion: companion.value.trim(),
-    enemy: enemy.value.trim() || "なし"
+    name: nameInput.value.trim(),
+    action: actionInput.value.trim(),
+    item: itemInput.value.trim(),
+    companion: companionInput.value.trim(),
+    enemy: enemyInput.value.trim() || "なし"
   };
 
   pushBotMessage("運命を覗いているわ…");
@@ -76,12 +84,18 @@ ${enemyText}
     );
 
     const json = await res.json();
+    
+    // APIからのレスポンス構造チェック（エラーハンドリング強化）
+    if (!json.candidates || !json.candidates[0] || !json.candidates[0].content) {
+       throw new Error("Geminiからの応答が不正です（APIキーが無効か、リクエスト制限の可能性があります）");
+    }
+
     const text = json.candidates[0].content.parts[0].text;
 
     pushBotMessage(marked.parse(text), true);
 
   } catch (err) {
-    pushBotMessage("運命の糸が乱れたわ。もう一度試して。");
+    pushBotMessage("運命の糸が乱れたわ。もう一度試して。<br><small>" + err.message + "</small>", true);
     console.error(err);
   }
 });
@@ -89,9 +103,11 @@ ${enemyText}
 function pushBotMessage(text, isHtml = false) {
   const box = document.createElement("div");
   box.className = "botContainer";
+  // isHtmlがtrueならinnerHTML、falseならtextContentを使うことでXSS対策と改行の両立を図るのが一般的ですが
+  // 今回はmarked.jsの出力を信用してinnerHTMLを使います
   box.innerHTML = `
     <img src="../static/bot_icon.png" class="botIcon">
-    <div class="botText">${isHtml ? text : text}</div>
+    <div class="botText">${text}</div>
   `;
   chat.appendChild(box);
   chat.scrollTop = chat.scrollHeight;
