@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>音声認識トグルボタン</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
+        #result-area { 
+            border: 2px solid #ddd; padding: 20px; width: 80%; margin: 20px auto; 
+            min-height: 100px; font-size: 1.2rem; background: white; border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* ボタンのスタイル */
+        #toggle-btn { 
+            padding: 15px 30px; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 50px;
+            transition: all 0.3s; color: white; background-color: #4CAF50; /* 最初は緑色 */
+        }
+        /* 録音中のスタイル */
+        #toggle-btn.recording { background-color: #f44336; box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); }
+        
+        .status { color: #888; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>音声認識トグルスイッチ</h2>
+    
+    <button id="toggle-btn">音声認識を開始</button>
+    <p class="status" id="status">ボタンを押すとマイクが起動します</p>
+    
+    <div id="result-area" id="result-area">ここに話した内容が表示されます</div>
+
+    <script>
+        const btn = document.getElementById('toggle-btn');
+        const resultArea = document.getElementById('result-area');
+        const statusText = document.getElementById('status');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("ブラウザが対応していません");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ja-JP';
+            recognition.interimResults = true; // 話している最中の文字も表示
+            recognition.continuous = true;    // 途切れても停止しない設定
+
+            let isRecording = false; // 録音中かどうかのフラグ
+
+            // ボタンクリック時の挙動
+            btn.addEventListener('click', () => {
+                if (!isRecording) {
+                    // 録音開始
+                    recognition.start();
+                } else {
+                    // 録音停止
+                    recognition.stop();
+                }
+            });
+
+            // 録音開始時の処理
+            recognition.onstart = () => {
+                isRecording = true;
+                btn.innerText = "録音を停止する";
+                btn.classList.add('recording');
+                statusText.innerText = "マイク使用中...";
+            };
+
+            // 録音終了時の処理（手動停止やエラー時）
+            recognition.onend = () => {
+                isRecording = false;
+                btn.innerText = "音声認識を開始";
+                btn.classList.remove('recording');
+                statusText.innerText = "停止中";
+            };
+
+            // 文字を認識した時の処理
+            recognition.onresult = (event) => {
+                let finalTranscript = ''; // 確定した文字列
+                let interimTranscript = ''; // 認識途中の文字列
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // 画面に表示（確定分は黒、途中分は薄い色などで区別も可能）
+                if (finalTranscript) {
+                    resultArea.innerText = finalTranscript;
+                } else {
+                    resultArea.innerText = interimTranscript;
+                }
+            };
+        }
+    </script>
+</body>
+</html>
