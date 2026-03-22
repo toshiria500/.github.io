@@ -3,115 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta property="og:title" content="音声認識で文字起こしするだけのサイト">
-    <meta property="og:description" content="※マイクのアクセス許可が必要です。">
-    <meta property="og:url" content="https://toshiria500.f5.si/mic">
-    <meta property="og:image" content="https://toshiria500.f5.si/images/Ogp2.png"> 
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
-
-    <link rel="stylesheet" href="../static/style.css">
-    <link rel="stylesheet" href="../css/theme.css">    
-    
-    <title>音声認識で文字起こしするだけのサイト</title>
-    
+    <title>音声認識 - toshiria</title>
     <style>
-        /* --- 基本レイアウト（ライトモード：デフォルト） --- */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f4f7f6; 
-            color: #333;
-            transition: background-color 0.3s, color 0.3s;
+            font-family: sans-serif; margin: 0; display: flex; flex-direction: column; min-height: 100vh;
+            background-color: #f4f7f6; color: #333; transition: 0.3s;
         }
-
-        main {
-            flex: 1;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 50px 20px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        #result-area { 
-            border: 2px solid #ddd; 
-            padding: 25px; 
-            width: 100%; 
-            margin: 30px auto; 
-            min-height: 200px; 
-            font-size: 1.2rem; 
-            background: white; 
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: left;
-            line-height: 1.8;
-            box-sizing: border-box;
-            color: #333;
-        }
-
-        #toggle-btn { 
-            padding: 16px 45px; 
-            font-size: 1.1rem; 
-            font-weight: bold;
-            cursor: pointer; 
-            border: none; 
-            border-radius: 50px;
-            transition: 0.3s; 
-            color: white; 
-            background-color: #4CAF50;
-        }
-
-        #toggle-btn.recording { 
-            background-color: #f44336; 
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); 
-        }
-        
-        .status { color: #888; margin-top: 15px; font-size: 0.9rem; }
-
-        .site-footer {
-            background-color: #333;
-            color: #fff;
-            padding: 25px 0;
-            text-align: center;
-            font-size: 0.9rem;
-            margin-top: auto;
-        }
-
-        /* --- ダークモード用設定（OSの設定がダークの時に適用） --- */
         @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #1a1a1a; /* ダークグレーの背景 */
-                color: #e0e0e0;            /* 薄いグレーの文字 */
-            }
-            #result-area {
-                background-color: #2d2d2d; /* 入力エリアも暗く */
-                border-color: #444;
-                color: #e0e0e0;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            }
-            .status {
-                color: #aaa;
-            }
-            .site-footer {
-                background-color: #000;    /* フッターを真っ黒に */
-            }
+            body { background-color: #1a1a1a; color: #e0e0e0; }
+            #result-area { background-color: #2d2d2d; border-color: #444; color: #e0e0e0; }
         }
+        main { flex: 1; width: 100%; max-width: 800px; margin: 0 auto; padding: 50px 20px; text-align: center; box-sizing: border-box; }
+        #result-area { border: 2px solid #ddd; padding: 25px; min-height: 200px; font-size: 1.2rem; background: white; border-radius: 12px; text-align: left; line-height: 1.8; }
+        #toggle-btn { padding: 16px 45px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; color: white; background-color: #4CAF50; margin-bottom: 10px; }
+        #toggle-btn.recording { background-color: #f44336; }
+        .site-footer { background-color: #333; color: #fff; padding: 25px 0; text-align: center; font-size: 0.9rem; margin-top: auto; }
     </style>
 </head>
 <body>
 
     <main>
-        <h2>音声認識で文字起こしするだけのサイト</h2>
-        
+        <h2>音声認識ツール</h2>
         <button id="toggle-btn">音声認識を開始</button>
-        <p class="status" id="status">ボタンを押すとマイクが起動します</p>
-        
         <div id="result-area">ここに話した内容が表示されます...</div>
     </main>
 
@@ -123,18 +36,14 @@
     </footer>
 
     <script>
-        // 年度を自動更新
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // 音声認識の処理
         const btn = document.getElementById('toggle-btn');
         const resultArea = document.getElementById('result-area');
-        const statusText = document.getElementById('status');
-
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!SpeechRecognition) {
-            resultArea.innerText = "お使いのブラウザは音声認識に対応していません。";
+            resultArea.innerText = "非対応ブラウザです。";
         } else {
             const recognition = new SpeechRecognition();
             recognition.lang = 'ja-JP';
@@ -143,34 +52,30 @@
 
             let isRecording = false; 
 
-            btn.addEventListener('click', () => {
-                if (!isRecording) {
-                    recognition.start();
-                } else {
-                    recognition.stop();
-                }
-            });
+            btn.onclick = () => {
+                if (!isRecording) { recognition.start(); } 
+                else { recognition.stop(); }
+            };
 
             recognition.onstart = () => {
                 isRecording = true;
                 btn.innerText = "録音を停止する";
                 btn.classList.add('recording');
-                statusText.innerText = "マイク使用中...";
             };
 
             recognition.onend = () => {
                 isRecording = false;
                 btn.innerText = "音声認識を開始";
                 btn.classList.remove('recording');
-                statusText.innerText = "停止中";
             };
 
+            // 【重要】スマホの二重表示バグ対策
             recognition.onresult = (event) => {
                 let text = ''; 
                 for (let i = 0; i < event.results.length; i++) {
                     text += event.results[i][0].transcript;
                 }
-                resultArea.innerText = text;
+                resultArea.innerText = text; // 常に最新の全体結果で上書き
             };
         }
     </script>
