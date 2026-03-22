@@ -17,7 +17,7 @@
     <title>音声認識で文字起こしするだけのサイト</title>
     
     <style>
-        /* 全体のレイアウト調整 */
+        /* --- 基本レイアウト（ライトモード：デフォルト） --- */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0;
@@ -25,14 +25,15 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: #f4f7f6; 
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* PCで横に広がりすぎないためのコンテナ */
         main {
             flex: 1;
             width: 100%;
-            max-width: 800px; /* PCでの最大幅 */
-            margin: 0 auto;   /* 中央寄せ */
+            max-width: 800px;
+            margin: 0 auto;
             padding: 50px 20px;
             text-align: center;
             box-sizing: border-box;
@@ -40,26 +41,28 @@
 
         #result-area { 
             border: 2px solid #ddd; 
-            padding: 20px; 
-            width: 100%; /* 親要素(main)に合わせる */
-            margin: 20px auto; 
-            min-height: 150px; 
+            padding: 25px; 
+            width: 100%; 
+            margin: 30px auto; 
+            min-height: 200px; 
             font-size: 1.2rem; 
             background: white; 
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: left; /* 文章は左詰めが見やすい */
+            text-align: left;
+            line-height: 1.8;
             box-sizing: border-box;
+            color: #333;
         }
 
-        /* ボタンのスタイル */
         #toggle-btn { 
-            padding: 15px 40px; 
+            padding: 16px 45px; 
             font-size: 1.1rem; 
+            font-weight: bold;
             cursor: pointer; 
             border: none; 
             border-radius: 50px;
-            transition: all 0.3s; 
+            transition: 0.3s; 
             color: white; 
             background-color: #4CAF50;
         }
@@ -69,34 +72,50 @@
             box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); 
         }
         
-        .status { color: #888; margin-top: 10px; }
+        .status { color: #888; margin-top: 15px; font-size: 0.9rem; }
 
-        /* フッターのスタイル */
         .site-footer {
             background-color: #333;
             color: #fff;
-            padding: 20px;
+            padding: 25px 0;
             text-align: center;
             font-size: 0.9rem;
+            margin-top: auto;
         }
-        .site-footer a { color: #4CAF50; text-decoration: none; margin-bottom: 10px; display: inline-block; }
-        .copyright { opacity: 0.8; margin-top: 5px; }
+
+        /* --- ダークモード用設定（OSの設定がダークの時に適用） --- */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a; /* ダークグレーの背景 */
+                color: #e0e0e0;            /* 薄いグレーの文字 */
+            }
+            #result-area {
+                background-color: #2d2d2d; /* 入力エリアも暗く */
+                border-color: #444;
+                color: #e0e0e0;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            .status {
+                color: #aaa;
+            }
+            .site-footer {
+                background-color: #000;    /* フッターを真っ黒に */
+            }
+        }
     </style>
 </head>
 <body>
 
     <main>
-        <h2>音声認識トグルスイッチ</h2>
+        <h2>音声認識で文字起こしするだけのサイト</h2>
         
         <button id="toggle-btn">音声認識を開始</button>
         <p class="status" id="status">ボタンを押すとマイクが起動します</p>
         
-        <div id="result-area">ここに話した内容が表示されます</div>
+        <div id="result-area">ここに話した内容が表示されます...</div>
     </main>
 
     <footer class="site-footer">
-        <a href="./Setting.html" class="setting-link">⚙ 設定</a><br>
-        <small>Powered by Gemini</small>
         <div class="copyright">
             Copyright © toshiria 2025 - <span id="year"></span>
             All Rights Reserved.
@@ -104,10 +123,10 @@
     </footer>
 
     <script>
-        // 1. 年度を自動更新する処理
+        // 年度を自動更新
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // 2. 音声認識の処理
+        // 音声認識の処理
         const btn = document.getElementById('toggle-btn');
         const resultArea = document.getElementById('result-area');
         const statusText = document.getElementById('status');
@@ -115,7 +134,7 @@
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!SpeechRecognition) {
-            alert("ブラウザが対応していません");
+            resultArea.innerText = "お使いのブラウザは音声認識に対応していません。";
         } else {
             const recognition = new SpeechRecognition();
             recognition.lang = 'ja-JP';
@@ -147,24 +166,11 @@
             };
 
             recognition.onresult = (event) => {
-                let finalTranscript = ''; 
-                let interimTranscript = ''; 
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        interimTranscript += transcript;
-                    }
+                let text = ''; 
+                for (let i = 0; i < event.results.length; i++) {
+                    text += event.results[i][0].transcript;
                 }
-                
-                // 画面表示の更新
-                if (finalTranscript) {
-                    resultArea.innerText = finalTranscript;
-                } else {
-                    resultArea.innerText = interimTranscript;
-                }
+                resultArea.innerText = text;
             };
         }
     </script>
