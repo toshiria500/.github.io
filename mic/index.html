@@ -2,74 +2,136 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta property="og:title" content="音声認識で文字起こしするだけのサイト">
+    <meta property="og:title" content="音声認識で文字起こしするだけのサイト">
     <meta property="og:description" content="※マイクのアクセス許可が必要です。">
     <meta property="og:url" content="https://toshiria500.f5.si/mic">
-    <meta property="og:image" content="https://toshiria500.f5.si/images/Ogp2.png"> <meta property="og:type" content="website">
+    <meta property="og:image" content="https://toshiria500.f5.si/images/Ogp2.png"> 
+    <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
 
-<!-- CSSのパスは環境に合わせてください -->
-<link rel="stylesheet" href="../static/style.css">
-<link rel="stylesheet" href="../css/theme.css">    
+    <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="../css/theme.css">    
     
     <title>音声認識で文字起こしするだけのサイト</title>
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
-        #result-area { 
-            border: 2px solid #ddd; padding: 20px; width: 80%; margin: 20px auto; 
-            min-height: 100px; font-size: 1.2rem; background: white; border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        /* 全体のレイアウト調整 */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f4f7f6; 
         }
+
+        /* PCで横に広がりすぎないためのコンテナ */
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 800px; /* PCでの最大幅 */
+            margin: 0 auto;   /* 中央寄せ */
+            padding: 50px 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        #result-area { 
+            border: 2px solid #ddd; 
+            padding: 20px; 
+            width: 100%; /* 親要素(main)に合わせる */
+            margin: 20px auto; 
+            min-height: 150px; 
+            font-size: 1.2rem; 
+            background: white; 
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: left; /* 文章は左詰めが見やすい */
+            box-sizing: border-box;
+        }
+
         /* ボタンのスタイル */
         #toggle-btn { 
-            padding: 15px 30px; font-size: 1.1rem; cursor: pointer; border: none; border-radius: 50px;
-            transition: all 0.3s; color: white; background-color: #4CAF50; /* 最初は緑色 */
+            padding: 15px 40px; 
+            font-size: 1.1rem; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 50px;
+            transition: all 0.3s; 
+            color: white; 
+            background-color: #4CAF50;
         }
-        /* 録音中のスタイル */
-        #toggle-btn.recording { background-color: #f44336; box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); }
+
+        #toggle-btn.recording { 
+            background-color: #f44336; 
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5); 
+        }
         
         .status { color: #888; margin-top: 10px; }
+
+        /* フッターのスタイル */
+        .site-footer {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .site-footer a { color: #4CAF50; text-decoration: none; margin-bottom: 10px; display: inline-block; }
+        .copyright { opacity: 0.8; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <h2>音声認識トグルスイッチ</h2>
-    
-    <button id="toggle-btn">音声認識を開始</button>
-    <p class="status" id="status">ボタンを押すとマイクが起動します</p>
-    
-    <div id="result-area" id="result-area">ここに話した内容が表示されます</div>
+    <main>
+        <h2>音声認識トグルスイッチ</h2>
+        
+        <button id="toggle-btn">音声認識を開始</button>
+        <p class="status" id="status">ボタンを押すとマイクが起動します</p>
+        
+        <div id="result-area">ここに話した内容が表示されます</div>
+    </main>
+
+    <footer class="site-footer">
+        <a href="./Setting.html" class="setting-link">⚙ 設定</a><br>
+        <small>Powered by Gemini</small>
+        <div class="copyright">
+            Copyright © toshiria 2025 - <span id="year"></span>
+            All Rights Reserved.
+        </div>
+    </footer>
 
     <script>
+        // 1. 年度を自動更新する処理
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // 2. 音声認識の処理
         const btn = document.getElementById('toggle-btn');
         const resultArea = document.getElementById('result-area');
         const statusText = document.getElementById('status');
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (!SpeechRecognition) {
             alert("ブラウザが対応していません");
         } else {
             const recognition = new SpeechRecognition();
             recognition.lang = 'ja-JP';
-            recognition.interimResults = true; // 話している最中の文字も表示
-            recognition.continuous = true;    // 途切れても停止しない設定
+            recognition.interimResults = true; 
+            recognition.continuous = true;    
 
-            let isRecording = false; // 録音中かどうかのフラグ
+            let isRecording = false; 
 
-            // ボタンクリック時の挙動
             btn.addEventListener('click', () => {
                 if (!isRecording) {
-                    // 録音開始
                     recognition.start();
                 } else {
-                    // 録音停止
                     recognition.stop();
                 }
             });
 
-            // 録音開始時の処理
             recognition.onstart = () => {
                 isRecording = true;
                 btn.innerText = "録音を停止する";
@@ -77,7 +139,6 @@
                 statusText.innerText = "マイク使用中...";
             };
 
-            // 録音終了時の処理（手動停止やエラー時）
             recognition.onend = () => {
                 isRecording = false;
                 btn.innerText = "音声認識を開始";
@@ -85,10 +146,9 @@
                 statusText.innerText = "停止中";
             };
 
-            // 文字を認識した時の処理
             recognition.onresult = (event) => {
-                let finalTranscript = ''; // 確定した文字列
-                let interimTranscript = ''; // 認識途中の文字列
+                let finalTranscript = ''; 
+                let interimTranscript = ''; 
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
@@ -99,7 +159,7 @@
                     }
                 }
                 
-                // 画面に表示（確定分は黒、途中分は薄い色などで区別も可能）
+                // 画面表示の更新
                 if (finalTranscript) {
                     resultArea.innerText = finalTranscript;
                 } else {
