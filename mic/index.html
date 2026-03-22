@@ -13,10 +13,11 @@
             body { background-color: #1a1a1a; color: #e0e0e0; }
             #result-area { background-color: #2d2d2d; border-color: #444; color: #e0e0e0; }
         }
-        main { flex: 1; width: 100%; max-width: 800px; margin: 0 auto; padding: 50px 20px; text-align: center; box-sizing: border-box; }
-        #result-area { border: 2px solid #ddd; padding: 25px; min-height: 200px; font-size: 1.2rem; background: white; border-radius: 12px; text-align: left; line-height: 1.8; }
-        #toggle-btn { padding: 16px 45px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; color: white; background-color: #4CAF50; margin-bottom: 10px; }
-        #toggle-btn.recording { background-color: #f44336; }
+        main { flex: 1; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px 20px; text-align: center; box-sizing: border-box; }
+        #result-area { border: 2px solid #ddd; padding: 25px; min-height: 250px; font-size: 1.2rem; background: white; border-radius: 12px; text-align: left; line-height: 1.8; word-break: break-all; }
+        #toggle-btn { padding: 16px 45px; font-size: 1.1rem; font-weight: bold; cursor: pointer; border: none; border-radius: 50px; color: white; background-color: #4CAF50; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; }
+        #toggle-btn.recording { background-color: #f44336; box-shadow: 0 0 15px rgba(244, 67, 54, 0.4); }
+        .status { color: #888; margin-top: 10px; font-size: 0.8rem; }
         .site-footer { background-color: #333; color: #fff; padding: 25px 0; text-align: center; font-size: 0.9rem; margin-top: auto; }
     </style>
 </head>
@@ -25,6 +26,7 @@
     <main>
         <h2>音声認識ツール</h2>
         <button id="toggle-btn">音声認識を開始</button>
+        <p class="status" id="status">ボタンを押すとマイクが起動します</p>
         <div id="result-area">ここに話した内容が表示されます...</div>
     </main>
 
@@ -40,42 +42,70 @@
 
         const btn = document.getElementById('toggle-btn');
         const resultArea = document.getElementById('result-area');
+        const statusText = document.getElementById('status');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        
+
         if (!SpeechRecognition) {
-            resultArea.innerText = "非対応ブラウザです。";
+            resultArea.innerText = "非対応ブラウザです。Chromeでお試しください。";
         } else {
             const recognition = new SpeechRecognition();
             recognition.lang = 'ja-JP';
-            recognition.interimResults = true; 
-            recognition.continuous = true;    
+            recognition.interimResults = true;
+            recognition.continuous = true;
 
-            let isRecording = false; 
+            let isRecording = false;
+            let manualStop = false; // 手動で止めたかどうかを判定
 
             btn.onclick = () => {
-                if (!isRecording) { recognition.start(); } 
-                else { recognition.stop(); }
+                if (!isRecording) {
+                    manualStop = false;
+                    recognition.start();
+                } else {
+                    manualStop = true;
+                    recognition.stop();
+                }
             };
 
             recognition.onstart = () => {
                 isRecording = true;
                 btn.innerText = "録音を停止する";
                 btn.classList.add('recording');
+                statusText.innerText = "聴き取り中...";
             };
 
+            // 勝手に止まった場合に再起動する処理
             recognition.onend = () => {
-                isRecording = false;
-                btn.innerText = "音声認識を開始";
-                btn.classList.remove('recording');
+                if (!manualStop && isRecording) {
+                    // 通信エラー等で勝手に止まったら、自動で再開を試みる
+                    recognition.start();
+                } else {
+                    isRecording = false;
+                    btn.innerText = "音声認識を開始";
+                    btn.classList.remove('recording');
+                    statusText.innerText = "停止中";
+                }
             };
 
-            // 【重要】スマホの二重表示バグ対策
             recognition.onresult = (event) => {
-                let text = ''; 
+                let text = '';
                 for (let i = 0; i < event.results.length; i++) {
+                    // 全ての結果を連結。スマホの重複を防ぐため、確定済みかどうかにかかわらず
+                    // インデックスごとの最新データだけを拾う
                     text += event.results[i][0].transcript;
                 }
-                resultArea.innerText = text; // 常に最新の全体結果で上書き
+                
+                // 画面を更新（カクつきを抑えるため、変更があるときだけDOM操作するのが理想的）
+                if (resultArea.innerText !== text) {
+                    resultArea.innerText = text;
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
+                if (event.error === 'not-allowed') {
+                    statusText.innerText = "マイクの使用が許可されていません。";
+                    isRecording = false;
+                }
             };
         }
     </script>
