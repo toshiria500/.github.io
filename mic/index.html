@@ -43,21 +43,20 @@
         
         .status { color: #888; margin-top: 10px; font-size: 0.85rem; }
 
-        /* フッターのデザイン調整 */
+        /* 警告メッセージのスタイル */
+        #alert-msg {
+            color: #ff4d4d;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            min-height: 1.2em;
+        }
+
         .site-footer {
-            background-color: #333;
-            color: #fff;
-            padding: 30px 20px;
-            text-align: center;
-            font-size: 0.85rem;
-            margin-top: auto;
+            background-color: #333; color: #fff; padding: 30px 20px;
+            text-align: center; font-size: 0.85rem; margin-top: auto;
         }
-        .privacy-note {
-            max-width: 600px;
-            margin: 0 auto 15px;
-            color: #bbb;
-            line-height: 1.5;
-        }
+        .privacy-note { max-width: 600px; margin: 0 auto 15px; color: #bbb; line-height: 1.5; }
         .copyright { opacity: 0.8; border-top: 1px solid #444; padding-top: 15px; }
     </style>
 </head>
@@ -67,15 +66,17 @@
         <h2>音声認識で文字起こし</h2>
         <button id="toggle-btn">音声認識を開始</button>
         <p class="status" id="status">ボタンを押すとマイクが起動します</p>
+        
+        <p id="alert-msg"></p>
+        
         <div id="result-area"></div>
     </main>
 
     <footer class="site-footer">
         <div class="privacy-note">
             【プライバシーについて】<br>
-            入力された音声はリアルタイムで文字に変換されるのみで、当サイトのサーバーに保存されたり、第三者に提供されることはありません。
+            入力された音声はリアルタイムで文字に変換されるのみで、サーバー保存や第三者提供は一切行われません。
         </div>
-
         <div class="copyright">
             Copyright © toshiria 2025 - <span id="year"></span>
             All Rights Reserved.
@@ -88,7 +89,24 @@
         const btn = document.getElementById('toggle-btn');
         const resultArea = document.getElementById('result-area');
         const statusText = document.getElementById('status');
+        const alertMsg = document.getElementById('alert-msg');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        // --- NGワード設定 ---
+        const ngWords = [/死ね/g, /殺す/g, /消えろ/g, /馬鹿/g, /ばか/g, /クズ/g, /ゴミ/g];
+
+        function filterText(text) {
+            let hasNG = false;
+            let filtered = text;
+            ngWords.forEach(word => {
+                if (word.test(filtered)) {
+                    // 文字数分のアスタリスクに置換
+                    filtered = filtered.replace(word, (match) => "*".repeat(match.length));
+                    hasNG = true;
+                }
+            });
+            return { filtered, hasNG };
+        }
 
         if (!SpeechRecognition) {
             resultArea.innerText = "非対応ブラウザです。";
@@ -107,6 +125,7 @@
                     manualStop = false;
                     finalOutput = ""; 
                     resultArea.innerText = "";
+                    alertMsg.innerText = "";
                     recognition.start();
                 } else {
                     manualStop = true;
@@ -136,13 +155,23 @@
                 let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     let transcript = event.results[i][0].transcript;
+                    
                     if (event.results[i].isFinal) {
-                        // 重複チェックロジック（endsWith）
-                        if (!finalOutput.endsWith(transcript)) {
-                            finalOutput += transcript;
+                        // 確定したタイミングでフィルタリング
+                        const result = filterText(transcript);
+                        
+                        if (result.hasNG) {
+                            alertMsg.innerText = "⚠️ 暴言を検出したため文字をフィルターしました";
+                        }
+                        
+                        // 重複ガードを適用しつつ確定分に追加
+                        if (!finalOutput.endsWith(result.filtered)) {
+                            finalOutput += result.filtered;
                         }
                     } else {
-                        interimTranscript = transcript;
+                        // 中間結果も一応フィルター（リアルタイムで伏せ字にするため）
+                        const result = filterText(transcript);
+                        interimTranscript = result.filtered;
                     }
                 }
                 resultArea.innerText = finalOutput + interimTranscript;
