@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:title" content="音声認識で文字起こしするだけのサイト">
+    <meta property="og:description" content="※マイクのアクセス許可が必要です。">
+    <meta property="og:url" content="https://toshiria500.f5.si/mic">
+    <meta property="og:image" content="https://toshiria500.f5.si/images/Ogp2.png"> 
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="../css/theme.css">    
+    
     <title>音声認識で文字起こしするだけのサイト</title>
     
     <style>
@@ -126,7 +137,7 @@
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     let transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        // 重複チェックロジック
+                        // 重複チェックロジック（endsWith）
                         if (!finalOutput.endsWith(transcript)) {
                             finalOutput += transcript;
                         }
