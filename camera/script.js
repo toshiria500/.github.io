@@ -11,31 +11,21 @@ const model_url = "https://storage.googleapis.com/mediapipe-models/object_detect
 const wasm_url = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
 
 /**
- * ライブラリの読み込みを待つ
+ * ライブラリ(window.tasksVision)が見つかるまで待機する
  */
-function wait_for_lib(limit = 10) {
-    return new Promise((resolve, reject) => {
-        let count = 0;
-        const check = setInterval(() => {
-            if (window.tasksVision) {
-                clearInterval(check);
-                resolve(window.tasksVision);
-            }
-            if (count >= limit) {
-                clearInterval(check);
-                reject("MediaPipe library not found. Check your network or script tag.");
-            }
-            count++;
-        }, 500);
-    });
+async function get_vision_lib() {
+    for (let i = 0; i < 20; i++) {
+        if (window.tasksVision) return window.tasksVision;
+        // 0.5秒待って再確認
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("MediaPipeを待機中... (" + i + ")");
+    }
+    throw new Error("MediaPipeライブラリの読み込みに失敗しました。ネット接続かURLを確認してください。");
 }
 
-/**
- * プログレスバー付きロード
- */
 async function fetch_with_progress(url) {
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) throw new Error("モデルの取得に失敗しました。");
     
     const reader = response.body.getReader();
     const total = +response.headers.get('Content-Length');
@@ -47,24 +37,19 @@ async function fetch_with_progress(url) {
         if (done) break;
         chunks.push(value);
         loaded += value.length;
-        
         const percent = total ? Math.round((loaded / total) * 100) : 0;
         progressBar.style.width = percent + "%";
         sizeInfo.innerText = `${(loaded/1024/1024).toFixed(1)} MB / ${(total/1024/1024 || 0).toFixed(1)} MB (${percent}%)`;
     }
-
     return URL.createObjectURL(new Blob(chunks));
 }
 
-/**
- * 初期化
- */
 async function init() {
     try {
-        // 1. ライブラリがロードされるのを最大5秒待つ
-        const vision = await wait_for_lib(10);
+        // 1. ライブラリの存在を徹底確認
+        const vision = await get_vision_lib();
 
-        // 2. モデルのロード
+        // 2. モデルのダウンロード
         const blobUrl = await fetch_with_progress(model_url);
 
         // 3. WASMエンジンの準備
@@ -78,18 +63,15 @@ async function init() {
         });
 
         loadingOverlay.style.display = "none";
-        await start_camera();
+        start_camera();
     } catch (err) {
         const errorDiv = document.getElementById('error-display');
-        errorDiv.innerText = "Error: " + err;
+        errorDiv.innerText = "Error: " + err.message;
         errorDiv.style.display = "block";
         loadingOverlay.style.display = "none";
     }
 }
 
-/**
- * カメラ開始
- */
 async function start_camera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -99,35 +81,28 @@ async function start_camera() {
         video.srcObject = stream;
         video.onloadeddata = predict;
     } catch (e) {
-        alert("カメラの起動に失敗しました。ブラウザの設定でカメラを許可してください。");
+        alert("カメラの起動に失敗しました。");
     }
 }
 
-/**
- * 判定ループ
- */
 async function predict() {
     if (canvas.width !== video.videoWidth) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
     }
-
     const results = await detector.detectForVideo(video, performance.now());
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     results.detections.forEach(d => {
         const box = d.boundingBox;
         ctx.strokeStyle = "#00FF00";
         ctx.lineWidth = 4;
         ctx.strokeRect(box.originX, box.originY, box.width, box.height);
-
         ctx.fillStyle = "#00FF00";
         ctx.font = "bold 18px sans-serif";
         ctx.fillText(d.categories[0].categoryName, box.originX, box.originY - 5);
     });
-    
     requestAnimationFrame(predict);
 }
 
-// 実行
-window.onload = init;
+// すぐに開始
+init();
