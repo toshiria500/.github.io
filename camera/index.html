@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIカメラ：エラー修正版</title>
+    <title>AIカメラ：完全修正版</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background-color: #f0f0f0; }
-        .container { position: relative; display: inline-block; background: #000; border-radius: 10px; overflow: hidden; }
+        .container { position: relative; display: inline-block; background: #000; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         video { display: block; max-width: 100%; height: auto; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
         .progress-box { width: 80%; max-width: 300px; height: 10px; background: #ddd; border-radius: 5px; overflow: hidden; margin: 10px 0; }
         #progress-bar { width: 0%; height: 100%; background: #2ecc71; transition: width 0.2s; }
-        #error-message { color: red; font-weight: bold; margin: 20px; display: none; background: #fff; padding: 10px; border: 2px solid red; }
+        #error-message { color: red; font-weight: bold; margin: 20px; display: none; background: #fff; padding: 15px; border: 2px solid red; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -32,7 +31,7 @@
         <canvas id="output_canvas"></canvas>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@google/mediapipe-tasks-vision@0.10.3/vision_bundle.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js" crossorigin="anonymous"></script>
 
     <script>
         const video = document.getElementById('webcam');
@@ -41,25 +40,23 @@
         const errorDiv = document.getElementById('error-message');
         const progressBar = document.getElementById('progress-bar');
         const sizeInfo = document.getElementById('size-info');
-        const loadStatus = document.getElementById('load-status');
+        const loadingOverlay = document.getElementById('loading-overlay');
 
         let objectDetector;
         const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
 
-        // エラー表示用
         function showError(msg) {
             errorDiv.innerText = msg;
             errorDiv.style.display = "block";
-            document.getElementById('loading-overlay').style.display = "none";
+            loadingOverlay.style.display = "none";
         }
 
-        // 1. 進捗付きでモデルをダウンロード
-        async function loadModelWithProgress(url) {
+        // 進捗付きロード
+        async function fetchModel(url) {
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
                 xhr.responseType = "blob";
-
                 xhr.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const percent = (e.loaded / e.total) * 100;
@@ -67,71 +64,58 @@
                         sizeInfo.innerText = `${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB`;
                     }
                 };
-
-                xhr.onload = () => {
-                    if (xhr.status === 200) resolve(URL.createObjectURL(xhr.response));
-                    else reject(`モデルのダウンロードに失敗 (Status: ${xhr.status})`);
-                };
-                xhr.onerror = () => reject("ネットワークエラーが発生しました");
+                xhr.onload = () => (xhr.status === 200) ? resolve(URL.createObjectURL(xhr.response)) : reject("モデル取得失敗");
+                xhr.onerror = () => reject("通信エラー");
                 xhr.send();
             });
         }
 
-        // 2. メイン初期化
         async function init() {
             try {
-                // ライブラリが読み込まれているか確認
-                if (typeof vision === 'undefined' && typeof FilesetResolver === 'undefined') {
-                    // CDNの読み込みが遅い場合を考慮して少し待つ
-                    await new Promise(r => setTimeout(r, 1000));
-                }
+                // 【重要】ライブラリから直接クラスを取り出す（ReferenceError対策）
+                const { ObjectDetector, FilesetResolver } = await bundle; 
 
-                const modelUrl = await loadModelWithProgress(MODEL_URL);
+                const modelUrl = await fetchModel(MODEL_URL);
                 
-                // MediaPipeエンジンの準備
-                const wasmFiles = await mpTasksVision.FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@google/mediapipe-tasks-vision@0.10.3/wasm"
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
                 );
 
-                objectDetector = await mpTasksVision.ObjectDetector.createFromOptions(wasmFiles, {
+                objectDetector = await ObjectDetector.createFromOptions(vision, {
                     baseOptions: { modelAssetPath: modelUrl, delegate: "GPU" },
                     scoreThreshold: 0.5,
                     runningMode: "VIDEO"
                 });
 
-                document.getElementById('loading-overlay').style.display = "none";
+                loadingOverlay.style.display = "none";
                 startCamera();
             } catch (e) {
                 showError("初期化エラー: " + e);
-                console.error(e);
             }
         }
 
-        // 3. カメラ起動（外カメ判別）
         async function startCamera() {
+            const videoConfig = { width: 640, height: 480 };
             try {
-                // まず外カメラを試す
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: "environment" }, width: 640 },
+                // 外カメラを試す
+                video.srcObject = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: "environment" }, ...videoConfig },
                     audio: false
                 });
-                video.srcObject = stream;
             } catch (e) {
-                // 失敗したら「外カメ無し」として普通に起動
+                // 失敗時は内カメラ等
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { width: 640 },
+                    video.srcObject = await navigator.mediaDevices.getUserMedia({
+                        video: videoConfig,
                         audio: false
                     });
-                    video.srcObject = stream;
                 } catch (e2) {
-                    showError("カメラが起動できません。設定を確認してください。");
+                    showError("カメラを起動できませんでした。");
                 }
             }
-            video.addEventListener('loadeddata', predict);
+            video.onloadeddata = predict;
         }
 
-        // 4. ループ判定
         async function predict() {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
@@ -143,10 +127,9 @@
                 canvasCtx.strokeStyle = "#00FF00";
                 canvasCtx.lineWidth = 3;
                 canvasCtx.strokeRect(box.originX, box.originY, box.width, box.height);
-                
                 canvasCtx.fillStyle = "#00FF00";
                 canvasCtx.font = "18px bold sans-serif";
-                canvasCtx.fillText(`${d.categories[0].categoryName}`, box.originX, box.originY - 5);
+                canvasCtx.fillText(`${d.categories[0].categoryName}`, box.originX, box.originY > 20 ? box.originY - 5 : 20);
             });
             requestAnimationFrame(predict);
         }
