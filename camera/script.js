@@ -1,30 +1,37 @@
-// 定数設定
-const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
+/**
+ * script.js - MediaPipe Object Detection Logic
+ */
 
-// 要素の取得
+// --- 設定値 ---
+const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
+const WASM_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
+
+// --- 要素取得 ---
 const video = document.getElementById('webcam');
 const canvas = document.getElementById('output_canvas');
-const canvasCtx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 const progressBar = document.getElementById('progress-bar');
 const sizeInfo = document.getElementById('size-info');
-const errorDiv = document.getElementById('error-message');
+const errorDisplay = document.getElementById('error-display');
+const loadingOverlay = document.getElementById('loading-overlay');
+const statusMsg = document.getElementById('status-msg');
 
 let objectDetector;
+let lastVideoTime = -1;
 
 /**
  * エラー表示
  */
-function showError(msg) {
-    errorDiv.innerText = "エラー: " + msg;
-    errorDiv.style.display = "block";
-    document.getElementById('loading-overlay').style.display = "none";
+function reportError(message) {
+    errorDisplay.style.display = "block";
+    errorDisplay.innerHTML = `<strong>エラーが発生しました:</strong><br>${message}`;
+    loadingOverlay.style.display = "none";
 }
 
 /**
- * 進捗付きでモデルをダウンロード
+ * モデルをダウンロードして進捗を計算
  */
-async function fetchModelWithProgress(url) {
+async function downloadModel(url) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
@@ -32,133 +39,156 @@ async function fetchModelWithProgress(url) {
 
         xhr.onprogress = (e) => {
             if (e.lengthComputable) {
-                const percent = (e.loaded / e.total) * 100;
+                const percent = Math.round((e.loaded / e.total) * 100);
+                const loadedMB = (e.loaded / 1024 / 1024).toFixed(1);
+                const totalMB = (e.total / 1024 / 1024).toFixed(1);
+                
                 progressBar.style.width = percent + "%";
-                sizeInfo.innerText = `${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB`;
+                sizeInfo.innerText = `${loadedMB} MB / ${totalMB} MB (${percent}%)`;
             }
         };
 
         xhr.onload = () => {
-            if (xhr.status === 200) resolve(URL.createObjectURL(xhr.response));
-            else reject(`モデルの取得に失敗 (Status: ${xhr.status})`);
+            if (xhr.status === 200) {
+                resolve(URL.createObjectURL(xhr.response));
+            } else {
+                reject(`モデル取得失敗 (HTTP ${xhr.status})`);
+            }
         };
-        xhr.onerror = () => reject("ネットワークエラーが発生しました。");
+        xhr.onerror = () => reject("ネットワークエラーによりモデルをダウンロードできませんでした。");
         xhr.send();
     });
 }
 
 /**
- * 初期化処理
+ * 初期化
  */
-async function initialize() {
+async function startApp() {
     try {
-        // 1. ライブラリがロードされるのを待つ (ReferenceError対策)
+        // MediaPipeライブラリ(vision_bundle.js)の読み込みを1秒だけ待機する安全策
         if (!window.tasksVision) {
-            console.log("ライブラリの準備を待っています...");
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(r => setTimeout(r, 1000));
         }
 
         const vision = window.tasksVision;
         if (!vision) {
-            throw new Error("MediaPipeライブラリが見つかりません。ネット接続を確認してください。");
+            throw new Error("MediaPipeライブラリが見つかりません。通信状態を確認してください。");
         }
 
-        // 2. モデルのロード
-        const modelBlobUrl = await fetchModelWithProgress(MODEL_URL);
+        // モデルファイルをダウンロード
+        const blobUrl = await downloadModel(MODEL_URL);
 
-        // 3. Wasmエンジンの準備
-        const fileset = await vision.FilesetResolver.forVisionTasks(WASM_URL);
+        // WebAssemblyエンジンの準備
+        const fileset = await vision.FilesetResolver.forVisionTasks(WASM_PATH);
 
-        // 4. ディテクターの作成
+        // 物体検知器の生成
         objectDetector = await vision.ObjectDetector.createFromOptions(fileset, {
             baseOptions: {
-                modelAssetPath: modelBlobUrl,
+                modelAssetPath: blobUrl,
                 delegate: "GPU"
             },
             scoreThreshold: 0.5,
             runningMode: "VIDEO"
         });
 
-        // ロード画面を非表示にしてカメラ開始
-        document.getElementById('loading-overlay').style.display = "none";
-        startCamera();
+        loadingOverlay.style.display = "none";
+        statusMsg.innerText = "カメラを準備しています...";
+        
+        initCamera();
 
     } catch (err) {
-        showError(err);
-        console.error(err);
+        reportError(err);
     }
 }
 
 /**
- * カメラの起動
+ * カメラ制御（外カメ優先ロジック）
  */
-async function startCamera() {
-    const config = { width: 640, height: 480 };
+async function initCamera() {
+    const constraints = {
+        video: { width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false
+    };
+
     try {
-        // 外カメラを試みる
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" }, ...config },
-            audio: false
-        });
-        video.srcObject = stream;
+        // 外カメラ(environment)を「厳密に(exact)」指定して試行
+        const rearConstraints = {
+            ...constraints,
+            video: { ...constraints.video, facingMode: { exact: "environment" } }
+        };
+        video.srcObject = await navigator.mediaDevices.getUserMedia(rearConstraints);
+        statusMsg.innerText = "外カメラ（背面）稼働中";
     } catch (e) {
-        // 外カメラがない場合は標準カメラ
+        // 外カメがない・拒否された場合は通常のカメラで再試行
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: config,
-                audio: false
-            });
-            video.srcObject = stream;
+            video.srcObject = await navigator.mediaDevices.getUserMedia(constraints);
+            statusMsg.innerText = "標準カメラ稼働中（外カメ非対応）";
         } catch (e2) {
-            showError("カメラの権限が拒否されたか、デバイスが見つかりません。");
+            reportError("カメラの使用が許可されていないか、カメラデバイスが見つかりません。");
+            return;
         }
     }
-    video.onloadeddata = predictLoop;
+
+    video.onloadeddata = () => {
+        runDetectionLoop();
+    };
 }
 
 /**
- * 判定ループ
+ * リアルタイムループ
  */
-async function predictLoop() {
-    // キャンバスサイズ調整
+async function runDetectionLoop() {
+    // キャンバスをビデオ解像度に合わせる
     if (canvas.width !== video.videoWidth) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
     }
 
-    // AI判定
-    const startTimeMs = performance.now();
-    const detections = await objectDetector.detectForVideo(video, startTimeMs);
+    // 映像のコマが進んだ時だけ判定を実行
+    if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const results = await objectDetector.detectForVideo(video, performance.now());
+        renderDetections(results);
+    }
 
-    // 描画
-    drawResults(detections);
-
-    // 次のフレームへ
-    window.requestAnimationFrame(predictLoop);
+    requestAnimationFrame(runDetectionLoop);
 }
 
 /**
- * 結果の描画
+ * 判定結果を描画
  */
-function drawResults(results) {
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+function renderDetections(results) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     results.detections.forEach(d => {
-        const box = d.boundingBox;
+        const { originX, originY, width, height } = d.boundingBox;
         const category = d.categories[0];
+        
+        // 日本語ラベル用マップ
+        const jaLabels = {
+            "person": "人", "cell phone": "スマホ", "laptop": "パソコン",
+            "cup": "コップ", "bottle": "ボトル", "chair": "椅子", "dog": "犬", "cat": "猫"
+        };
+        const name = jaLabels[category.categoryName] || category.categoryName;
+        const score = Math.round(category.score * 100);
 
-        // 枠
-        canvasCtx.strokeStyle = "#00FF00";
-        canvasCtx.lineWidth = 3;
-        canvasCtx.strokeRect(box.originX, box.originY, box.width, box.height);
+        // 枠の描画
+        ctx.strokeStyle = "#00FF00";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(originX, originY, width, height);
 
-        // ラベル
-        canvasCtx.fillStyle = "#00FF00";
-        canvasCtx.font = "18px sans-serif";
-        const text = `${category.categoryName} (${Math.round(category.score * 100)}%)`;
-        canvasCtx.fillText(text, box.originX, box.originY > 20 ? box.originY - 5 : 20);
+        // ラベルの背景
+        ctx.fillStyle = "#00FF00";
+        ctx.font = "bold 18px Arial";
+        const labelStr = `${name} (${score}%)`;
+        const textWidth = ctx.measureText(labelStr).width;
+        ctx.fillRect(originX, originY - 30, textWidth + 10, 30);
+
+        // ラベルの文字
+        ctx.fillStyle = "#000";
+        ctx.fillText(labelStr, originX + 5, originY - 8);
     });
 }
 
-// 実行
-initialize();
+// アプリ開始
+window.onload = startApp;
