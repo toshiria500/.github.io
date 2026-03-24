@@ -11,9 +11,29 @@ const model_url = "https://storage.googleapis.com/mediapipe-models/object_detect
 const wasm_url = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
 
 /**
- * プログレスバー付きダウンロード
+ * ライブラリの読み込みを待つ
  */
-async function fetchWithProgress(url) {
+function wait_for_lib(limit = 10) {
+    return new Promise((resolve, reject) => {
+        let count = 0;
+        const check = setInterval(() => {
+            if (window.tasksVision) {
+                clearInterval(check);
+                resolve(window.tasksVision);
+            }
+            if (count >= limit) {
+                clearInterval(check);
+                reject("MediaPipe library not found. Check your network or script tag.");
+            }
+            count++;
+        }, 500);
+    });
+}
+
+/**
+ * プログレスバー付きロード
+ */
+async function fetch_with_progress(url) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     
@@ -28,29 +48,29 @@ async function fetchWithProgress(url) {
         chunks.push(value);
         loaded += value.length;
         
-        const percent = Math.round((loaded / total) * 100);
+        const percent = total ? Math.round((loaded / total) * 100) : 0;
         progressBar.style.width = percent + "%";
-        sizeInfo.innerText = `${(loaded/1024/1024).toFixed(1)} MB / ${(total/1024/1024).toFixed(1)} MB (${percent}%)`;
+        sizeInfo.innerText = `${(loaded/1024/1024).toFixed(1)} MB / ${(total/1024/1024 || 0).toFixed(1)} MB (${percent}%)`;
     }
 
     return URL.createObjectURL(new Blob(chunks));
 }
 
 /**
- * メイン初期化
+ * 初期化
  */
 async function init() {
     try {
-        const vision = window.tasksVision;
-        if (!vision) throw new Error("MediaPipe library not found.");
+        // 1. ライブラリがロードされるのを最大5秒待つ
+        const vision = await wait_for_lib(10);
 
-        // モデルのロード
-        const blobUrl = await fetchWithProgress(model_url);
+        // 2. モデルのロード
+        const blobUrl = await fetch_with_progress(model_url);
 
-        // WASMエンジンの準備
+        // 3. WASMエンジンの準備
         const fileset = await vision.FilesetResolver.forVisionTasks(wasm_url);
 
-        // 検知器の作成
+        // 4. 検知器の作成
         detector = await vision.ObjectDetector.createFromOptions(fileset, {
             baseOptions: { modelAssetPath: blobUrl, delegate: "GPU" },
             scoreThreshold: 0.5,
@@ -58,10 +78,10 @@ async function init() {
         });
 
         loadingOverlay.style.display = "none";
-        await startCamera();
+        await start_camera();
     } catch (err) {
         const errorDiv = document.getElementById('error-display');
-        errorDiv.innerText = "Error: " + err.message;
+        errorDiv.innerText = "Error: " + err;
         errorDiv.style.display = "block";
         loadingOverlay.style.display = "none";
     }
@@ -70,7 +90,7 @@ async function init() {
 /**
  * カメラ開始
  */
-async function startCamera() {
+async function start_camera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: "environment" }, width: 640 },
@@ -79,7 +99,7 @@ async function startCamera() {
         video.srcObject = stream;
         video.onloadeddata = predict;
     } catch (e) {
-        throw new Error("カメラの起動に失敗しました。設定を確認してください。");
+        alert("カメラの起動に失敗しました。ブラウザの設定でカメラを許可してください。");
     }
 }
 
@@ -87,8 +107,10 @@ async function startCamera() {
  * 判定ループ
  */
 async function predict() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (canvas.width !== video.videoWidth) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+    }
 
     const results = await detector.detectForVideo(video, performance.now());
     
@@ -107,5 +129,5 @@ async function predict() {
     requestAnimationFrame(predict);
 }
 
-// ページロード時に実行
+// 実行
 window.onload = init;
