@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIカメラ：完全修正版</title>
+    <title>AIカメラ：ライブラリ確認強化版</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 20px; text-align: center; background-color: #f0f0f0; }
-        .container { position: relative; display: inline-block; background: #000; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .container { position: relative; display: inline-block; background: #000; border-radius: 10px; overflow: hidden; margin-top: 10px; border: 4px solid #333; }
         video { display: block; max-width: 100%; height: auto; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
-        .progress-box { width: 80%; max-width: 300px; height: 10px; background: #ddd; border-radius: 5px; overflow: hidden; margin: 10px 0; }
-        #progress-bar { width: 0%; height: 100%; background: #2ecc71; transition: width 0.2s; }
-        #error-message { color: red; font-weight: bold; margin: 20px; display: none; background: #fff; padding: 15px; border: 2px solid red; border-radius: 8px; }
+        .progress-box { width: 80%; max-width: 300px; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; margin: 15px 0; border: 1px solid #ddd; }
+        #progress-bar { width: 0%; height: 100%; background: #2ecc71; }
+        #error-message { color: #d32f2f; font-weight: bold; margin: 20px; display: none; background: #ffebee; padding: 15px; border: 1px solid #d32f2f; border-radius: 8px; font-size: 14px; text-align: left; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <h3 id="load-status">AIを準備しています...</h3>
+        <h3 id="load-status">ライブラリを読み込み中...</h3>
         <div class="progress-box"><div id="progress-bar"></div></div>
-        <div id="size-info">0 MB / 0 MB</div>
+        <div id="size-info">ネットワークを確認しています...</div>
     </div>
 
     <h1>AI物体検知</h1>
     <div id="error-message"></div>
 
     <div class="container">
-        <video id="webcam" autoplay playsinline></video>
+        <video id="webcam" autoplay playsinline muted></video>
         <canvas id="output_canvas"></canvas>
     </div>
 
@@ -40,18 +40,18 @@
         const errorDiv = document.getElementById('error-message');
         const progressBar = document.getElementById('progress-bar');
         const sizeInfo = document.getElementById('size-info');
-        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadStatus = document.getElementById('load-status');
 
         let objectDetector;
         const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
 
         function showError(msg) {
-            errorDiv.innerText = msg;
+            errorDiv.innerHTML = `<strong>エラーが発生しました:</strong><br>${msg}`;
             errorDiv.style.display = "block";
-            loadingOverlay.style.display = "none";
+            document.getElementById('loading-overlay').style.display = "none";
         }
 
-        // 進捗付きロード
+        // モデルファイルのダウンロード（進捗表示付き）
         async function fetchModel(url) {
             return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
@@ -61,66 +61,76 @@
                     if (e.lengthComputable) {
                         const percent = (e.loaded / e.total) * 100;
                         progressBar.style.width = percent + "%";
-                        sizeInfo.innerText = `${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB`;
+                        sizeInfo.innerText = `モデル取得中: ${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB`;
                     }
                 };
-                xhr.onload = () => (xhr.status === 200) ? resolve(URL.createObjectURL(xhr.response)) : reject("モデル取得失敗");
-                xhr.onerror = () => reject("通信エラー");
+                xhr.onload = () => xhr.status === 200 ? resolve(URL.createObjectURL(xhr.response)) : reject(`モデル(TFLite)の取得失敗: ${xhr.status}`);
+                xhr.onerror = () => reject("ネットワークエラーでモデルが落とせませんでした。");
                 xhr.send();
             });
         }
 
         async function init() {
             try {
-                // 【重要】ライブラリから直接クラスを取り出す（ReferenceError対策）
-                const { ObjectDetector, FilesetResolver } = await bundle; 
+                // 【対策】JSファイルが正しく読み込まれているか、変数を確認
+                // vision_bundle.js を読み込むと、グローバルに「fileset_resolver」などが展開される場合があります
+                if (typeof Array !== 'function') throw new Error("基本JS実行環境に異常があります。");
 
+                loadStatus.innerText = "AIモデルをダウンロード中...";
                 const modelUrl = await fetchModel(MODEL_URL);
-                
-                const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
-                );
 
-                objectDetector = await ObjectDetector.createFromOptions(vision, {
+                // 【対策】MediaPipeの各クラスを安全に取得
+                // バージョンによって場所が変わるため、複数の候補から探します
+                const vision = window.tasksVision || window.mpTasksVision || (typeof createObjectDetector === 'function' ? window : null);
+                
+                // もし直接アクセスできない場合は FilesetResolver を手動で探す
+                const resolverPath = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
+                
+                // FilesetResolver, ObjectDetector の実体を探す
+                const NS = window.tasksVision || {};
+                if (!NS.FilesetResolver) {
+                    throw new Error("JSライブラリ(MediaPipe)の読み込みに失敗しました。外部ネットワークへのアクセスが許可されているか確認してください。");
+                }
+
+                const wasmFiles = await NS.FilesetResolver.forVisionTasks(resolverPath);
+
+                objectDetector = await NS.ObjectDetector.createFromOptions(wasmFiles, {
                     baseOptions: { modelAssetPath: modelUrl, delegate: "GPU" },
                     scoreThreshold: 0.5,
                     runningMode: "VIDEO"
                 });
 
-                loadingOverlay.style.display = "none";
-                startCamera();
+                document.getElementById('loading-overlay').style.display = "none";
+                await startCamera();
             } catch (e) {
-                showError("初期化エラー: " + e);
+                showError(e.message || e);
+                console.error(e);
             }
         }
 
         async function startCamera() {
-            const videoConfig = { width: 640, height: 480 };
             try {
-                // 外カメラを試す
-                video.srcObject = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: "environment" }, ...videoConfig },
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" }, width: 640 },
                     audio: false
                 });
+                video.srcObject = stream;
             } catch (e) {
-                // 失敗時は内カメラ等
                 try {
-                    video.srcObject = await navigator.mediaDevices.getUserMedia({
-                        video: videoConfig,
-                        audio: false
-                    });
+                    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
                 } catch (e2) {
-                    showError("カメラを起動できませんでした。");
+                    showError("カメラが起動できません。ブラウザの設定で許可してください。");
                 }
             }
             video.onloadeddata = predict;
         }
 
         async function predict() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            if (canvas.width !== video.videoWidth) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }
             const results = await objectDetector.detectForVideo(video, performance.now());
-            
             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
             results.detections.forEach(d => {
                 const box = d.boundingBox;
@@ -134,7 +144,8 @@
             requestAnimationFrame(predict);
         }
 
-        init();
+        // ページ読み込み完了後に実行
+        window.onload = init;
     </script>
 </body>
 </html>
