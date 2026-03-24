@@ -18,9 +18,9 @@
 <body>
 
     <div id="loading-overlay">
-        <h2 id="load-status">AIを準備中...</h2>
+        <h2 id="load-status">AIをロード中...</h2>
         <div class="progress-box"><div id="progress-bar"></div></div>
-        <div id="size-info">0.0 MB / 0.0 MB (0%)</div>
+        <div id="size-info">ライブラリを確認しています...</div>
     </div>
 
     <div id="error-display"></div>
@@ -31,7 +31,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.js" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
+    
+    <script src="script.js" defer></script>
 
 </body>
 </html>
