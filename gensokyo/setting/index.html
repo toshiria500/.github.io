@@ -44,8 +44,6 @@
 
   label { display: block; color: var(--text-accent); margin-bottom: 12px; font-weight: bold; border-left: 3px solid var(--red-eye); padding-left: 10px; }
 
-  .hidden-user { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-
   input[type="password"] {
     width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid var(--purple-main);
     color: #fff; padding: 14px; border-radius: 8px; font-size: 1rem; outline: none; font-family: var(--font-serif);
@@ -57,9 +55,7 @@
     display: inline-flex; align-items: center; gap: 8px; margin-top: 5px; padding: 10px 18px;
     background: rgba(212, 175, 55, 0.1); border: 1px solid var(--text-accent);
     color: var(--text-accent); text-decoration: none; border-radius: 20px; font-size: 0.85rem;
-    transition: 0.3s;
   }
-  .external-link-btn:hover { background: var(--text-accent); color: #000; }
 
   button {
     width: 100%; padding: 16px; border-radius: 10px; border: none; font-family: var(--font-serif);
@@ -68,16 +64,8 @@
 
   .btn-save { background: linear-gradient(135deg, var(--purple-main), var(--purple-dark)); color: #fff; margin-bottom: 15px; }
   .btn-back { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--purple-main); }
-  .btn-reset { background: transparent; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3); font-size: 0.9rem; margin-top: 20px; }
-
-  #modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9); display: none; align-items: center; justify-content: center; z-index: 2000;
-  }
-  .modal-content { background: var(--purple-dark); border: 2px solid var(--red-eye); padding: 30px; border-radius: 15px; text-align: center; width: 90%; max-width: 400px; }
 
   #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--text-accent); color: #000; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; font-weight: bold; }
-  footer { padding: 25px; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.8rem; }
 </style>
 </head>
 <body>
@@ -90,21 +78,16 @@
   <form id="settings-form" onsubmit="saveSettings(event)">
     <div class="card">
       <label for="apiKey">境界の鍵 (Gemini API Key)</label>
-      <input type="text" name="username" value="GeminiUser" class="hidden-user" autocomplete="username">
-      <input type="password" id="apiKey" name="password" placeholder="鍵を入力してちょうだい..." autocomplete="current-password" required>
+      <input type="password" id="apiKey" placeholder="AI Studioで発行したAIza...から始まる鍵を入力" required>
       
       <div class="description">
         物語を紡ぐために必要な「通行証」よ。<br>
-        もし、まだ「鍵」を持っていないのなら、外の世界（Google AI Studio）へ取りに行ってらっしゃい。
+        コピーしたときに<b>余計なスペース（空白）</b>が入っていると動かないから気をつけて。
       </div>
 
       <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="external-link-btn">
         Google AI Studio で鍵を入手する <i class="fas fa-external-link-alt"></i>
       </a>
-      
-      <div style="border-top: 1px solid rgba(157, 78, 221, 0.2); margin-top: 25px; padding-top: 10px;">
-        <button type="button" class="btn-reset" onclick="showResetModal()">記憶をすべて消去する</button>
-      </div>
     </div>
 
     <button type="submit" class="btn-save">設定を保存する</button>
@@ -112,22 +95,9 @@
   </form>
 </main>
 
-<div id="modal-overlay">
-  <div class="modal-content">
-    <h2 style="color:var(--red-eye); margin-bottom:15px;">境界の破棄</h2>
-    <p>本当に、あなたとの思い出をすべて消し去ってもいいのかしら？</p>
-    <div style="display:flex; gap:10px; margin-top:25px;">
-      <button type="button" style="background:#444; color:#fff; flex:1;" onclick="hideResetModal()">やめておく</button>
-      <button type="button" style="background:var(--red-eye); color:#fff; flex:1;" onclick="executeReset()">消去する</button>
-    </div>
-  </div>
-</div>
-
 <div id="toast">設定を保存したわ。</div>
-<footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
 
 <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
   window.onload = () => {
     const savedKey = localStorage.getItem("GEMINI_API_KEY");
     if (savedKey) document.getElementById("apiKey").value = savedKey;
@@ -135,22 +105,15 @@
 
   function saveSettings(event) {
     event.preventDefault();
-    localStorage.setItem("GEMINI_API_KEY", document.getElementById("apiKey").value.trim());
+    // 保存時に空白を徹底的に除去（前後および改行）
+    const rawValue = document.getElementById("apiKey").value;
+    const cleanKey = rawValue.replace(/[\s\n\r]/g, '');
+    
+    localStorage.setItem("GEMINI_API_KEY", cleanKey);
+    
     const toast = document.getElementById("toast");
     toast.style.display = "block"; 
     setTimeout(() => { toast.style.display = "none"; }, 2500);
-  }
-
-  const modal = document.getElementById("modal-overlay");
-  function showResetModal() { modal.style.display = "flex"; }
-  function hideResetModal() { modal.style.display = "none"; }
-  function executeReset() {
-    localStorage.clear(); 
-    hideResetModal();
-    const toast = document.getElementById("toast"); 
-    toast.textContent = "……すべて忘れたわ。"; 
-    toast.style.display = "block";
-    setTimeout(() => { location.reload(); }, 1500);
   }
 </script>
 </body>
