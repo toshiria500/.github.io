@@ -1,31 +1,177 @@
---- API Keys and Secrets ---
-絶対にGitHubに公開してはいけない設定ファイル
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
---- Dependencies ---
-ライブラリ本体（npm installで再現できるためアップロード不要）
-node_modules/
-/dist
-/.next/
-/out/
-/build
---- Debug logs ---
-エラーログなどの一時ファイル
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs
-*.log
---- OS & IDE Specific ---
-OSやエディタが自動生成するキャッシュファイル
-.DS_Store
-.idea/
-.vscode/
-*.swp
-Thumbs.db
---- Environment Template ---
-.env.example はテンプレートなので無視リストには入れない（GitHubに上げる）
-!.env.example
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>幻想郷ジェネレーター - 境界の語り部</title>
+<meta name="description" content="八雲紫があなたの幻想郷での運命を語ります。">
+
+<!-- OGP設定 -->
+<meta property="og:title" content="幻想郷ジェネレーター - 境界の語り部">
+<meta property="og:description" content="八雲紫があなたの幻想郷での運命を語ります。">
+<meta property="og:image" content="images/ogp3.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="images/ogp3.png">
+
+<!-- Markdown変換用ライブラリ -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+  :root {
+    --bg-color: #0d0616;
+    --text-main: #f8f0fc;
+    --text-accent: #d4af37;
+    --purple-main: #6b2c91;
+    --purple-light: #9d4edd;
+    --red-eye: #ff1a1a;
+    --user-bubble: #3a3d52;
+    --bot-msg-bg: rgba(20, 10, 30, 0.85);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    background: linear-gradient(90deg, #000000, var(--purple-main), #000000);
+    color: var(--text-accent);
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-bottom: 2px solid var(--red-eye);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .setting-link {
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+
+  #chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background-image: radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.15) 0%, transparent 80%),
+                      url('https://www.transparenttextures.com/patterns/dark-matter.png');
+  }
+
+  .botContainer { display: flex; align-items: flex-start; gap: 14px; max-width: 95%; animation: fadeIn 0.4s ease-out; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .icon-wrapper {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    position: relative;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
+    box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
+    cursor: pointer;
+  }
+
+  .botIcon { width: 100%; height: 100%; border-radius: 50%; background-color: #000; object-fit: cover; display: block; }
+
+  .botText {
+    background: var(--bot-msg-bg);
+    border: 1px solid rgba(157, 78, 221, 0.4);
+    border-radius: 4px 20px 20px 20px;
+    padding: 14px 18px;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+  }
+
+  .size-tip {
+    font-size: 11px;
+    color: var(--text-accent);
+    margin-top: 8px;
+    display: block;
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+    line-height: 1.4;
+    opacity: 0.95;
+    border-left: 2px solid var(--red-eye);
+    padding-left: 8px;
+  }
+
+  .userContainer { display: flex; justify-content: flex-end; width: 100%; animation: fadeIn 0.4s ease-out; }
+  .userBubble {
+    background: var(--user-bubble);
+    color: #fff;
+    border-radius: 20px 4px 20px 20px;
+    padding: 12px 18px;
+    max-width: 80%;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+  }
+
+  /* --- トリミングモーダル --- */
+  #cropModal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .crop-viewport {
+    width: 280px;
+    height: 280px;
+    border: 2px solid var(--purple-light);
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+    cursor: move;
+    touch-action: none;
+  }
+  #cropImage {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+    user-select: none;
+  }
+  .crop-controls {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .crop-slider { width: 100%; accent-color: var(--purple-light); }
+  .crop-btns { display: flex; gap: 10px; }
+  .crop-btns button {
+    flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;
+  
