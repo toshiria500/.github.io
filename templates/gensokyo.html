@@ -174,4 +174,299 @@
   .crop-btns { display: flex; gap: 10px; }
   .crop-btns button {
     flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;
-  
+  }
+  .btn-cancel { background: #444; color: white; }
+  .btn-save { background: var(--purple-main); color: white; }
+
+  /* --- 入力フォーム --- */
+  #bottom-area { background: #000; border-top: 2px solid var(--purple-main); }
+  #storyForm {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px;
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 16px;
+  }
+  .full-width { grid-column: span 2; }
+  input {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid #444; color: white;
+    padding: 12px 15px; border-radius: 8px; font-size: 16px; outline: none;
+  }
+  button[type="submit"] {
+    grid-column: span 2; background: linear-gradient(135deg, var(--purple-main), #4b0082);
+    color: white; border: 1px solid var(--purple-light); padding: 14px;
+    font-weight: bold; border-radius: 8px; cursor: pointer;
+    font-family: 'Hiragino Mincho ProN', serif;
+  }
+
+  .site-footer {
+    text-align: center; padding: 15px 10px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);
+    background: #000; font-family: 'Hiragino Mincho ProN', serif; border-top: 1px solid #222;
+  }
+  .footer-links a { color: var(--purple-light); text-decoration: none; margin: 0 5px; }
+
+  .loading-eye { display: inline-block; animation: blink 1.2s infinite; color: var(--text-accent); }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  @media (max-width: 600px) {
+    #storyForm { grid-template-columns: 1fr; }
+    .full-width, button[type="submit"] { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <span>⛩ 幻想郷ジェネレーター</span>
+    <a href="./Setting.html" class="setting-link">⚙ 設定</a>
+  </header>
+
+  <div id="cropModal">
+    <h3 style="color:var(--text-accent); margin-bottom:15px;">境界の姿を調整してちょうだい</h3>
+    <div class="crop-viewport" id="cropViewport">
+      <img id="cropImage" src="">
+    </div>
+    <div class="crop-controls">
+      <input type="range" class="crop-slider" id="zoomSlider" min="0.1" max="3" step="0.01" value="1">
+      <div class="crop-btns">
+        <button class="btn-cancel" onclick="closeCropModal()">取り消し</button>
+        <button class="btn-save" onclick="saveCroppedIcon()">定着させる</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="iconInput" accept="image/*" style="display:none">
+
+  <main id="chat-container">
+    <div class="botContainer" id="first-msg">
+      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
+        <img src="" class="botIcon" id="displayIcon" alt="八雲紫" onerror="handleIconError(this)">
+      </div>
+      <div class="botText">
+        あらあら、外の世界から迷い込んできたの？<br>
+        歓迎するわ、幻想郷へ。<br><br>
+        あなたの名前や、持っている物を教えてちょうだい。<br>
+        この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。<br>
+        <span class="size-tip">
+          ※姿（アイコン）をタップして変えられるわよ。原作の私、別の世界線（ロスワ）の私、あるいは誰かが描いた私……どのような「八雲紫」であっても、私は私。あなたの好む境界の姿を見せてちょうだい（推奨: 400x400px）
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <div id="bottom-area">
+    <form id="storyForm" autocomplete="off">
+      <input id="name" placeholder="名前" required autocomplete="off">
+      <input id="action" placeholder="行動" required autocomplete="off">
+      <input id="item" placeholder="持ち物" required autocomplete="off">
+      <input id="companion" placeholder="お供" required autocomplete="off">
+      <input id="enemy" class="full-width" placeholder="遭遇する者 (任意)" autocomplete="off">
+      <button type="submit">👁️ 境界を覗く</button>
+    </form>
+
+    <footer class="site-footer">
+      <div class="footer-links">
+        <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">生存率診断(元ネタ) <i class="fas fa-external-link-alt"></i></a>
+      </div>
+      <div class="copyright">Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
+    </footer>
+  </div>
+
+<script>
+  // 年号を2025から現在の年までに更新
+  const currentYear = new Date().getFullYear();
+  document.getElementById("year").textContent = currentYear;
+
+  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V2';
+  const displayIcon = document.getElementById('displayIcon');
+  const cropModal = document.getElementById('cropModal');
+  const cropImage = document.getElementById('cropImage');
+  const zoomSlider = document.getElementById('zoomSlider');
+  const viewport = document.getElementById('cropViewport');
+
+  let imgState = { x: 0, y: 0, scale: 1, baseScale: 1 };
+  let isDragging = false;
+  let startX, startY;
+
+  function applyIconToElement(imgElement, src) {
+    if (!src || src === "null" || src === "") return;
+    imgElement.src = src;
+    imgElement.style.display = 'block';
+    const label = imgElement.parentElement.querySelector('.fallback-label');
+    if (label) label.remove();
+  }
+
+  function initIcon() {
+    const saved = localStorage.getItem(STORAGE_KEY_ICON);
+    if (saved) {
+      applyIconToElement(displayIcon, saved);
+    } else {
+      displayIcon.src = '../static/bot_icon.png';
+    }
+  }
+
+  window.addEventListener('load', initIcon);
+  setTimeout(initIcon, 100);
+
+  function handleIconError(img) {
+    const saved = localStorage.getItem(STORAGE_KEY_ICON);
+    if (saved && img.src !== saved) {
+      applyIconToElement(img, saved);
+      return;
+    }
+    img.style.display = 'none';
+    const parent = img.parentElement;
+    if (!parent.querySelector('.fallback-label')) {
+      const label = document.createElement('div');
+      label.className = 'fallback-label';
+      label.style.cssText = 'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;';
+      label.innerText = '紫';
+      parent.appendChild(label);
+    }
+  }
+
+  document.getElementById('iconInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      cropImage.src = event.target.result;
+      cropImage.onload = () => {
+        const ratioW = 280 / cropImage.naturalWidth;
+        const ratioH = 280 / cropImage.naturalHeight;
+        imgState.baseScale = Math.max(ratioW, ratioH);
+        imgState.scale = imgState.baseScale;
+        imgState.x = (280 - cropImage.naturalWidth * imgState.scale) / 2;
+        imgState.y = (280 - cropImage.naturalHeight * imgState.scale) / 2;
+        zoomSlider.min = imgState.baseScale;
+        zoomSlider.max = imgState.baseScale * 5;
+        zoomSlider.value = imgState.scale;
+        applyTransform();
+        cropModal.style.display = 'flex';
+      };
+    };
+    reader.readAsDataURL(file);
+  });
+
+  viewport.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', doDrag);
+  window.addEventListener('mouseup', endDrag);
+  viewport.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0]); }, {passive: false});
+  window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); doDrag(e.touches[0]); }, {passive: false});
+  window.addEventListener('touchend', endDrag);
+
+  function startDrag(e) { isDragging = true; startX = e.clientX - imgState.x; startY = e.clientY - imgState.y; }
+  function doDrag(e) {
+    if (!isDragging) return;
+    imgState.x = e.clientX - startX;
+    imgState.y = e.clientY - startY;
+    applyTransform();
+  }
+  function endDrag() { isDragging = false; }
+
+  zoomSlider.addEventListener('input', (e) => {
+    const oldScale = imgState.scale;
+    imgState.scale = parseFloat(e.target.value);
+    imgState.x -= (cropImage.naturalWidth * imgState.scale - cropImage.naturalWidth * oldScale) / 2;
+    imgState.y -= (cropImage.naturalHeight * imgState.scale - cropImage.naturalHeight * oldScale) / 2;
+    applyTransform();
+  });
+
+  function applyTransform() {
+    cropImage.style.transform = `translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`;
+  }
+
+  function closeCropModal() { cropModal.style.display = 'none'; document.getElementById('iconInput').value = ""; }
+
+  function saveCroppedIcon() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    const ratio = 400 / 280;
+    ctx.drawImage(cropImage, imgState.x * ratio, imgState.y * ratio, cropImage.naturalWidth * imgState.scale * ratio, cropImage.naturalHeight * imgState.scale * ratio);
+    const dataUrl = canvas.toDataURL('image/png');
+    localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
+    updateAllBotIcons(dataUrl);
+    closeCropModal();
+  }
+
+  function updateAllBotIcons(src) {
+    const icons = document.querySelectorAll('.botIcon');
+    icons.forEach(img => applyIconToElement(img, src));
+  }
+
+  const form = document.getElementById("storyForm");
+  const chat = document.getElementById("chat-container");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const apiKey = localStorage.getItem("GEMINI_API_KEY");
+    if (!apiKey) {
+      pushBotMessage("APIキーが設定されていないわ。設定画面で境界の鍵を入力して。");
+      return;
+    }
+
+    const data = {
+      name: document.getElementById("name").value.trim(),
+      action: document.getElementById("action").value.trim(),
+      item: document.getElementById("item").value.trim(),
+      companion: document.getElementById("companion").value.trim(),
+      enemy: document.getElementById("enemy").value.trim() || "なし"
+    };
+
+    pushUserMessage(`${data.name}\n行動: ${data.action}\n持ち物: ${data.item}`);
+    form.reset();
+
+    const loadingId = pushBotMessage("境界を操作中よ…… <span class='loading-eye'>👁️</span>");
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の情報を元に、幻想郷での運命を優雅でミステリアスにMarkdownで語ってください。
+名前:${data.name}, 行動:${data.action}, 持ち物:${data.item}, お供:${data.companion}, 遭遇者:${data.enemy}
+
+### 1. 境界の向こう側
+### 2. 生存率（%）
+### 3. 結末（**生存**か**死亡**かを明記）` }] }]
+        })
+      });
+      const json = await res.json();
+      const text = json.candidates[0].content.parts[0].text;
+      document.getElementById(loadingId).remove();
+      pushBotMessage(marked.parse(text));
+    } catch (err) {
+      document.getElementById(loadingId).innerText = "あら、結界にノイズが走ったわ。";
+    }
+  });
+
+  function pushBotMessage(text) {
+    const id = "bot-" + Date.now();
+    const div = document.createElement("div");
+    div.className = "botContainer";
+    div.id = id;
+    const currentSrc = localStorage.getItem(STORAGE_KEY_ICON) || '../static/bot_icon.png';
+    div.innerHTML = `
+      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
+        <img src="${currentSrc}" class="botIcon" onerror="handleIconError(this)">
+      </div>
+      <div class="botText">${text}</div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    return id;
+  }
+
+  function pushUserMessage(text) {
+    const div = document.createElement("div");
+    div.className = "userContainer";
+    div.innerHTML = `<div class="userBubble">${text}</div>`;
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
+
