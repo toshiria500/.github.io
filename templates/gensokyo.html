@@ -7,7 +7,7 @@
 <meta name="description" content="八雲紫があなたの幻想郷での運命を語ります">
 <!-- Markdown変換用ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<!-- Font Awesome (アイコン用) -->
+<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
@@ -22,12 +22,7 @@
     --bot-msg-bg: rgba(20, 10, 30, 0.85);
   }
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: transparent;
-  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
     font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
@@ -56,12 +51,6 @@
     align-items: center;
   }
 
-  .header-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
   .setting-link {
     color: var(--text-main);
     text-decoration: none;
@@ -69,12 +58,7 @@
     background: rgba(255,255,255,0.15);
     padding: 6px 12px;
     border-radius: 20px;
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-  }
-  .setting-link:hover {
-    background: rgba(255,255,255,0.25);
-    border-color: var(--purple-light);
+    transition: all 0.3s;
   }
 
   /* --- チャットエリア --- */
@@ -85,25 +69,14 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    background-image: 
-      radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.15) 0%, transparent 80%),
-      url('https://www.transparenttextures.com/patterns/dark-matter.png');
+    background-image: radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.15) 0%, transparent 80%),
+                      url('https://www.transparenttextures.com/patterns/dark-matter.png');
   }
 
-  .botContainer {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    max-width: 95%;
-    animation: fadeIn 0.4s ease-out;
-  }
+  .botContainer { display: flex; align-items: flex-start; gap: 14px; max-width: 95%; animation: fadeIn 0.4s ease-out; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* アイコン設定関連 */
   .icon-wrapper {
     flex-shrink: 0;
     width: 50px;
@@ -114,41 +87,10 @@
     background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
     box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
     cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .icon-wrapper:hover {
-    transform: scale(1.05);
-  }
-  .icon-wrapper::after {
-    content: '換';
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    background: var(--red-eye);
-    color: white;
-    font-size: 10px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid white;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .icon-wrapper:hover::after {
-    opacity: 1;
+    overflow: visible;
   }
 
-  .botIcon {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background-color: #000;
-    object-fit: cover;
-    display: block;
-  }
+  .botIcon { width: 100%; height: 100%; border-radius: 50%; background-color: #000; object-fit: cover; display: block; }
 
   .botText {
     background: var(--bot-msg-bg);
@@ -157,176 +99,134 @@
     padding: 14px 18px;
     line-height: 1.7;
     font-size: 0.95rem;
-    color: var(--text-main);
     box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
     backdrop-filter: blur(4px);
   }
 
-  .userContainer {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-    animation: fadeIn 0.4s ease-out;
+  .size-tip {
+    font-size: 11px;
+    color: var(--text-accent);
+    margin-top: 6px;
+    display: block;
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+    opacity: 0.9;
   }
 
+  .userContainer { display: flex; justify-content: flex-end; width: 100%; animation: fadeIn 0.4s ease-out; }
   .userBubble {
     background: var(--user-bubble);
     color: #fff;
     border-radius: 20px 4px 20px 20px;
     padding: 12px 18px;
     max-width: 80%;
-    font-family: sans-serif;
     font-size: 0.9rem;
-    line-height: 1.5;
     white-space: pre-wrap;
-    box-shadow: -2px 4px 10px rgba(0,0,0,0.3);
   }
 
-  /* Markdownスタイル */
-  .botText h2, .botText h3 { 
-    color: var(--text-accent); 
-    margin: 15px 0 8px 0; 
-    font-size: 1.15rem; 
-    border-bottom: 1px solid var(--purple-main);
-    padding-bottom: 4px;
+  /* --- トリミングモーダル --- */
+  #cropModal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   }
-  .botText p { margin-bottom: 12px; }
-  .botText strong { color: #ff6b6b; font-weight: bold; }
-
-  .loading-eye {
-    display: inline-block; color: var(--text-accent); animation: blink 1.2s infinite;
+  .crop-viewport {
+    width: 280px;
+    height: 280px;
+    border: 2px solid var(--purple-light);
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+    cursor: move;
+    touch-action: none;
   }
-  @keyframes blink {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(0.8); color: var(--red-eye); }
+  #cropImage {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+    user-select: none;
   }
-
-  /* --- 入力エリア --- */
-  #bottom-area {
-    background: #000;
-    border-top: 2px solid var(--purple-main);
-    z-index: 20;
-  }
-
-  #storyForm {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 16px;
+  .crop-controls {
     width: 100%;
+    max-width: 300px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
   }
+  .crop-slider { width: 100%; accent-color: var(--purple-light); }
+  .crop-btns { display: flex; gap: 10px; }
+  .crop-btns button {
+    flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;
+  }
+  .btn-cancel { background: #444; color: white; }
+  .btn-save { background: var(--purple-main); color: white; }
 
+  /* --- 入力フォーム --- */
+  #bottom-area { background: #000; border-top: 2px solid var(--purple-main); }
+  #storyForm {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    max-width: 900px; margin: 0 auto; padding: 16px;
+  }
   .full-width { grid-column: span 2; }
-
   input {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid #444;
-    color: white;
-    padding: 12px 15px;
-    border-radius: 8px;
-    font-size: 16px;
-    outline: none;
-    font-family: sans-serif;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid #444; color: white;
+    padding: 12px 15px; border-radius: 8px; font-size: 16px; outline: none;
   }
-  input:focus { 
-    border-color: var(--purple-light); 
-    background: rgba(255, 255, 255, 0.12);
-  }
-
   button[type="submit"] {
-    grid-column: span 2;
-    background: linear-gradient(135deg, var(--purple-main) 0%, #4b0082 100%);
-    color: white;
-    border: 1px solid var(--purple-light);
-    padding: 14px;
-    font-size: 1.05rem;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex; justify-content: center; align-items: center; gap: 10px;
+    grid-column: span 2; background: linear-gradient(135deg, var(--purple-main), #4b0082);
+    color: white; border: 1px solid var(--purple-light); padding: 14px;
+    font-weight: bold; border-radius: 8px; cursor: pointer;
     font-family: 'Hiragino Mincho ProN', serif;
   }
 
-  /* --- フッター --- */
   .site-footer {
-    text-align: center;
-    padding: 15px 10px;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
-    background: #000;
-    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
-    border-top: 1px solid #222;
+    text-align: center; padding: 15px 10px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);
+    background: #000; font-family: 'Hiragino Mincho ProN', serif; border-top: 1px solid #222;
   }
-  
-  .gemini-power {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #fff;
-    margin-bottom: 8px;
-    font-size: 0.95rem;
-  }
-  .gemini-icon { width: 20px; height: 20px; }
-  .gemini-icon path { fill: url(#gemini-grad); }
-
-  .footer-links { margin-bottom: 8px; }
-  .site-footer a { color: var(--purple-light); text-decoration: none; margin: 0 5px; }
-  
-  .copyright {
-    font-size: 0.75rem;
-    letter-spacing: 0.02em;
-    opacity: 0.7;
-  }
-
-  /* 隠しファイル入力 */
-  #iconInput { display: none; }
-
-  /* 推奨サイズチップ (明朝体に設定) */
-  .size-tip {
-    font-size: 11px;
-    color: var(--text-accent);
-    margin-top: 6px;
-    display: block;
-    /* 明朝体を適用 */
-    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
-    opacity: 0.9;
-    letter-spacing: 0.03em;
-  }
+  .footer-links a { color: var(--purple-light); text-decoration: none; margin: 0 5px; }
 
   @media (max-width: 600px) {
-    #storyForm { grid-template-columns: 1fr; padding: 12px; }
+    #storyForm { grid-template-columns: 1fr; }
     .full-width, button[type="submit"] { grid-column: span 1; }
   }
 </style>
 </head>
 <body>
 
-  <svg width="0" height="0" style="position:absolute;">
-    <defs>
-      <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#4285F4" />
-        <stop offset="50%" stop-color="#9B72CB" />
-        <stop offset="100%" stop-color="#D96570" />
-      </linearGradient>
-    </defs>
-  </svg>
-
-  <input type="file" id="iconInput" accept="image/*">
-
   <header>
     <span>⛩ 幻想郷ジェネレーター</span>
-    <div class="header-actions">
-      <a href="./Setting.html" class="setting-link">⚙ 設定</a>
-    </div>
+    <a href="./Setting.html" class="setting-link">⚙ 設定</a>
   </header>
 
+  <!-- アイコン編集モーダル -->
+  <div id="cropModal">
+    <h3 style="color:var(--text-accent); margin-bottom:15px;">画像を調整してちょうだい</h3>
+    <div class="crop-viewport" id="cropViewport">
+      <img id="cropImage" src="">
+    </div>
+    <div class="crop-controls">
+      <input type="range" class="crop-slider" id="zoomSlider" min="0.1" max="3" step="0.01" value="1">
+      <div class="crop-btns">
+        <button class="btn-cancel" onclick="closeCropModal()">キャンセル</button>
+        <button class="btn-save" onclick="saveCroppedIcon()">決定</button>
+      </div>
+    </div>
+    <p style="color:#888; font-size:12px; margin-top:10px;">ドラッグで移動、スライダーで拡大</p>
+  </div>
+
+  <input type="file" id="iconInput" accept="image/*" style="display:none">
+
   <main id="chat-container">
-    <!-- 初回メッセージ -->
-    <div class="botContainer">
-      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()" title="アイコンを変更（このブラウザのみ保存されます）">
+    <div class="botContainer" id="first-msg">
+      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
         <img src="" class="botIcon" id="displayIcon" alt="紫" onerror="handleIconError(this)">
       </div>
       <div class="botText">
@@ -334,147 +234,172 @@
         歓迎するわ、幻想郷へ。<br><br>
         あなたの名前や、持っている物を教えてちょうだい。<br>
         この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。<br>
-        <span class="size-tip">※アイコンをタップして好きな画像に変えられるわよ（推奨: 200x200px以上）</span>
+        <span class="size-tip">※アイコンをタップして画像を変更・調整できるわ（推奨: 400x400px）</span>
       </div>
     </div>
   </main>
 
   <div id="bottom-area">
-    <form id="storyForm" autocomplete="off">
-      <input id="name" placeholder="名前 (例: 博麗の巫女)" required>
-      <input id="action" placeholder="行動 (例: 紅魔館に忍び込む)" required>
-      <input id="item" placeholder="持ち物 (例: カップ麺)" required>
-      <input id="companion" placeholder="お供 (例: 普通の魔法使い)" required>
-      <input id="enemy" class="full-width" placeholder="遭遇する者 (任意 / 例: フランドール)">
-      <button type="submit">
-        <span>👁️ 境界を覗く (送信)</span>
-      </button>
+    <form id="storyForm">
+      <input id="name" placeholder="名前" required>
+      <input id="action" placeholder="行動" required>
+      <input id="item" placeholder="持ち物" required>
+      <input id="companion" placeholder="お供" required>
+      <input id="enemy" class="full-width" placeholder="遭遇する者 (任意)">
+      <button type="submit">👁️ 境界を覗く (送信)</button>
     </form>
 
     <footer class="site-footer">
-      <div class="gemini-power">
-        Powered by 
-        <svg class="gemini-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 22C12 16.4772 7.52285 12 2 12C7.52285 12 12 7.52285 12 2C12 7.52285 16.4772 12 22 12C16.4772 12 12 16.4772 12 22Z"/>
-          <path d="M19 8C19 6.34315 17.6569 5 16 5C17.6569 5 19 3.65685 19 2C19 3.65685 20.3431 5 22 5C20.3431 5 19 6.34315 19 8Z"/>
-        </svg>
-        Gemini
-      </div>
       <div class="footer-links">
         <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">
           生存率診断(元ネタ) <i class="fas fa-external-link-alt"></i>
         </a>
       </div>
-      <div class="copyright">
-        Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
-      </div>
+      <div class="copyright">Copyright © toshiria 2025 - <span id="year"></span></div>
     </footer>
   </div>
 
 <script>
-  // 年号
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  // --- アイコン画像管理ロジック ---
-  const iconInput = document.getElementById('iconInput');
+  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V2';
   const displayIcon = document.getElementById('displayIcon');
-  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON';
+  const cropModal = document.getElementById('cropModal');
+  const cropImage = document.getElementById('cropImage');
+  const zoomSlider = document.getElementById('zoomSlider');
+  const viewport = document.getElementById('cropViewport');
 
-  // 起動時に保存されたアイコンを読み込む
-  window.addEventListener('load', () => {
-    const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
-    if (savedIcon) {
-      displayIcon.src = savedIcon;
+  let imgState = { x: 0, y: 0, scale: 1, baseScale: 1 };
+  let isDragging = false;
+  let startX, startY;
+
+  // 1. アイコンの初期読み込み
+  function initIcon() {
+    const saved = localStorage.getItem(STORAGE_KEY_ICON);
+    if (saved && saved !== "null") {
+      displayIcon.src = saved;
+      updateAllBotIcons(saved);
     } else {
       displayIcon.src = '../static/bot_icon.png';
     }
-  });
+  }
+  window.addEventListener('load', initIcon);
 
-  // アイコン読み込み失敗時のフォールバック
   function handleIconError(img) {
     img.style.display = 'none';
     const parent = img.parentElement;
-    const oldLabel = parent.querySelector('.fallback-label');
-    if (oldLabel) oldLabel.remove();
-    
-    const label = document.createElement('div');
-    label.className = 'fallback-label';
-    label.style.cssText = 'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;';
-    label.innerText = '紫';
-    parent.appendChild(label);
+    if (!parent.querySelector('.fallback-label')) {
+      const label = document.createElement('div');
+      label.className = 'fallback-label';
+      label.style.cssText = 'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;';
+      label.innerText = '紫';
+      parent.appendChild(label);
+    }
   }
 
-  // 画像アップロードとリサイズ・切り抜き
-  iconInput.addEventListener('change', (e) => {
+  // 2. ファイル選択 & モーダル表示
+  document.getElementById('iconInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const size = 200; 
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-
-        let sourceX = 0, sourceY = 0, sourceSize = 0;
-        if (img.width > img.height) {
-          sourceSize = img.height;
-          sourceX = (img.width - img.height) / 2;
-        } else {
-          sourceSize = img.width;
-          sourceY = (img.height - img.width) / 2;
-        }
-
-        ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
-        const dataUrl = canvas.toDataURL('image/png');
-        localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
-        updateAllIcons(dataUrl);
+      cropImage.src = event.target.result;
+      cropImage.onload = () => {
+        // 初期スケール計算（枠に合わせる）
+        const ratioW = 280 / cropImage.naturalWidth;
+        const ratioH = 280 / cropImage.naturalHeight;
+        imgState.baseScale = Math.max(ratioW, ratioH);
+        imgState.scale = imgState.baseScale;
+        imgState.x = (280 - cropImage.naturalWidth * imgState.scale) / 2;
+        imgState.y = (280 - cropImage.naturalHeight * imgState.scale) / 2;
+        
+        zoomSlider.min = imgState.baseScale;
+        zoomSlider.max = imgState.baseScale * 5;
+        zoomSlider.value = imgState.scale;
+        
+        applyTransform();
+        cropModal.style.display = 'flex';
       };
-      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   });
 
-  function updateAllIcons(src) {
+  // 3. ドラッグ操作
+  viewport.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', doDrag);
+  window.addEventListener('mouseup', endDrag);
+  viewport.addEventListener('touchstart', (e) => startDrag(e.touches[0]));
+  window.addEventListener('touchmove', (e) => doDrag(e.touches[0]));
+  window.addEventListener('touchend', endDrag);
+
+  function startDrag(e) { isDragging = true; startX = e.clientX - imgState.x; startY = e.clientY - imgState.y; }
+  function doDrag(e) {
+    if (!isDragging) return;
+    imgState.x = e.clientX - startX;
+    imgState.y = e.clientY - startY;
+    applyTransform();
+  }
+  function endDrag() { isDragging = false; }
+
+  zoomSlider.addEventListener('input', (e) => {
+    const oldScale = imgState.scale;
+    imgState.scale = parseFloat(e.target.value);
+    // 中心を維持して拡大
+    imgState.x -= (cropImage.naturalWidth * imgState.scale - cropImage.naturalWidth * oldScale) / 2;
+    imgState.y -= (cropImage.naturalHeight * imgState.scale - cropImage.naturalHeight * oldScale) / 2;
+    applyTransform();
+  });
+
+  function applyTransform() {
+    cropImage.style.transform = `translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`;
+  }
+
+  function closeCropModal() { cropModal.style.display = 'none'; document.getElementById('iconInput').value = ""; }
+
+  // 4. 切り抜き実行と保存
+  function saveCroppedIcon() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+
+    // プレビュー(280px)から400pxへの比率
+    const ratio = 400 / 280;
+    
+    ctx.drawImage(
+      cropImage, 
+      imgState.x * ratio, 
+      imgState.y * ratio, 
+      cropImage.naturalWidth * imgState.scale * ratio, 
+      cropImage.naturalHeight * imgState.scale * ratio
+    );
+
+    const dataUrl = canvas.toDataURL('image/png');
+    localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
+    updateAllBotIcons(dataUrl);
+    closeCropModal();
+  }
+
+  function updateAllBotIcons(src) {
     const icons = document.querySelectorAll('.botIcon');
-    icons.forEach(icon => {
-      icon.src = src;
-      icon.style.display = 'block';
-      const label = icon.parentElement.querySelector('.fallback-label');
+    icons.forEach(img => {
+      img.src = src;
+      img.style.display = 'block';
+      const label = img.parentElement.querySelector('.fallback-label');
       if (label) label.remove();
     });
   }
 
-  // --- メインロジック ---
+  // --- チャットロジック ---
   const form = document.getElementById("storyForm");
   const chat = document.getElementById("chat-container");
-  const requiredInputs = [
-    document.getElementById("name"),
-    document.getElementById("action"),
-    document.getElementById("item"),
-    document.getElementById("companion")
-  ];
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const apiKey = localStorage.getItem("GEMINI_API_KEY");
-
-    let hasError = false;
-    requiredInputs.forEach(input => {
-      if (!input.value.trim()) {
-        input.classList.add("error");
-        hasError = true;
-      } else {
-        input.classList.remove("error");
-      }
-    });
-    if (hasError) return;
-
     if (!apiKey) {
-      pushBotMessage("通行証（APIキー）がないと、境界は開けないわ。右上の設定を確認してちょうだい。", true);
+      pushBotMessage("APIキーがないわ。設定を確認してちょうだい。");
       return;
     }
 
@@ -486,88 +411,52 @@
       enemy: document.getElementById("enemy").value.trim() || "なし"
     };
 
-    pushUserMessage(`挑戦者: ${data.name}\n行動: ${data.action}\n持ち物: ${data.item}\nお供: ${data.companion}\n遭遇: ${data.enemy}`);
+    pushUserMessage(`${data.name}が行くわ。\n行動: ${data.action}\n持ち物: ${data.item}`);
     form.reset();
 
-    const loadingId = pushBotMessage("境界を繋いでいるわ…… <span class='loading-eye'>👁️</span>", true);
-
-    const prompt = `
-あなたは東方Projectの八雲紫です。以下の情報を元に、幻想郷での運命をMarkdownで語ってください。
-口調は優雅でミステリアス、時折恐ろしく。「〜かしら」「〜ね」「うふふ」を使用。
-
-- 名前：${data.name}
-- 行動：${data.action}
-- 持ち物：${data.item}
-- お供：${data.companion}
-- 遭遇：${data.enemy}
-
-### 1. 境界の向こう側
-### 2. 生存率（%）
-### 3. 結末（**生存**か**死亡**かを明記）
-`;
+    const loadingId = pushBotMessage("境界を繋いでいるわ…… <span class='loading-eye'>👁️</span>");
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        }
-      );
-
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の情報を元に Markdownで語ってください。
+口調: 優雅, ミステリアス。名前:${data.name}, 行動:${data.action}, 持物:${data.item}, お供:${data.companion}, 遭遇:${data.enemy}` }] }]
+        })
+      });
       const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      
       const text = json.candidates[0].content.parts[0].text;
-      removeMessage(loadingId);
-      pushBotMessage(marked.parse(text), true);
-
+      document.getElementById(loadingId).remove();
+      pushBotMessage(marked.parse(text));
     } catch (err) {
-      removeMessage(loadingId);
-      pushBotMessage(`あら、結界が乱れたわ。<br><small>${err.message}</small>`, true);
+      document.getElementById(loadingId).innerText = "あら、結界が乱れたみたい。";
     }
   });
 
-  function pushBotMessage(text, isHtml = false) {
-    const msgId = "msg-" + Date.now();
-    const box = document.createElement("div");
-    box.className = "botContainer";
-    box.id = msgId;
-
-    const currentIcon = localStorage.getItem(STORAGE_KEY_ICON) || '../static/bot_icon.png';
-
-    box.innerHTML = `
+  function pushBotMessage(text) {
+    const id = "bot-" + Date.now();
+    const div = document.createElement("div");
+    div.className = "botContainer";
+    div.id = id;
+    const currentSrc = localStorage.getItem(STORAGE_KEY_ICON) || '../static/bot_icon.png';
+    div.innerHTML = `
       <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
-        <img src="${currentIcon}" class="botIcon" alt="紫" onerror="handleIconError(this)">
+        <img src="${currentSrc}" class="botIcon" onerror="handleIconError(this)">
       </div>
       <div class="botText">${text}</div>
     `;
-    chat.appendChild(box);
-    scrollToBottom();
-    return msgId;
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    return id;
   }
 
   function pushUserMessage(text) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "userContainer";
-    const box = document.createElement("div");
-    box.className = "userBubble";
-    box.textContent = text;
-    wrapper.appendChild(box);
-    chat.appendChild(wrapper);
-    scrollToBottom();
-  }
-
-  function removeMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
-
-  function scrollToBottom() {
-    setTimeout(() => {
-      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-    }, 50);
+    const div = document.createElement("div");
+    div.className = "userContainer";
+    div.innerHTML = `<div class="userBubble">${text}</div>`;
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
   }
 </script>
 </body>
