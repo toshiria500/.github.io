@@ -2,75 +2,464 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>幻想郷ジェネレーター</title>
-<meta name="description" content="幻想郷に迷い込んだ時の運命をAIが語ります">
-<!-- CSSのパスは環境に合わせてください -->
-<link rel="stylesheet" href="../static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>幻想郷ジェネレーター - 境界の語り部</title>
+<meta name="description" content="八雲紫があなたの幻想郷での運命を語ります">
 <!-- Markdown変換用ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+  :root {
+    --bg-color: #1a0b2e; /* 深い紫（夜の幻想郷） */
+    --chat-bg: #2d1b4e;
+    --text-main: #f8f0fc;
+    --text-accent: #d4af37; /* 金色 */
+    --purple-main: #6b2c91;
+    --purple-light: #9d4edd;
+    --red-eye: #e63946; /* スキマの目の赤 */
+    --user-bubble: #4a4e69;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif; /* 明朝体で和風妖怪感を演出 */
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* --- ヘッダー --- */
+  header {
+    background: linear-gradient(90deg, #000000, var(--purple-main), #000000);
+    color: var(--text-accent);
+    padding: 15px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 2px solid var(--red-eye);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .setting-link {
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+
+  /* --- チャットエリア --- */
+  #chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-image: radial-gradient(circle at center, #2a164d 0%, var(--bg-color) 100%);
+  }
+
+  /* 紫のメッセージ（左側） */
+  .botContainer {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 90%;
+  }
+
+  .botIcon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--red-eye);
+    background-color: #000;
+    object-fit: cover;
+    box-shadow: 0 0 10px var(--red-eye);
+  }
+
+  .botText {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--purple-light);
+    border-radius: 0 15px 15px 15px;
+    padding: 12px 16px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(107, 44, 145, 0.5);
+  }
+
+  /* スキマのリボン風装飾 */
+  .botText::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: 0 15px 15px 15px;
+    background: linear-gradient(45deg, transparent 40%, rgba(230,57,70,0.3) 50%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ユーザーのメッセージ（右側） */
+  .userContainer {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .userBubble {
+    background: var(--user-bubble);
+    border-radius: 15px 0 15px 15px;
+    padding: 12px 16px;
+    max-width: 85%;
+    font-family: sans-serif; /* ユーザー入力は現代風に */
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+
+  /* Markdownのスタイル調整 */
+  .botText h2, .botText h3 {
+    color: var(--text-accent);
+    margin: 10px 0 5px 0;
+    font-size: 1.1rem;
+    border-bottom: 1px dashed var(--purple-main);
+  }
+  .botText p { margin-bottom: 10px; }
+  .botText p:last-child { margin-bottom: 0; }
+  .botText strong { color: var(--red-eye); font-weight: bold; }
+  .botText ul { padding-left: 20px; margin-bottom: 10px; }
+
+  /* ローディングアニメーション（スキマの瞬き） */
+  .loading-eye {
+    display: inline-block;
+    color: var(--text-accent);
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; transform: scaleY(1); }
+    50% { opacity: 0.3; transform: scaleY(0.1); color: var(--red-eye); }
+  }
+
+  /* --- 入力エリア（下部固定） --- */
+  #input-container {
+    background: rgba(0, 0, 0, 0.85);
+    padding: 15px;
+    border-top: 1px solid var(--purple-main);
+    backdrop-filter: blur(5px);
+  }
+
+  #storyForm {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* 行をまたぐ要素 */
+  .full-width {
+    grid-column: span 2;
+  }
+
+  input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--purple-main);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 16px; /* スマホズーム防止 */
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: sans-serif;
+  }
+
+  input:focus {
+    border-color: var(--text-accent);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  input.error {
+    border-color: var(--red-eye);
+    background: rgba(230, 57, 70, 0.1);
+  }
+
+  button[type="submit"] {
+    grid-column: span 2;
+    background: linear-gradient(45deg, var(--purple-main), #8a2be2);
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Hiragino Mincho ProN', serif;
+  }
+
+  button[type="submit"]:active {
+    transform: scale(0.98);
+  }
+  button[type="submit"]:hover {
+    filter: brightness(1.2);
+  }
+
+  /* スクロールバーの装飾 */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-color); }
+  ::-webkit-scrollbar-thumb { background: var(--purple-main); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--purple-light); }
+
+  /* スマホ向け微調整 */
+  @media (max-width: 480px) {
+    #storyForm {
+      grid-template-columns: 1fr;
+    }
+    .full-width, button[type="submit"] {
+      grid-column: span 1;
+    }
+    .botText { font-size: 0.9rem; }
+  }
+</style>
 </head>
 <body>
 
-<div class="container">
-  <h2>幻想郷ストーリー生成</h2>
+  <header>
+    <span>⛩ 幻想郷ジェネレーター</span>
+    <a href="./Setting.html" class="setting-link">⚙ 設定</a>
+  </header>
 
-  <!-- 1. 挨拶エリア（固定表示） -->
-  <div id="greeting" class="botContainer">
-    <img src="../static/bot_icon.png" class="botIcon" alt="Bot">
-    <div class="botText">
-      幻想郷へようこそ。<br>
-      あなたの運命を、私が見てあげる。<br>
-      名前や持ち物を教えてちょうだい。
+  <!-- 3. 結果表示エリア（チャット） -->
+  <main id="chat-container">
+    <!-- 挨拶（八雲紫の口調） -->
+    <div class="botContainer">
+      <!-- アイコンがない場合はエラーにならずCSSの丸枠だけ残るようにonerrorを設定 -->
+      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;\'>紫</div>');">
+      <div class="botText">
+        あらあら、外の世界から迷い込んできたの？<br>
+        歓迎するわ、幻想郷へ。<br><br>
+        あなたの名前や、持っている物を教えてちょうだい。<br>
+        この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。
+      </div>
     </div>
-  </div>
+  </main>
 
-  <!-- 2. 入力フォーム -->
-  <form id="storyForm" autocomplete="off">
-    <div class="form-group">
-      <input id="name" placeholder="名前" required>
-    </div>
-    <div class="form-group">
-      <input id="action" placeholder="行動" required>
-    </div>
-    <div class="form-group">
-      <input id="item" placeholder="持ち物" required>
-    </div>
-    <div class="form-group">
-      <input id="companion" placeholder="お供" required>
-    </div>
-    <div class="form-group">
-      <input id="enemy" placeholder="敵（任意）">
-    </div>
-    <button type="submit">送信</button>
-  </form>
+  <!-- 2. 入力フォーム（下部固定） -->
+  <footer id="input-container">
+    <form id="storyForm" autocomplete="off">
+      <input id="name" placeholder="名前 (例: 博麗の巫女)" required>
+      <input id="action" placeholder="行動 (例: 紅魔館に忍び込む)" required>
+      <input id="item" placeholder="持ち物 (例: カップ麺)" required>
+      <input id="companion" placeholder="お供 (例: 普通の魔法使い)" required>
+      <input id="enemy" class="full-width" placeholder="敵・遭遇する者 (任意 / 例: フランドール)">
+      <button type="submit">
+        <span>👁️ 境界を覗く (送信)</span>
+      </button>
+    </form>
+  </footer>
 
-  <!-- 3. 結果表示エリア（フォームの下に追加されていく） -->
-  <div id="chat">
-    <!-- ここに結果が追加されます -->
-  </div>
-
-  <p class="note">
-    元ネタ：
-    <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">
-      もし幻想郷に行った時の生存率診断
-    </a>
-  </p>
-</div>
-
-<footer class="site-footer">
-  <a href="./Setting.html" class="setting-link">⚙ 設定</a>
-  <small>Powered by Gemini</small>
-  <div class="copyright">
-    Copyright © toshiria 2025 - <span id="year"></span>
-    All Rights Reserved.
-  </div>
-</footer>
-
-<!-- JSの読み込み -->
-<script src="../static/gensokyo.js"></script>
 <script>
-document.getElementById("year").textContent = new Date().getFullYear();
+  const form = document.getElementById("storyForm");
+  const chat = document.getElementById("chat-container");
+
+  // 入力要素の取得
+  const nameInput = document.getElementById("name");
+  const actionInput = document.getElementById("action");
+  const itemInput = document.getElementById("item");
+  const companionInput = document.getElementById("companion");
+  const enemyInput = document.getElementById("enemy");
+
+  const requiredInputs = [nameInput, actionInput, itemInput, companionInput];
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // 常に最新のAPIキーを取得
+    const apiKey = localStorage.getItem("GEMINI_API_KEY");
+
+    // 1. 必須チェック
+    let hasError = false;
+    requiredInputs.forEach(input => {
+      if (!input.value.trim()) {
+        input.classList.add("error");
+        hasError = true;
+      } else {
+        input.classList.remove("error");
+      }
+    });
+
+    if (hasError) {
+      // 紫風のエラーアラート
+      alert("あら？ 大事な情報が欠けているみたい。境界が結べないわよ。");
+      return;
+    }
+
+    // 2. APIキーチェック（紫風の誘導）
+    if (!apiKey) {
+      pushBotMessage("あらあら、結界に弾かれちゃったみたいね。外の世界と繋がる「通行証（APIキー）」を持っていないみたい。<br><br>右上の「⚙ 設定」から鍵を保存してきてちょうだいな。", true);
+      return;
+    }
+
+    // 3. ユーザーの入力内容を取得
+    const data = {
+      name: nameInput.value.trim(),
+      action: actionInput.value.trim(),
+      item: itemInput.value.trim(),
+      companion: companionInput.value.trim(),
+      enemy: enemyInput.value.trim() || "なし"
+    };
+
+    // 4. ユーザーの入力をチャット欄に表示
+    pushUserMessage(`【挑戦者】${data.name}\n行動：${data.action}\n持ち物：${data.item}\nお供：${data.companion}\n遭遇：${data.enemy}`);
+
+    // 入力欄をクリア（連続して遊べるように）
+    form.reset();
+
+    // 5. Botの「生成中...」を表示（紫風）
+    const loadingId = pushBotMessage("ふふっ、境界を繋いで、あなたの運命を覗いてあげるわ…… <span class='loading-eye'>👁️</span>", true);
+
+    // プロンプト作成（八雲紫として振る舞うよう指示を強力に）
+    const enemyText = data.enemy !== "なし"
+      ? `## ⚔ 遭遇・敵対者の行動\n- 相手(${data.enemy})が主人公に対してどのような行動をとったか。`
+      : "";
+
+    const prompt = `
+あなたは東方Projectの「八雲紫（やくも ゆかり）」です。境界を操る大妖怪として、幻想郷に迷い込んだ人間の運命を語ってください。
+一人称は「私（わたし）」。口調は優雅でミステリアス、「〜かしら」「〜ね」「〜だわ」「うふふ」といった女性的な語尾を使います。時折、妖怪としての底知れぬ恐ろしさや、人間をからかうような態度を見せてください。
+
+## 迷い込んだ人間の情報
+- 名前：${data.name}
+- 行動：${data.action}
+- 持ち物：${data.item}
+- お供：${data.companion}
+- 遭遇：${data.enemy}
+
+## 出力ルール
+- Markdown形式で出力すること。
+- 八雲紫自身の視点・語り口調で、対象者の運命を面白おかしく、あるいは残酷に語ること。
+- 以下の要素を必ず含めること。
+
+### 1. 境界の向こう側（行動の結果）
+- 具体的に何が起きたか。持ち物やお供がどう影響したか。紫の視点からの感想も交える。
+${enemyText}
+
+### 2. 生存率
+- 0% 〜 100% の数値と、紫からの辛辣あるいは温かい一言コメント。
+
+### 3. 結末
+- **生存** または **死亡** （太字で明記）。
+- 幻想郷の養分になるか、無事に帰れるか、あるいは紫の気まぐれでスキマ送りにされるか。
+`;
+
+    try {
+      // 6. Gemini APIへ送信（モデル名は最新の推奨フラッシュモデルに更新）
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+
+      const json = await res.json();
+
+      if (json.error) {
+        throw new Error(json.error.message);
+      }
+
+      if (!json.candidates || !json.candidates[0].content) {
+        throw new Error("返答が空でした。");
+      }
+
+      const text = json.candidates[0].content.parts[0].text;
+
+      // 7. 生成中のメッセージを削除して、結果を表示
+      removeMessage(loadingId);
+      pushBotMessage(marked.parse(text), true);
+
+    } catch (err) {
+      removeMessage(loadingId);
+      let errorMsg = "あら、スキマの繋がりが悪いみたいね。運命が見えないわ。";
+      if (err.message.includes("API_KEY_INVALID")) {
+         errorMsg = "ふふっ、そのAPIキー、偽物じゃないかしら？ もう一度設定を確認して頂戴。";
+      }
+      pushBotMessage(`${errorMsg}<br><small style="color:var(--red-eye);">エラー詳細: ${err.message}</small>`, true);
+      console.error(err);
+    }
+  });
+
+  // Botのメッセージを表示する関数
+  function pushBotMessage(text, isHtml = false) {
+    const msgId = "msg-" + Date.now();
+    const box = document.createElement("div");
+    box.className = "botContainer";
+    box.id = msgId;
+
+    // 画像エラー処理も含むHTML
+    box.innerHTML = `
+      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;box-shadow: 0 0 10px var(--red-eye);\\'>紫</div>');">
+      <div class="botText">${isHtml ? text : text}</div>
+    `;
+
+    chat.appendChild(box);
+    scrollToBottom();
+    return msgId;
+  }
+
+  // ユーザーのメッセージを表示する関数
+  function pushUserMessage(text) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "userContainer";
+    
+    const box = document.createElement("div");
+    box.className = "userBubble";
+    box.textContent = text;
+    
+    wrapper.appendChild(box);
+    chat.appendChild(wrapper);
+    scrollToBottom();
+  }
+
+  function removeMessage(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  // チャットコンテナの一番下へスクロール
+  function scrollToBottom() {
+    chat.scrollTo({
+      top: chat.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
 </script>
 </body>
 </html>
+
