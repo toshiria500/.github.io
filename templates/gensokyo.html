@@ -11,7 +11,6 @@
 <style>
   :root {
     --bg-color: #1a0b2e; /* 深い紫（夜の幻想郷） */
-    --chat-bg: #2d1b4e;
     --text-main: #f8f0fc;
     --text-accent: #d4af37; /* 金色 */
     --purple-main: #6b2c91;
@@ -27,7 +26,7 @@
   }
 
   body {
-    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif; /* 明朝体で和風妖怪感を演出 */
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
@@ -59,6 +58,10 @@
     background: rgba(255,255,255,0.1);
     padding: 5px 10px;
     border-radius: 5px;
+    transition: background 0.3s;
+  }
+  .setting-link:hover {
+    background: rgba(255,255,255,0.2);
   }
 
   /* --- チャットエリア --- */
@@ -101,14 +104,10 @@
     box-shadow: inset 0 0 10px rgba(107, 44, 145, 0.5);
   }
 
-  /* スキマのリボン風装飾 */
   .botText::before {
     content: '';
     position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
     border-radius: 0 15px 15px 15px;
     background: linear-gradient(45deg, transparent 40%, rgba(230,57,70,0.3) 50%, transparent 60%);
     pointer-events: none;
@@ -126,42 +125,35 @@
     border-radius: 15px 0 15px 15px;
     padding: 12px 16px;
     max-width: 85%;
-    font-family: sans-serif; /* ユーザー入力は現代風に */
+    font-family: sans-serif;
     font-size: 0.9rem;
     line-height: 1.5;
     white-space: pre-wrap;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
   }
 
-  /* Markdownのスタイル調整 */
-  .botText h2, .botText h3 {
-    color: var(--text-accent);
-    margin: 10px 0 5px 0;
-    font-size: 1.1rem;
-    border-bottom: 1px dashed var(--purple-main);
-  }
+  /* Markdownスタイル */
+  .botText h2, .botText h3 { color: var(--text-accent); margin: 10px 0 5px 0; font-size: 1.1rem; border-bottom: 1px dashed var(--purple-main); }
   .botText p { margin-bottom: 10px; }
   .botText p:last-child { margin-bottom: 0; }
   .botText strong { color: var(--red-eye); font-weight: bold; }
   .botText ul { padding-left: 20px; margin-bottom: 10px; }
 
-  /* ローディングアニメーション（スキマの瞬き） */
   .loading-eye {
-    display: inline-block;
-    color: var(--text-accent);
-    animation: blink 1.5s infinite;
+    display: inline-block; color: var(--text-accent); animation: blink 1.5s infinite;
   }
   @keyframes blink {
     0%, 100% { opacity: 1; transform: scaleY(1); }
     50% { opacity: 0.3; transform: scaleY(0.1); color: var(--red-eye); }
   }
 
-  /* --- 入力エリア（下部固定） --- */
-  #input-container {
+  /* --- 入力エリア＆フッター --- */
+  #bottom-area {
     background: rgba(0, 0, 0, 0.85);
-    padding: 15px;
     border-top: 1px solid var(--purple-main);
     backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
   }
 
   #storyForm {
@@ -170,12 +162,11 @@
     gap: 10px;
     max-width: 800px;
     margin: 0 auto;
+    padding: 15px;
+    width: 100%;
   }
 
-  /* 行をまたぐ要素 */
-  .full-width {
-    grid-column: span 2;
-  }
+  .full-width { grid-column: span 2; }
 
   input {
     background: rgba(255, 255, 255, 0.1);
@@ -183,25 +174,14 @@
     color: white;
     padding: 10px;
     border-radius: 5px;
-    font-size: 16px; /* スマホズーム防止 */
+    font-size: 16px;
     outline: none;
     transition: border-color 0.3s;
     font-family: sans-serif;
   }
-
-  input:focus {
-    border-color: var(--text-accent);
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  input.error {
-    border-color: var(--red-eye);
-    background: rgba(230, 57, 70, 0.1);
-  }
+  input:focus { border-color: var(--text-accent); background: rgba(255, 255, 255, 0.15); }
+  input::placeholder { color: rgba(255, 255, 255, 0.5); }
+  input.error { border-color: var(--red-eye); background: rgba(230, 57, 70, 0.1); }
 
   button[type="submit"] {
     grid-column: span 2;
@@ -213,52 +193,82 @@
     font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
-    transition: transform 0.1s, filter 0.3s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
     font-family: 'Hiragino Mincho ProN', serif;
   }
 
-  button[type="submit"]:active {
-    transform: scale(0.98);
+  /* --- フッター情報 --- */
+  .site-footer {
+    text-align: center;
+    padding: 12px 10px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    background: #000;
+    /* フッター全体を明朝体に設定 */
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  button[type="submit"]:hover {
-    filter: brightness(1.2);
+  .site-footer a { color: var(--purple-light); text-decoration: none; }
+  .site-footer a:hover { text-decoration: underline; }
+  
+  .gemini-power {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fff;
+    font-weight: normal;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+  }
+  /* Geminiアイコンのグラデーション */
+  .gemini-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .gemini-icon path {
+    fill: url(#gemini-grad);
   }
 
-  /* スクロールバーの装飾 */
+  .copyright {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  /* スクロールバー */
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg-color); }
   ::-webkit-scrollbar-thumb { background: var(--purple-main); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--purple-light); }
 
-  /* スマホ向け微調整 */
   @media (max-width: 480px) {
-    #storyForm {
-      grid-template-columns: 1fr;
-    }
-    .full-width, button[type="submit"] {
-      grid-column: span 1;
-    }
-    .botText { font-size: 0.9rem; }
+    #storyForm { grid-template-columns: 1fr; }
+    .full-width, button[type="submit"] { grid-column: span 1; }
   }
 </style>
 </head>
 <body>
+
+  <!-- Gemini SVG グラデーション定義 -->
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#4285F4" />
+        <stop offset="50%" stop-color="#9B72CB" />
+        <stop offset="100%" stop-color="#D96570" />
+      </linearGradient>
+    </defs>
+  </svg>
 
   <header>
     <span>⛩ 幻想郷ジェネレーター</span>
     <a href="./Setting.html" class="setting-link">⚙ 設定</a>
   </header>
 
-  <!-- 3. 結果表示エリア（チャット） -->
   <main id="chat-container">
-    <!-- 挨拶（八雲紫の口調） -->
     <div class="botContainer">
-      <!-- アイコンがない場合はエラーにならずCSSの丸枠だけ残るようにonerrorを設定 -->
-      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;\'>紫</div>');">
+      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;\\'>紫</div>');">
       <div class="botText">
         あらあら、外の世界から迷い込んできたの？<br>
         歓迎するわ、幻想郷へ。<br><br>
@@ -268,8 +278,7 @@
     </div>
   </main>
 
-  <!-- 2. 入力フォーム（下部固定） -->
-  <footer id="input-container">
+  <div id="bottom-area">
     <form id="storyForm" autocomplete="off">
       <input id="name" placeholder="名前 (例: 博麗の巫女)" required>
       <input id="action" placeholder="行動 (例: 紅魔館に忍び込む)" required>
@@ -280,13 +289,38 @@
         <span>👁️ 境界を覗く (送信)</span>
       </button>
     </form>
-  </footer>
+
+    <footer class="site-footer">
+      <!-- Powered by Gemini と ロゴ (明朝体) -->
+      <div class="gemini-power">
+        Powered by 
+        <svg class="gemini-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 22C12 16.4772 7.52285 12 2 12C7.52285 12 12 7.52285 12 2C12 7.52285 16.4772 12 22 12C16.4772 12 12 16.4772 12 22Z"/>
+          <path d="M19 8C19 6.34315 17.6569 5 16 5C17.6569 5 19 3.65685 19 2C19 3.65685 20.3431 5 22 5C20.3431 5 19 6.34315 19 8Z"/>
+        </svg>
+        Gemini
+      </div>
+      
+      <!-- 元ネタリンク -->
+      <div>
+        元ネタ：<a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">もし幻想郷に行った時の生存率診断</a>
+      </div>
+      
+      <!-- コピーライト (明朝体) -->
+      <div class="copyright">
+        Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
+      </div>
+    </footer>
+  </div>
 
 <script>
+  // 年号の自動更新
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // --- 以降は 八雲紫ロジック ---
   const form = document.getElementById("storyForm");
   const chat = document.getElementById("chat-container");
 
-  // 入力要素の取得
   const nameInput = document.getElementById("name");
   const actionInput = document.getElementById("action");
   const itemInput = document.getElementById("item");
@@ -298,10 +332,8 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // 常に最新のAPIキーを取得
     const apiKey = localStorage.getItem("GEMINI_API_KEY");
 
-    // 1. 必須チェック
     let hasError = false;
     requiredInputs.forEach(input => {
       if (!input.value.trim()) {
@@ -313,18 +345,16 @@
     });
 
     if (hasError) {
-      // 紫風のエラーアラート
       alert("あら？ 大事な情報が欠けているみたい。境界が結べないわよ。");
       return;
     }
 
-    // 2. APIキーチェック（紫風の誘導）
     if (!apiKey) {
-      pushBotMessage("あらあら、結界に弾かれちゃったみたいね。外の世界と繋がる「通行証（APIキー）」を持っていないみたい。<br><br>右上の「⚙ 設定」から鍵を保存してきてちょうだいな。", true);
+      const errorMsg = "あらあら、結界に弾かれちゃったみたいね。外の世界と繋がる「通行証（APIキー）」を持っていないみたい。<br><br>右上の「⚙ 設定」から鍵を保存してきてちょうだいな。";
+      pushBotMessage(errorMsg, true);
       return;
     }
 
-    // 3. ユーザーの入力内容を取得
     const data = {
       name: nameInput.value.trim(),
       action: actionInput.value.trim(),
@@ -333,16 +363,11 @@
       enemy: enemyInput.value.trim() || "なし"
     };
 
-    // 4. ユーザーの入力をチャット欄に表示
     pushUserMessage(`【挑戦者】${data.name}\n行動：${data.action}\n持ち物：${data.item}\nお供：${data.companion}\n遭遇：${data.enemy}`);
-
-    // 入力欄をクリア（連続して遊べるように）
     form.reset();
 
-    // 5. Botの「生成中...」を表示（紫風）
     const loadingId = pushBotMessage("ふふっ、境界を繋いで、あなたの運命を覗いてあげるわ…… <span class='loading-eye'>👁️</span>", true);
 
-    // プロンプト作成（八雲紫として振る舞うよう指示を強力に）
     const enemyText = data.enemy !== "なし"
       ? `## ⚔ 遭遇・敵対者の行動\n- 相手(${data.enemy})が主人公に対してどのような行動をとったか。`
       : "";
@@ -376,9 +401,8 @@ ${enemyText}
 `;
 
     try {
-      // 6. Gemini APIへ送信（モデル名は最新の推奨フラッシュモデルに更新）
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -389,18 +413,10 @@ ${enemyText}
       );
 
       const json = await res.json();
-
-      if (json.error) {
-        throw new Error(json.error.message);
-      }
-
-      if (!json.candidates || !json.candidates[0].content) {
-        throw new Error("返答が空でした。");
-      }
+      if (json.error) throw new Error(json.error.message);
+      if (!json.candidates || !json.candidates[0].content) throw new Error("返答が空でした。");
 
       const text = json.candidates[0].content.parts[0].text;
-
-      // 7. 生成中のメッセージを削除して、結果を表示
       removeMessage(loadingId);
       pushBotMessage(marked.parse(text), true);
 
@@ -415,14 +431,12 @@ ${enemyText}
     }
   });
 
-  // Botのメッセージを表示する関数
   function pushBotMessage(text, isHtml = false) {
     const msgId = "msg-" + Date.now();
     const box = document.createElement("div");
     box.className = "botContainer";
     box.id = msgId;
 
-    // 画像エラー処理も含むHTML
     box.innerHTML = `
       <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;box-shadow: 0 0 10px var(--red-eye);\\'>紫</div>');">
       <div class="botText">${isHtml ? text : text}</div>
@@ -433,15 +447,12 @@ ${enemyText}
     return msgId;
   }
 
-  // ユーザーのメッセージを表示する関数
   function pushUserMessage(text) {
     const wrapper = document.createElement("div");
     wrapper.className = "userContainer";
-    
     const box = document.createElement("div");
     box.className = "userBubble";
     box.textContent = text;
-    
     wrapper.appendChild(box);
     chat.appendChild(wrapper);
     scrollToBottom();
@@ -452,12 +463,8 @@ ${enemyText}
     if (el) el.remove();
   }
 
-  // チャットコンテナの一番下へスクロール
   function scrollToBottom() {
-    chat.scrollTo({
-      top: chat.scrollHeight,
-      behavior: 'smooth'
-    });
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
   }
 </script>
 </body>
