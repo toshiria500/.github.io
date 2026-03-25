@@ -1,29 +1,108 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>設定</title>
-<link rel="stylesheet" href="../../static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>設定 - 幻想郷ジェネレーター</title>
+  <!-- CSSのパスは環境に合わせて調整してください -->
+  <link rel="stylesheet" href="../static/style.css">
+  <style>
+    /* 設定画面専用の簡易スタイル */
+    .setting-container {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .instruction-box {
+      background: #f0f7ff;
+      border-left: 5px solid #007bff;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 0.9em;
+      text-align: left;
+    }
+    .instruction-box ol {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    .api-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="password"] {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px; /* モバイルでズームされないように16px以上推奨 */
+    }
+    #saveKey {
+      padding: 12px;
+      background-color: #e3182d; /* 東方風の赤 */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #saveKey:hover {
+      background-color: #b31223;
+    }
+    .status-msg {
+      font-size: 0.8em;
+      color: #666;
+      line-height: 1.5;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #007bff;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>設定</h2>
+<div class="container setting-container">
+  <h2>⚙ 設定</h2>
 
-  <label class="setting-label">
-    Gemini API Key
-<input type="password" id="apiKey" placeholder="APIキーを入力" style="width: 300px;">
-<button id="saveKey">保存</button>
+  <!-- ユーザーへの説明エリア -->
+  <div class="instruction-box">
+    <p>このアプリで物語を生成するには <strong>Gemini APIキー</strong> が必要です。</p>
+    <ol>
+      <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> にアクセスします。</li>
+      <li>「Create API key」からキーを発行し、コピーします。</li>
+      <li>下の欄に貼り付けて「保存」を押してください。</li>
+    </ol>
+  </div>
 
-  <p class="note">
-    ※ このキーはこの端末のみに保存されます。<br>
-    別の端末では再入力が必要です。
-  </p>
+  <!-- 入力エリア -->
+  <div class="api-input-group">
+    <label for="apiKey">Gemini API Key</label>
+    <input type="password" id="apiKey" placeholder="AIza...から始まるキーを入力">
+    <button id="saveKey">保存する</button>
+  </div>
 
-  <a href="../templates/gensokyo" class="back-link">← 戻る</a>
+  <!-- セキュリティに関する注意書き -->
+  <div class="status-msg">
+    <p>※ 入力したキーは、あなたのブラウザ（LocalStorage）にのみ保存されます。</p>
+    <p>※ 外部サーバーへ送信されたり、作者に知られることはありませんのでご安心ください。</p>
+  </div>
+
+  <hr>
+  
+  <!-- 戻るリンク -->
+  <a href="./gensokyo.html" class="back-link">← 物語の画面に戻る</a>
 </div>
 
-<script src="../../static/Setting.js"></script>
+<!-- JSの読み込み -->
+<script src="../static/Setting.js"></script>
+
 </body>
 </html>
+
