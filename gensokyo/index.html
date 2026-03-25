@@ -83,6 +83,7 @@
     background: var(--bot-msg-bg); border: 1px solid rgba(157, 78, 221, 0.4);
     border-radius: 4px 20px 20px 20px; padding: 14px 18px; line-height: 1.7;
     font-size: 0.95rem; backdrop-filter: blur(10px); max-width: 85%;
+    overflow-wrap: break-word;
   }
 
   .userContainer { display: flex; justify-content: flex-end; width: 100%; }
@@ -93,7 +94,7 @@
 
   #bottom-area { background: #050208; border-top: 1px solid var(--purple-main); padding-bottom: env(safe-area-inset-bottom); }
   #storyForm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; max-width: 900px; margin: 0 auto; }
-  
+
   input {
     background: rgba(255,255,255,0.07); border: 1px solid #333; color: #fff;
     padding: 12px; border-radius: 8px; font-size: 16px; outline: none; font-family: var(--font-serif);
@@ -106,7 +107,7 @@
     color: #fff; font-weight: bold; cursor: pointer; font-family: var(--font-serif); font-size: 1.1rem;
   }
 
-  /* モーダル群 */
+  /* モーダル */
   .modal-overlay {
     position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.97);
     z-index: 2000; display:none; flex-direction:column; align-items:center; justify-content:center;
@@ -133,7 +134,7 @@
   /* フッター */
   .site-footer { padding: 15px; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
   .gemini-text { font-weight: bold; background: linear-gradient(90deg, #4E89FF, #FF7FDE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .loading-eye { animation: blink 1.2s infinite; color: var(--text-accent); }
+  .loading-eye { animation: blink 1.2s infinite; color: var(--text-accent); display: inline-block; }
   @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1.1); } 50% { opacity: 0.3; transform: scale(0.9); } }
 </style>
 </head>
@@ -144,7 +145,6 @@
   <a href="./setting/" class="setting-link">⚙ 設定</a>
 </header>
 
-<!-- プレビューモーダル -->
 <div id="previewModal" class="modal-overlay">
   <div class="preview-circle">
     <img src="" id="largeIconPreview" class="preview-img" onerror="handleIconError(this)">
@@ -156,7 +156,6 @@
   </div>
 </div>
 
-<!-- クロップモーダル -->
 <div id="cropModal" class="modal-overlay">
   <p style="margin-bottom:20px;">境界に合うよう、位置を調整してちょうだい</p>
   <div class="crop-viewport" id="cropViewport"><img id="cropImage"></div>
@@ -182,12 +181,13 @@
 
 <div id="bottom-area">
   <form id="storyForm">
-    <input id="name" placeholder="名前" required>
-    <input id="action" placeholder="行動" required>
-    <input id="item" placeholder="持ち物" required>
-    <input id="companion" placeholder="お供" required>
-    <input id="enemy" class="full-width" placeholder="遭遇者 (任意)">
-    <button type="submit">👁️ 境界を覗く</button>
+    <!-- autocomplete="off" を追加 -->
+    <input id="name" placeholder="名前" required autocomplete="off">
+    <input id="action" placeholder="行動" required autocomplete="off">
+    <input id="item" placeholder="持ち物" required autocomplete="off">
+    <input id="companion" placeholder="お供" required autocomplete="off">
+    <input id="enemy" class="full-width" placeholder="遭遇者 (任意)" autocomplete="off">
+    <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
   </form>
   <footer class="site-footer">
     <div style="margin-bottom:6px;">Powered by <span class="gemini-text">Gemini</span></div>
@@ -245,10 +245,9 @@
   }
   window.addEventListener('load', initIcon);
 
-  // クロップロジック
+  // クロップロジック省略
   let imgState = { x: 0, y: 0, scale: 1 };
   const viewportSize = Math.min(window.innerWidth * 0.85, 340);
-
   iconInput.onchange = (e) => {
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader();
@@ -263,10 +262,8 @@
     };
     r.readAsDataURL(f);
   };
-
   function updateCrop() { cropImg.style.transform = `translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`; }
   function closeCropModal() { cropModal.style.display = 'none'; iconInput.value = ''; }
-
   function saveCroppedIcon() {
     const canvas = document.createElement('canvas'); canvas.width = 400; canvas.height = 400;
     const ctx = canvas.getContext('2d'); const ratio = 400 / viewportSize;
@@ -275,7 +272,6 @@
     const dataUrl = canvas.toDataURL('image/png'); localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
     initIcon(); closeCropModal();
   }
-
   let isDragging = false, startX, startY;
   const onStart = (e) => { isDragging = true; const ev = e.touches ? e.touches[0] : e; startX = ev.clientX - imgState.x; startY = ev.clientY - imgState.y; };
   const onMove = (e) => { if(!isDragging) return; const ev = e.touches ? e.touches[0] : e; imgState.x = ev.clientX - startX; imgState.y = ev.clientY - startY; updateCrop(); };
@@ -283,35 +279,107 @@
   vp.addEventListener('touchstart', onStart, {passive: false}); window.addEventListener('touchmove', onMove, {passive: false}); window.addEventListener('touchend', () => isDragging = false);
   zoom.oninput = () => { imgState.scale = parseFloat(zoom.value); updateCrop(); };
 
-  // API
+  // タイピングアニメーション関数
+  async function typeWriter(element, markdown) {
+    const html = marked.parse(markdown);
+    // 一旦空にする
+    element.innerHTML = "";
+    
+    // HTMLタグを壊さないように、一時的にダミー要素に描画して、中身のテキスト/ノードを順次追加する
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    
+    const nodes = Array.from(tempDiv.childNodes);
+    for (let node of nodes) {
+      const newNode = node.cloneNode(true);
+      if (newNode.nodeType === Node.TEXT_NODE) {
+        // テキストノードなら一文字ずつ追加
+        const text = newNode.textContent;
+        const textNode = document.createTextNode("");
+        element.appendChild(textNode);
+        for (let i = 0; i < text.length; i++) {
+          textNode.textContent += text[i];
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          await new Promise(r => setTimeout(r, 20)); // タイピング速度
+        }
+      } else {
+        // タグ（p, h3など）ならそのまま追加
+        element.appendChild(newNode);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        await new Promise(r => setTimeout(r, 50));
+      }
+    }
+  }
+
   const storyForm = document.getElementById('storyForm');
+  const submitBtn = document.getElementById('submitBtn');
+
   storyForm.onsubmit = async (e) => {
     e.preventDefault();
     const apiKey = localStorage.getItem("GEMINI_API_KEY") || "";
     if(!apiKey) { pushBotMsg("設定画面で「境界の鍵」を登録してちょうだい。"); return; }
-    const data = { n: document.getElementById('name').value, a: document.getElementById('action').value, i: document.getElementById('item').value, c: document.getElementById('companion').value, e: document.getElementById('enemy').value || "なし" };
+    
+    const data = { 
+      n: document.getElementById('name').value, 
+      a: document.getElementById('action').value, 
+      i: document.getElementById('item').value, 
+      c: document.getElementById('companion').value, 
+      e: document.getElementById('enemy').value || "なし" 
+    };
+    
     pushUserMsg(`${data.n}は「${data.a}」を試みる。`);
-    const loadingId = pushBotMsg("境界を弄っているわ…… <span class='loading-eye'>👁️</span>");
+    
+    // ローディングメッセージを表示し、その要素のIDを取得
+    const botMsgId = pushBotMsg("境界を弄っているわ…… <span class='loading-eye'>👁️</span>");
+    const botTextElem = document.getElementById(botMsgId).querySelector('.botText');
+    
     storyForm.reset();
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の要素で物語をMarkdownで語って。名前:${data.n}, 行動:${data.a}, 持ち物:${data.i}, お供:${data.c}, 敵:${data.e}\n### 1. 境界の向こう側\n### 2. 生存率\n### 3. 結末` }] }] })
+        body: JSON.stringify({ contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の要素で物語をMarkdownで語って。名前:${data.n}, 行動:${data.a}, 持ち物:${data.i}, お供:${data.c}, 敵:${data.e}\n\n### 1. 境界の向こう側\n### 2. 生存率\n### 3. 結末\n\n紫らしい、余裕のある、しかし底知れない口調でお願いします。` }] }] })
       });
-      const res = await response.json(); document.getElementById(loadingId).remove();
-      pushBotMsg(marked.parse(res.candidates[0].content.parts[0].text));
-    } catch { document.getElementById(loadingId).innerHTML = "鍵を確認して。"; }
+      
+      const res = await response.json();
+      const answer = res.candidates[0].content.parts[0].text;
+      
+      // 生成中メッセージを消してタイピング開始
+      await typeWriter(botTextElem, answer);
+      
+    } catch (err) {
+      botTextElem.innerHTML = "<span style='color:var(--red-eye)'>境界が安定しないわ。鍵が正しいか確認してちょうだい。</span>";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+    }
   };
 
   function pushBotMsg(t) {
-    const id = "b" + Date.now(); const div = document.createElement('div'); div.className = "botContainer"; div.id = id;
+    const id = "b" + Date.now();
+    const div = document.createElement('div');
+    div.className = "botContainer";
+    div.id = id;
     const src = localStorage.getItem(STORAGE_KEY_ICON);
-    div.innerHTML = `<div class="icon-wrapper"><img src="${src||''}" class="botIcon" style="${src?'':'display:none'}" onerror="handleIconError(this)"></div><div class="botText">${t}</div>`;
-    chatContainer.appendChild(div); div.scrollIntoView({behavior:'smooth'}); return id;
+    div.innerHTML = `
+      <div class="icon-wrapper">
+        <img src="${src||''}" class="botIcon" style="${src?'':'display:none'}" onerror="handleIconError(this)">
+      </div>
+      <div class="botText">${t}</div>
+    `;
+    chatContainer.appendChild(div);
+    div.scrollIntoView({behavior:'smooth'});
+    return id;
   }
+
   function pushUserMsg(t) {
-    const div = document.createElement('div'); div.className = "userContainer"; div.innerHTML = `<div class="userBubble">${t}</div>`;
-    chatContainer.appendChild(div); div.scrollIntoView({behavior:'smooth'});
+    const div = document.createElement('div');
+    div.className = "userContainer";
+    div.innerHTML = `<div class="userBubble">${t}</div>`;
+    chatContainer.appendChild(div);
+    div.scrollIntoView({behavior:'smooth'});
   }
 </script>
 </body>
