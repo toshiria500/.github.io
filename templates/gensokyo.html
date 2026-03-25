@@ -6,17 +6,7 @@
 <title>幻想郷ジェネレーター - 境界の語り部</title>
 <meta name="description" content="八雲紫があなたの幻想郷での運命を語ります。">
 
-<!-- OGP設定 -->
-<meta property="og:title" content="幻想郷ジェネレーター - 境界の語り部">
-<meta property="og:description" content="八雲紫があなたの幻想郷での運命を語ります。">
-<meta property="og:image" content="images/ogp3.png">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="images/ogp3.png">
-
-<!-- Markdown変換用ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
@@ -46,14 +36,13 @@
   }
 
   header {
-    background: linear-gradient(90deg, #000000, var(--purple-main), #000000);
+    background: linear-gradient(90deg, #000, var(--purple-main), #000);
     color: var(--text-accent);
     padding: 12px 20px;
     text-align: center;
     font-size: 1.1rem;
     font-weight: bold;
     border-bottom: 2px solid var(--red-eye);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
     z-index: 10;
     display: flex;
     justify-content: space-between;
@@ -63,12 +52,11 @@
   .setting-link {
     color: var(--text-main);
     text-decoration: none;
-    font-size: 0.85rem;
-    background: rgba(255,255,255,0.15);
-    padding: 6px 12px;
+    font-size: 0.8rem;
+    background: rgba(255,255,255,0.1);
+    padding: 5px 12px;
     border-radius: 20px;
-    transition: all 0.3s;
-    font-family: sans-serif; /* 設定リンクは読みやすさ優先 */
+    font-family: sans-serif;
   }
 
   #chat-container {
@@ -78,12 +66,10 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    background-image: radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.15) 0%, transparent 80%),
-                      url('https://www.transparenttextures.com/patterns/dark-matter.png');
+    background: radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.1) 0%, transparent 80%);
   }
 
   .botContainer { display: flex; align-items: flex-start; gap: 14px; max-width: 95%; animation: fadeIn 0.4s ease-out; }
-  
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   .icon-wrapper {
@@ -92,414 +78,344 @@
     height: 50px;
     position: relative;
     border-radius: 50%;
-    padding: 2px;
     background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
-    box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
+    padding: 2px;
     cursor: pointer;
   }
 
-  .botIcon { width: 100%; height: 100%; border-radius: 50%; background-color: #000; object-fit: cover; display: block; }
+  .botIcon { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; background: #000; }
 
   .botText {
     background: var(--bot-msg-bg);
-    border: 1px solid rgba(157, 78, 221, 0.4);
-    border-radius: 4px 20px 20px 20px;
-    padding: 14px 18px;
-    line-height: 1.7;
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    border-radius: 4px 18px 18px 18px;
+    padding: 12px 16px;
+    line-height: 1.6;
     font-size: 0.95rem;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(5px);
   }
 
-  .size-tip {
-    font-size: 11px;
-    color: var(--text-accent);
-    margin-top: 8px;
-    display: block;
-    line-height: 1.4;
-    opacity: 0.95;
-    border-left: 2px solid var(--red-eye);
-    padding-left: 8px;
-  }
-
-  .userContainer { display: flex; justify-content: flex-end; width: 100%; animation: fadeIn 0.4s ease-out; }
+  .userContainer { display: flex; justify-content: flex-end; width: 100%; }
   .userBubble {
     background: var(--user-bubble);
-    color: #fff;
-    border-radius: 20px 4px 20px 20px;
-    padding: 12px 18px;
+    padding: 10px 16px;
+    border-radius: 18px 4px 18px 18px;
     max-width: 80%;
     font-size: 0.9rem;
-    white-space: pre-wrap;
   }
 
-  /* --- トリミングモーダル --- */
-  #cropModal {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 1000;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .crop-viewport {
-    width: 280px;
-    height: 280px;
-    border: 2px solid var(--purple-light);
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    background: #111;
-    cursor: move;
-    touch-action: none;
-  }
-  #cropImage {
-    position: absolute;
-    top: 0; left: 0;
-    transform-origin: 0 0;
-    pointer-events: none;
-    user-select: none;
-  }
-  .crop-controls {
-    width: 100%;
-    max-width: 300px;
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  .crop-slider { width: 100%; accent-color: var(--purple-light); }
-  .crop-btns { display: flex; gap: 10px; }
-  .crop-btns button {
-    flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-family: var(--font-serif);
-  }
-  .btn-cancel { background: #444; color: white; }
-  .btn-save { background: var(--purple-main); color: white; }
-
-  /* --- 入力フォーム --- */
-  #bottom-area { background: #000; border-top: 2px solid var(--purple-main); }
+  #bottom-area { background: #000; border-top: 1px solid var(--purple-main); }
   #storyForm {
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 12px;
-    max-width: 900px; 
-    margin: 0 auto; 
-    padding: 16px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; max-width: 800px; margin: 0 auto;
   }
-  .full-width { grid-column: span 2; }
   input {
-    background: rgba(255, 255, 255, 0.08); border: 1px solid #444; color: white;
-    padding: 12px 15px; border-radius: 8px; font-size: 16px; outline: none;
-    font-family: var(--font-serif); /* 入力欄も明朝体に変更 */
-  }
-  input::placeholder { color: rgba(255,255,255,0.4); }
-  
-  button[type="submit"] {
-    grid-column: span 2; background: linear-gradient(135deg, var(--purple-main), #4b0082);
-    color: white; border: 1px solid var(--purple-light); padding: 14px;
-    font-weight: bold; border-radius: 8px; cursor: pointer;
+    background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff;
+    padding: 12px; border-radius: 6px; font-size: 16px; outline: none;
     font-family: var(--font-serif);
   }
+  .full-width { grid-column: span 2; }
+  button[type="submit"] {
+    grid-column: span 2; padding: 14px; border-radius: 6px; border: none;
+    background: linear-gradient(to right, var(--purple-main), #4b0082);
+    color: #fff; font-weight: bold; cursor: pointer; font-family: var(--font-serif);
+  }
 
-  .site-footer {
-    text-align: center; padding: 15px 10px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);
-    background: #000; border-top: 1px solid #222;
+  /* --- Modals --- */
+  .modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95);
+    z-index: 1000; display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding: 20px;
   }
-  .footer-links { margin-bottom: 8px; }
-  .footer-links a { color: var(--purple-light); text-decoration: none; margin: 0 8px; }
-  
-  .powered-by {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    margin-bottom: 8px;
-    font-size: 0.75rem;
-    font-family: sans-serif;
-  }
-  .gemini-sparkle {
-    width: 16px;
-    height: 16px;
-  }
-  .gemini-logo-img { height: 14px; filter: invert(1); opacity: 0.9; }
 
-  .loading-eye { display: inline-block; animation: blink 1.2s infinite; color: var(--text-accent); }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  @media (max-width: 600px) {
-    #storyForm { grid-template-columns: 1fr; }
-    .full-width, button[type="submit"] { grid-column: span 1; }
+  /* Preview Modal */
+  #previewModal .preview-circle {
+    width: 240px; height: 240px; border-radius: 50%; border: 3px solid var(--text-accent);
+    overflow: hidden; background: #000; margin-bottom: 20px;
+    box-shadow: 0 0 20px var(--purple-main);
   }
+  #previewModal .preview-img { width: 100%; height: 100%; object-fit: cover; }
+  #previewModal .modal-text { text-align: center; color: var(--text-main); margin-bottom: 20px; font-size: 0.9rem; }
+  #previewModal .modal-tip { color: var(--text-accent); font-size: 0.8rem; margin-top: 5px; }
+
+  /* Crop Modal */
+  .crop-viewport { 
+    width: 280px; height: 280px; border-radius: 50%; border: 2px solid var(--purple-light); 
+    overflow: hidden; position: relative; touch-action: none; background: #111;
+  }
+  #cropImage { position: absolute; transform-origin: 0 0; cursor: move; pointer-events: none; }
+
+  .modal-btn-group { display: flex; gap: 15px; width: 100%; max-width: 300px; }
+  .modal-btn { 
+    flex: 1; padding: 12px; border-radius: 8px; border: none; font-family: var(--font-serif); font-weight: bold; cursor: pointer;
+  }
+  .btn-primary { background: var(--purple-main); color: #fff; }
+  .btn-secondary { background: #333; color: #fff; }
+
+  /* Footer */
+  .site-footer { padding: 15px; text-align: center; border-top: 1px solid #111; color: rgba(255,255,255,0.4); }
+  .powered-by { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 5px; }
+  .gemini-sparkle { width: 18px; height: 18px; }
+  .gemini-text { font-weight: bold; font-size: 1rem; background: linear-gradient(90deg, #4E89FF, #FF7FDE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .loading-eye { animation: blink 1s infinite; color: var(--text-accent); }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 </style>
 </head>
 <body>
 
-  <header>
-    <span>⛩ 幻想郷ジェネレーター</span>
-    <a href="./Setting.html" class="setting-link">⚙ 設定</a>
-  </header>
+<header>
+  <span>⛩ 幻想郷ジェネレーター</span>
+  <a href="./Setting.html" class="setting-link">⚙ 設定</a>
+</header>
 
-  <div id="cropModal">
-    <h3 style="color:var(--text-accent); margin-bottom:15px;">境界の姿を調整してちょうだい</h3>
-    <div class="crop-viewport" id="cropViewport">
-      <img id="cropImage" src="">
+<!-- アイコン拡大プレビューモーダル -->
+<div id="previewModal" class="modal-overlay">
+  <div class="preview-circle">
+    <img src="" id="largeIconPreview" class="preview-img" onerror="handleIconError(this)">
+  </div>
+  <div class="modal-text">
+    <p>現在の境界の姿（アイコン）よ。</p>
+    <p class="modal-tip">※アイコンの変更が可能です。<br>推奨サイズ：400 × 400 px</p>
+  </div>
+  <div class="modal-btn-group">
+    <button class="modal-btn btn-secondary" onclick="closePreviewModal()">閉じる</button>
+    <button class="modal-btn btn-primary" onclick="triggerIconSelect()">姿を変える</button>
+  </div>
+</div>
+
+<!-- アイコン調整モーダル -->
+<div id="cropModal" class="modal-overlay">
+  <div class="modal-text"><p>位置と大きさを調整してちょうだい</p></div>
+  <div class="crop-viewport" id="cropViewport"><img id="cropImage"></div>
+  <input type="range" id="zoomSlider" min="0.1" max="3" step="0.01" style="width:280px; margin:20px 0;">
+  <div class="modal-btn-group">
+    <button class="modal-btn btn-secondary" onclick="closeCropModal()">戻る</button>
+    <button class="modal-btn btn-primary" onclick="saveCroppedIcon()">決定</button>
+  </div>
+</div>
+
+<input type="file" id="iconInput" accept="image/*" style="display:none">
+
+<main id="chat-container">
+  <div class="botContainer">
+    <div class="icon-wrapper" onclick="openPreviewModal()">
+      <img src="" class="botIcon" id="displayIcon" onerror="handleIconError(this)">
     </div>
-    <div class="crop-controls">
-      <input type="range" class="crop-slider" id="zoomSlider" min="0.1" max="3" step="0.01" value="1">
-      <div class="crop-btns">
-        <button class="btn-cancel" onclick="closeCropModal()">取り消し</button>
-        <button class="btn-save" onclick="saveCroppedIcon()">定着させる</button>
-      </div>
+    <div class="botText">
+      あら、境界を越えてここまで来るとは物好きね。<br>
+      あなたの名と、今持っている物を教えてちょうだい。<br>
+      私が「境界」を弄って、あなたの行く末を少しだけ覗いてあげるわ。
     </div>
   </div>
+</main>
 
-  <input type="file" id="iconInput" accept="image/*" style="display:none">
+<div id="bottom-area">
+  <form id="storyForm">
+    <input id="name" placeholder="名前" required>
+    <input id="action" placeholder="行動" required>
+    <input id="item" placeholder="持ち物" required>
+    <input id="companion" placeholder="お供" required>
+    <input id="enemy" class="full-width" placeholder="遭遇者 (任意)">
+    <button type="submit">👁️ 境界を覗く</button>
+  </form>
 
-  <main id="chat-container">
-    <div class="botContainer" id="first-msg">
-      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
-        <img src="" class="botIcon" id="displayIcon" alt="八雲紫" onerror="handleIconError(this)">
-      </div>
-      <div class="botText">
-        あらあら、外の世界から迷い込んできたの？<br>
-        歓迎するわ、幻想郷へ。<br><br>
-        あなたの名前や、持っている物を教えてちょうだい。<br>
-        この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。<br>
-        <span class="size-tip">
-          ※姿（アイコン）をタップして変えられるわよ。原作の私、別の世界線（ロスワ）の私、あるいは誰かが描いた私……どのような「八雲紫」であっても、私は私。あなたの好む境界の姿を見せてちょうだい（推奨: 400x400px）
-        </span>
-      </div>
+  <footer class="site-footer">
+    <div class="powered-by">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" fill="url(#grad)"/>
+        <defs><linearGradient id="grad" x1="2" y1="12" x2="22" y2="12" gradientUnits="userSpaceOnUse"><stop stop-color="#4E89FF"/><stop offset="1" stop-color="#FF7FDE"/></linearGradient></defs>
+      </svg>
+      <span>Powered by</span>
+      <span class="gemini-text">Gemini</span>
     </div>
-  </main>
-
-  <div id="bottom-area">
-    <form id="storyForm" autocomplete="off">
-      <input id="name" placeholder="名前" required autocomplete="off">
-      <input id="action" placeholder="行動" required autocomplete="off">
-      <input id="item" placeholder="持ち物" required autocomplete="off">
-      <input id="companion" placeholder="お供" required autocomplete="off">
-      <input id="enemy" class="full-width" placeholder="遭遇する者 (任意)" autocomplete="off">
-      <button type="submit">👁️ 境界を覗く</button>
-    </form>
-
-    <footer class="site-footer">
-      <div class="footer-links">
-        <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">生存率診断(元ネタ) <i class="fas fa-external-link-alt"></i></a>
-      </div>
-      <div class="powered-by">
-        <!-- Gemini ロゴとアイコン -->
-        <svg class="gemini-sparkle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" fill="url(#gemini_grad)"/>
-          <defs>
-            <linearGradient id="gemini_grad" x1="2" y1="12" x2="22" y2="12" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#4E89FF"/>
-              <stop offset="1" stop-color="#FF7FDE"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <span>Powered by</span>
-        <img src="https://www.gstatic.com/lamda/images/gemini_wordmark_601c7d29255675e2c5626.svg" alt="Gemini" class="gemini-logo-img">
-      </div>
-      <div class="copyright">Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
-    </footer>
-  </div>
+    <div style="font-size:0.75rem;">Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
+  </footer>
+</div>
 
 <script>
-  // 年号を2025から現在の年までに更新
+  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V2';
   const currentYear = new Date().getFullYear();
   document.getElementById("year").textContent = currentYear;
 
-  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V2';
-  const displayIcon = document.getElementById('displayIcon');
+  const iconInput = document.getElementById('iconInput');
+  const previewModal = document.getElementById('previewModal');
   const cropModal = document.getElementById('cropModal');
-  const cropImage = document.getElementById('cropImage');
-  const zoomSlider = document.getElementById('zoomSlider');
-  const viewport = document.getElementById('cropViewport');
+  const largePreview = document.getElementById('largeIconPreview');
+  const cropImg = document.getElementById('cropImage');
+  const zoom = document.getElementById('zoomSlider');
+  const vp = document.getElementById('cropViewport');
 
-  let imgState = { x: 0, y: 0, scale: 1, baseScale: 1 };
-  let isDragging = false;
-  let startX, startY;
+  // --- Modal Logic ---
+  function openPreviewModal() {
+    const saved = localStorage.getItem(STORAGE_KEY_ICON);
+    if (saved) largePreview.src = saved;
+    previewModal.style.display = 'flex';
+  }
+  function closePreviewModal() { previewModal.style.display = 'none'; }
 
-  function applyIconToElement(imgElement, src) {
-    if (!src || src === "null" || src === "") return;
-    imgElement.src = src;
-    imgElement.style.display = 'block';
-    const label = imgElement.parentElement.querySelector('.fallback-label');
-    if (label) label.remove();
+  function triggerIconSelect() {
+    closePreviewModal();
+    iconInput.click();
+  }
+
+  function handleIconError(img) {
+    img.style.display = 'none';
+    const parent = img.parentElement;
+    if (!parent.querySelector('.fb')) {
+      const fb = document.createElement('div');
+      fb.className = 'fb'; fb.innerText = '紫';
+      fb.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-accent);font-weight:bold;font-size:32px;';
+      if(parent.classList.contains('preview-circle')) fb.style.fontSize = '80px';
+      parent.appendChild(fb);
+    }
   }
 
   function initIcon() {
     const saved = localStorage.getItem(STORAGE_KEY_ICON);
     if (saved) {
-      applyIconToElement(displayIcon, saved);
-    } else {
-      displayIcon.src = '../static/bot_icon.png';
+      document.querySelectorAll('.botIcon').forEach(i => i.src = saved);
+      largePreview.src = saved;
     }
   }
-
   window.addEventListener('load', initIcon);
-  setTimeout(initIcon, 100);
 
-  function handleIconError(img) {
-    const saved = localStorage.getItem(STORAGE_KEY_ICON);
-    if (saved && img.src !== saved) {
-      applyIconToElement(img, saved);
-      return;
-    }
-    img.style.display = 'none';
-    const parent = img.parentElement;
-    if (!parent.querySelector('.fallback-label')) {
-      const label = document.createElement('div');
-      label.className = 'fallback-label';
-      label.style.cssText = 'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;';
-      label.innerText = '紫';
-      parent.appendChild(label);
-    }
-  }
-
-  document.getElementById('iconInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      cropImage.src = event.target.result;
-      cropImage.onload = () => {
-        const ratioW = 280 / cropImage.naturalWidth;
-        const ratioH = 280 / cropImage.naturalHeight;
-        imgState.baseScale = Math.max(ratioW, ratioH);
-        imgState.scale = imgState.baseScale;
-        imgState.x = (280 - cropImage.naturalWidth * imgState.scale) / 2;
-        imgState.y = (280 - cropImage.naturalHeight * imgState.scale) / 2;
-        zoomSlider.min = imgState.baseScale;
-        zoomSlider.max = imgState.baseScale * 5;
-        zoomSlider.value = imgState.scale;
-        applyTransform();
+  // --- Crop & Adjust Logic (SNS Style) ---
+  let imgState = { x: 0, y: 0, scale: 1 };
+  iconInput.onchange = (e) => {
+    const f = e.target.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      cropImg.src = ev.target.result;
+      cropImg.onload = () => {
+        const baseScale = 280 / Math.min(cropImg.width, cropImg.height);
+        imgState.scale = baseScale;
+        imgState.x = (280 - cropImg.width * imgState.scale) / 2;
+        imgState.y = (280 - cropImg.height * imgState.scale) / 2;
+        zoom.min = baseScale * 0.5;
+        zoom.max = baseScale * 5;
+        zoom.value = imgState.scale;
+        updateCrop();
         cropModal.style.display = 'flex';
       };
     };
-    reader.readAsDataURL(file);
-  });
+    r.readAsDataURL(f);
+  };
 
-  viewport.addEventListener('mousedown', startDrag);
-  window.addEventListener('mousemove', doDrag);
-  window.addEventListener('mouseup', endDrag);
-  viewport.addEventListener('touchstart', (e) => { e.preventDefault(); startDrag(e.touches[0]); }, {passive: false});
-  window.addEventListener('touchmove', (e) => { if(isDragging) e.preventDefault(); doDrag(e.touches[0]); }, {passive: false});
-  window.addEventListener('touchend', endDrag);
-
-  function startDrag(e) { isDragging = true; startX = e.clientX - imgState.x; startY = e.clientY - imgState.y; }
-  function doDrag(e) {
-    if (!isDragging) return;
-    imgState.x = e.clientX - startX;
-    imgState.y = e.clientY - startY;
-    applyTransform();
-  }
-  function endDrag() { isDragging = false; }
-
-  zoomSlider.addEventListener('input', (e) => {
-    const oldScale = imgState.scale;
-    imgState.scale = parseFloat(e.target.value);
-    imgState.x -= (cropImage.naturalWidth * imgState.scale - cropImage.naturalWidth * oldScale) / 2;
-    imgState.y -= (cropImage.naturalHeight * imgState.scale - cropImage.naturalHeight * oldScale) / 2;
-    applyTransform();
-  });
-
-  function applyTransform() {
-    cropImage.style.transform = `translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`;
-  }
-
-  function closeCropModal() { cropModal.style.display = 'none'; document.getElementById('iconInput').value = ""; }
+  function updateCrop() { cropImg.style.transform = `translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`; }
+  function closeCropModal() { cropModal.style.display = 'none'; iconInput.value = ''; }
 
   function saveCroppedIcon() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 400; canvas.height = 400;
-    const ctx = canvas.getContext('2d');
-    const ratio = 400 / 280;
-    ctx.drawImage(cropImage, imgState.x * ratio, imgState.y * ratio, cropImage.naturalWidth * imgState.scale * ratio, cropImage.naturalHeight * imgState.scale * ratio);
-    const dataUrl = canvas.toDataURL('image/png');
-    localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
-    updateAllBotIcons(dataUrl);
+    const c = document.createElement('canvas');
+    c.width = 400; c.height = 400;
+    const ctx = c.getContext('2d');
+    const r = 400 / 280;
+    ctx.save();
+    ctx.translate(imgState.x * r, imgState.y * r);
+    ctx.scale(imgState.scale * r, imgState.scale * r);
+    ctx.drawImage(cropImg, 0, 0);
+    ctx.restore();
+    const data = c.toDataURL();
+    localStorage.setItem(STORAGE_KEY_ICON, data);
+    
+    document.querySelectorAll('.botIcon, .preview-img').forEach(i => {
+      i.src = data;
+      i.style.display = 'block';
+      const fb = i.parentElement.querySelector('.fb');
+      if (fb) fb.remove();
+    });
     closeCropModal();
   }
 
-  function updateAllBotIcons(src) {
-    const icons = document.querySelectorAll('.botIcon');
-    icons.forEach(img => applyIconToElement(img, src));
-  }
+  // Drag logic for PC & Mobile
+  let isD = false, ox, oy;
+  const startDrag = (e) => { 
+    isD = true; 
+    const ev = e.touches ? e.touches[0] : e;
+    ox = ev.clientX - imgState.x; oy = ev.clientY - imgState.y; 
+  };
+  const moveDrag = (e) => { 
+    if(isD) { 
+      const ev = e.touches ? e.touches[0] : e;
+      imgState.x = ev.clientX - ox; imgState.y = ev.clientY - oy; 
+      updateCrop(); 
+    } 
+  };
+  const endDrag = () => isD = false;
 
-  const form = document.getElementById("storyForm");
-  const chat = document.getElementById("chat-container");
+  vp.onmousedown = startDrag;
+  window.onmousemove = moveDrag;
+  window.onmouseup = endDrag;
+  vp.ontouchstart = startDrag;
+  window.ontouchmove = moveDrag;
+  window.ontouchend = endDrag;
 
-  form.addEventListener("submit", async (e) => {
+  zoom.oninput = () => { imgState.scale = parseFloat(zoom.value); updateCrop(); };
+
+  // --- API Connection ---
+  const form = document.getElementById('storyForm');
+  form.onsubmit = async (e) => {
     e.preventDefault();
-    const apiKey = localStorage.getItem("GEMINI_API_KEY");
-    if (!apiKey) {
-      pushBotMessage("APIキーが設定されていないわ。設定画面で境界の鍵を入力して。");
-      return;
-    }
+    const key = localStorage.getItem("GEMINI_API_KEY");
+    if(!key) { pushBotMsg("設定画面で「境界の鍵(APIキー)」を入力してちょうだい。"); return; }
 
     const data = {
-      name: document.getElementById("name").value.trim(),
-      action: document.getElementById("action").value.trim(),
-      item: document.getElementById("item").value.trim(),
-      companion: document.getElementById("companion").value.trim(),
-      enemy: document.getElementById("enemy").value.trim() || "なし"
+      n: document.getElementById('name').value,
+      a: document.getElementById('action').value,
+      i: document.getElementById('item').value,
+      c: document.getElementById('companion').value,
+      e: document.getElementById('enemy').value || "なし"
     };
 
-    pushUserMessage(`${data.name}\n行動: ${data.action}\n持ち物: ${data.item}`);
+    pushUserMsg(`${data.n}は「${data.a}」を行おうとしている。`);
+    const loadingId = pushBotMsg("境界を操作中よ…… <span class='loading-eye'>👁️</span>");
     form.reset();
 
-    const loadingId = pushBotMessage("境界を操作中よ…… <span class='loading-eye'>👁️</span>");
-
     try {
-      // 最新の安定版モデル gemini-2.0-flash を使用
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の情報を元に、幻想郷での運命を優雅でミステリアスにMarkdownで語ってください。
-名前:${data.name}, 行動:${data.action}, 持ち物:${data.item}, お供:${data.companion}, 遭遇者:${data.enemy}
-
-### 1. 境界の向こう側
+          contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の情報を元に、幻想郷での運命をMarkdownで語ってください。
+名前:${data.n}, 行動:${data.a}, 持ち物:${data.i}, お供:${data.c}, 遭遇者:${data.e}
+### 1. 境界の向こう側 (物語)
 ### 2. 生存率（%）
 ### 3. 結末（**生存**か**死亡**かを明記）` }] }]
         })
       });
       const json = await res.json();
+      if(json.error) throw new Error();
       const text = json.candidates[0].content.parts[0].text;
       document.getElementById(loadingId).remove();
-      pushBotMessage(marked.parse(text));
-    } catch (err) {
-      document.getElementById(loadingId).innerText = "あら、結界にノイズが走ったわ。APIキーが正しいか確認してちょうだい。";
+      pushBotMsg(marked.parse(text));
+    } catch {
+      const errEl = document.getElementById(loadingId);
+      if(errEl) errEl.innerText = "あら、境界が乱れているわ。APIキーが正しいか確認してちょうだい。";
     }
-  });
+  };
 
-  function pushBotMessage(text) {
-    const id = "bot-" + Date.now();
-    const div = document.createElement("div");
-    div.className = "botContainer";
-    div.id = id;
-    const currentSrc = localStorage.getItem(STORAGE_KEY_ICON) || '../static/bot_icon.png';
-    div.innerHTML = `
-      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
-        <img src="${currentSrc}" class="botIcon" onerror="handleIconError(this)">
+  function pushBotMsg(t) {
+    const id = "b"+Date.now();
+    const d = document.createElement('div');
+    d.className = "botContainer"; d.id = id;
+    const src = localStorage.getItem(STORAGE_KEY_ICON);
+    d.innerHTML = `
+      <div class="icon-wrapper" onclick="openPreviewModal()">
+        <img src="${src || ''}" class="botIcon" style="${src ? '' : 'display:none'}" onerror="handleIconError(this)">
       </div>
-      <div class="botText">${text}</div>
+      <div class="botText">${t}</div>
     `;
-    chat.appendChild(div);
-    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    document.getElementById('chat-container').appendChild(d);
+    d.scrollIntoView({behavior:'smooth'});
     return id;
   }
 
-  function pushUserMessage(text) {
-    const div = document.createElement("div");
-    div.className = "userContainer";
-    div.innerHTML = `<div class="userBubble">${text}</div>`;
-    chat.appendChild(div);
-    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+  function pushUserMsg(t) {
+    const d = document.createElement('div');
+    d.className = "userContainer";
+    d.innerHTML = `<div class="userBubble">${t}</div>`;
+    document.getElementById('chat-container').appendChild(d);
+    d.scrollIntoView({behavior:'smooth'});
   }
 </script>
 </body>
