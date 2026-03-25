@@ -29,12 +29,13 @@
     --red-eye: #ff1a1a;
     --user-bubble: #3a3d52;
     --bot-msg-bg: rgba(20, 10, 30, 0.85);
+    --font-serif: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
-    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
+    font-family: var(--font-serif);
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
@@ -67,6 +68,7 @@
     padding: 6px 12px;
     border-radius: 20px;
     transition: all 0.3s;
+    font-family: sans-serif; /* 設定リンクは読みやすさ優先 */
   }
 
   #chat-container {
@@ -114,7 +116,6 @@
     color: var(--text-accent);
     margin-top: 8px;
     display: block;
-    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
     line-height: 1.4;
     opacity: 0.95;
     border-left: 2px solid var(--red-eye);
@@ -173,7 +174,7 @@
   .crop-slider { width: 100%; accent-color: var(--purple-light); }
   .crop-btns { display: flex; gap: 10px; }
   .crop-btns button {
-    flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;
+    flex: 1; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-family: var(--font-serif);
   }
   .btn-cancel { background: #444; color: white; }
   .btn-save { background: var(--purple-main); color: white; }
@@ -192,19 +193,38 @@
   input {
     background: rgba(255, 255, 255, 0.08); border: 1px solid #444; color: white;
     padding: 12px 15px; border-radius: 8px; font-size: 16px; outline: none;
+    font-family: var(--font-serif); /* 入力欄も明朝体に変更 */
   }
+  input::placeholder { color: rgba(255,255,255,0.4); }
+  
   button[type="submit"] {
     grid-column: span 2; background: linear-gradient(135deg, var(--purple-main), #4b0082);
     color: white; border: 1px solid var(--purple-light); padding: 14px;
     font-weight: bold; border-radius: 8px; cursor: pointer;
-    font-family: 'Hiragino Mincho ProN', serif;
+    font-family: var(--font-serif);
   }
 
   .site-footer {
-    text-align: center; padding: 15px 10px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);
-    background: #000; font-family: 'Hiragino Mincho ProN', serif; border-top: 1px solid #222;
+    text-align: center; padding: 15px 10px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);
+    background: #000; border-top: 1px solid #222;
   }
-  .footer-links a { color: var(--purple-light); text-decoration: none; margin: 0 5px; }
+  .footer-links { margin-bottom: 8px; }
+  .footer-links a { color: var(--purple-light); text-decoration: none; margin: 0 8px; }
+  
+  .powered-by {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-family: sans-serif;
+  }
+  .gemini-sparkle {
+    width: 16px;
+    height: 16px;
+  }
+  .gemini-logo-img { height: 14px; filter: invert(1); opacity: 0.9; }
 
   .loading-eye { display: inline-block; animation: blink 1.2s infinite; color: var(--text-accent); }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -268,6 +288,20 @@
     <footer class="site-footer">
       <div class="footer-links">
         <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">生存率診断(元ネタ) <i class="fas fa-external-link-alt"></i></a>
+      </div>
+      <div class="powered-by">
+        <!-- Gemini ロゴとアイコン -->
+        <svg class="gemini-sparkle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" fill="url(#gemini_grad)"/>
+          <defs>
+            <linearGradient id="gemini_grad" x1="2" y1="12" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#4E89FF"/>
+              <stop offset="1" stop-color="#FF7FDE"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Powered by</span>
+        <img src="https://www.gstatic.com/lamda/images/gemini_wordmark_601c7d29255675e2c5626.svg" alt="Gemini" class="gemini-logo-img">
       </div>
       <div class="copyright">Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
     </footer>
@@ -421,7 +455,8 @@
     const loadingId = pushBotMessage("境界を操作中よ…… <span class='loading-eye'>👁️</span>");
 
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+      // 最新の安定版モデル gemini-2.0-flash を使用
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -438,7 +473,7 @@
       document.getElementById(loadingId).remove();
       pushBotMessage(marked.parse(text));
     } catch (err) {
-      document.getElementById(loadingId).innerText = "あら、結界にノイズが走ったわ。";
+      document.getElementById(loadingId).innerText = "あら、結界にノイズが走ったわ。APIキーが正しいか確認してちょうだい。";
     }
   });
 
