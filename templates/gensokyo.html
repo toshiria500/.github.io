@@ -7,15 +7,17 @@
 <meta name="description" content="八雲紫があなたの幻想郷での運命を語ります">
 <!-- Markdown変換用ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Font Awesome (アイコン用) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
   :root {
-    --bg-color: #0d0616; /* より深い闇 */
+    --bg-color: #0d0616;
     --text-main: #f8f0fc;
-    --text-accent: #d4af37; /* 金色 */
+    --text-accent: #d4af37;
     --purple-main: #6b2c91;
     --purple-light: #9d4edd;
-    --red-eye: #ff1a1a; /* より鮮やかなスキマの赤 */
+    --red-eye: #ff1a1a;
     --user-bubble: #3a3d52;
     --bot-msg-bg: rgba(20, 10, 30, 0.85);
   }
@@ -32,7 +34,7 @@
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
-    height: 100dvh; /* モバイル対応 */
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -51,6 +53,12 @@
     z-index: 10;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
     align-items: center;
   }
 
@@ -82,7 +90,6 @@
       url('https://www.transparenttextures.com/patterns/dark-matter.png');
   }
 
-  /* 紫のメッセージ（左側） */
   .botContainer {
     display: flex;
     align-items: flex-start;
@@ -96,6 +103,7 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* アイコン設定関連 */
   .icon-wrapper {
     flex-shrink: 0;
     width: 50px;
@@ -105,6 +113,32 @@
     padding: 2px;
     background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
     box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .icon-wrapper:hover {
+    transform: scale(1.05);
+  }
+  .icon-wrapper::after {
+    content: '換';
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--red-eye);
+    color: white;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid white;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .icon-wrapper:hover::after {
+    opacity: 1;
   }
 
   .botIcon {
@@ -128,7 +162,6 @@
     backdrop-filter: blur(4px);
   }
 
-  /* ユーザーのメッセージ（右側） */
   .userContainer {
     display: flex;
     justify-content: flex-end;
@@ -159,7 +192,6 @@
   }
   .botText p { margin-bottom: 12px; }
   .botText strong { color: #ff6b6b; font-weight: bold; }
-  .botText ul { padding-left: 20px; margin-bottom: 12px; }
 
   .loading-eye {
     display: inline-block; color: var(--text-accent); animation: blink 1.2s infinite;
@@ -169,7 +201,7 @@
     50% { opacity: 0.2; transform: scale(0.8); color: var(--red-eye); }
   }
 
-  /* --- 入力エリア＆フッター --- */
+  /* --- 入力エリア --- */
   #bottom-area {
     background: #000;
     border-top: 2px solid var(--purple-main);
@@ -194,17 +226,14 @@
     color: white;
     padding: 12px 15px;
     border-radius: 8px;
-    font-size: 16px; /* モバイルでのズーム防止 */
+    font-size: 16px;
     outline: none;
-    transition: all 0.3s;
     font-family: sans-serif;
   }
   input:focus { 
     border-color: var(--purple-light); 
     background: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 8px rgba(157, 78, 221, 0.3);
   }
-  input.error { border-color: var(--red-eye); }
 
   button[type="submit"] {
     grid-column: span 2;
@@ -218,12 +247,9 @@
     cursor: pointer;
     display: flex; justify-content: center; align-items: center; gap: 10px;
     font-family: 'Hiragino Mincho ProN', serif;
-    transition: transform 0.1s, filter 0.3s;
   }
-  button[type="submit"]:active { transform: scale(0.98); }
-  button[type="submit"]:hover { filter: brightness(1.2); }
 
-  /* --- フッター情報 --- */
+  /* --- フッター --- */
   .site-footer {
     text-align: center;
     padding: 15px 10px;
@@ -255,22 +281,29 @@
     opacity: 0.7;
   }
 
-  /* スクロールバー */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg-color); }
-  ::-webkit-scrollbar-thumb { background: var(--purple-main); border-radius: 10px; }
+  /* 隠しファイル入力 */
+  #iconInput { display: none; }
+
+  /* 推奨サイズチップ (明朝体に設定) */
+  .size-tip {
+    font-size: 11px;
+    color: var(--text-accent);
+    margin-top: 6px;
+    display: block;
+    /* 明朝体を適用 */
+    font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+    opacity: 0.9;
+    letter-spacing: 0.03em;
+  }
 
   @media (max-width: 600px) {
-    #storyForm { grid-template-columns: 1fr; padding: 12px; gap: 10px; }
+    #storyForm { grid-template-columns: 1fr; padding: 12px; }
     .full-width, button[type="submit"] { grid-column: span 1; }
-    .botText { font-size: 0.9rem; padding: 12px 15px; }
-    header { padding: 10px 15px; }
   }
 </style>
 </head>
 <body>
 
-  <!-- Gemini SVG グラデーション定義 -->
   <svg width="0" height="0" style="position:absolute;">
     <defs>
       <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -281,22 +314,27 @@
     </defs>
   </svg>
 
+  <input type="file" id="iconInput" accept="image/*">
+
   <header>
     <span>⛩ 幻想郷ジェネレーター</span>
-    <a href="./Setting.html" class="setting-link">⚙ 設定</a>
+    <div class="header-actions">
+      <a href="./Setting.html" class="setting-link">⚙ 設定</a>
+    </div>
   </header>
 
   <main id="chat-container">
     <!-- 初回メッセージ -->
     <div class="botContainer">
-      <div class="icon-wrapper">
-        <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;\\'>紫</div>');">
+      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()" title="アイコンを変更（このブラウザのみ保存されます）">
+        <img src="" class="botIcon" id="displayIcon" alt="紫" onerror="handleIconError(this)">
       </div>
       <div class="botText">
         あらあら、外の世界から迷い込んできたの？<br>
         歓迎するわ、幻想郷へ。<br><br>
         あなたの名前や、持っている物を教えてちょうだい。<br>
-        この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。
+        この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。<br>
+        <span class="size-tip">※アイコンをタップして好きな画像に変えられるわよ（推奨: 200x200px以上）</span>
       </div>
     </div>
   </main>
@@ -323,7 +361,9 @@
         Gemini
       </div>
       <div class="footer-links">
-        <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">生存率診断(元ネタ)</a>
+        <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">
+          生存率診断(元ネタ) <i class="fas fa-external-link-alt"></i>
+        </a>
       </div>
       <div class="copyright">
         Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
@@ -332,8 +372,83 @@
   </div>
 
 <script>
+  // 年号
   document.getElementById("year").textContent = new Date().getFullYear();
 
+  // --- アイコン画像管理ロジック ---
+  const iconInput = document.getElementById('iconInput');
+  const displayIcon = document.getElementById('displayIcon');
+  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON';
+
+  // 起動時に保存されたアイコンを読み込む
+  window.addEventListener('load', () => {
+    const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
+    if (savedIcon) {
+      displayIcon.src = savedIcon;
+    } else {
+      displayIcon.src = '../static/bot_icon.png';
+    }
+  });
+
+  // アイコン読み込み失敗時のフォールバック
+  function handleIconError(img) {
+    img.style.display = 'none';
+    const parent = img.parentElement;
+    const oldLabel = parent.querySelector('.fallback-label');
+    if (oldLabel) oldLabel.remove();
+    
+    const label = document.createElement('div');
+    label.className = 'fallback-label';
+    label.style.cssText = 'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;';
+    label.innerText = '紫';
+    parent.appendChild(label);
+  }
+
+  // 画像アップロードとリサイズ・切り抜き
+  iconInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 200; 
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        let sourceX = 0, sourceY = 0, sourceSize = 0;
+        if (img.width > img.height) {
+          sourceSize = img.height;
+          sourceX = (img.width - img.height) / 2;
+        } else {
+          sourceSize = img.width;
+          sourceY = (img.height - img.width) / 2;
+        }
+
+        ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+        const dataUrl = canvas.toDataURL('image/png');
+        localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
+        updateAllIcons(dataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function updateAllIcons(src) {
+    const icons = document.querySelectorAll('.botIcon');
+    icons.forEach(icon => {
+      icon.src = src;
+      icon.style.display = 'block';
+      const label = icon.parentElement.querySelector('.fallback-label');
+      if (label) label.remove();
+    });
+  }
+
+  // --- メインロジック ---
   const form = document.getElementById("storyForm");
   const chat = document.getElementById("chat-container");
   const requiredInputs = [
@@ -359,7 +474,7 @@
     if (hasError) return;
 
     if (!apiKey) {
-      pushBotMessage("通行証（APIキー）がないと、境界は開けないわ。設定を確認してちょうだい。", true);
+      pushBotMessage("通行証（APIキー）がないと、境界は開けないわ。右上の設定を確認してちょうだい。", true);
       return;
     }
 
@@ -419,9 +534,12 @@
     const box = document.createElement("div");
     box.className = "botContainer";
     box.id = msgId;
+
+    const currentIcon = localStorage.getItem(STORAGE_KEY_ICON) || '../static/bot_icon.png';
+
     box.innerHTML = `
-      <div class="icon-wrapper">
-        <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;\\'>紫</div>');">
+      <div class="icon-wrapper" onclick="document.getElementById('iconInput').click()">
+        <img src="${currentIcon}" class="botIcon" alt="紫" onerror="handleIconError(this)">
       </div>
       <div class="botText">${text}</div>
     `;
