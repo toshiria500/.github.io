@@ -3,117 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>境界の管理 - 設定</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<title>幻想郷ジェネレーター - 境界の語り部</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
   :root {
     --bg-color: #0d0616;
     --text-main: #f8f0fc;
     --text-accent: #d4af37;
-    --purple-main: #6b2c91;
     --purple-dark: #240b36;
+    --purple-main: #6b2c91;
+    --purple-light: #9d4edd;
     --red-eye: #ff1a1a;
+    --user-bubble: #2d2f3f;
+    --bot-msg-bg: rgba(30, 15, 45, 0.9);
     --font-serif: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
     font-family: var(--font-serif);
     background-color: var(--bg-color);
     color: var(--text-main);
-    min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 
   header {
     background: linear-gradient(90deg, #000, var(--purple-main), #000);
     color: var(--text-accent);
-    padding: 15px;
+    padding: 12px 15px;
     text-align: center;
     border-bottom: 2px solid var(--red-eye);
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.8);
+  }
+  header h1 { font-size: 1.1rem; letter-spacing: 0.1em; }
+
+  .setting-link {
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.8rem;
+    background: rgba(255,255,255,0.1);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: sans-serif;
+    transition: 0.3s;
   }
 
-  main { flex: 1; padding: 20px; max-width: 700px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; }
-
-  .card {
-    background: rgba(30, 15, 45, 0.8); border: 1px solid rgba(157, 78, 221, 0.3);
-    padding: 20px; border-radius: 12px; backdrop-filter: blur(12px); margin-bottom: 20px;
+  #chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: radial-gradient(circle at 50% 20%, rgba(107, 44, 145, 0.2) 0%, transparent 70%);
   }
 
-  label { display: block; color: var(--text-accent); margin-bottom: 12px; font-weight: bold; border-left: 3px solid var(--red-eye); padding-left: 10px; }
+  .botContainer { display: flex; align-items: flex-start; gap: 12px; max-width: 100%; animation: fadeIn 0.5s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-  input[type="password"] {
-    width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid var(--purple-main);
-    color: #fff; padding: 14px; border-radius: 8px; font-size: 1rem; outline: none; font-family: var(--font-serif);
+  .icon-wrapper {
+    flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%;
+    background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
+    padding: 2px; cursor: pointer; box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
+    transition: transform 0.2s;
+  }
+  .botIcon { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; pointer-events: none; }
+
+  .botText {
+    background: var(--bot-msg-bg); border: 1px solid rgba(157, 78, 221, 0.4);
+    border-radius: 4px 20px 20px 20px; padding: 14px 18px; line-height: 1.7;
+    font-size: 0.95rem; backdrop-filter: blur(10px); max-width: 85%;
+    overflow-wrap: break-word;
   }
 
-  .description { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin: 15px 0; line-height: 1.6; }
-
-  .external-link-btn {
-    display: inline-flex; align-items: center; gap: 8px; margin-top: 5px; padding: 10px 18px;
-    background: rgba(212, 175, 55, 0.1); border: 1px solid var(--text-accent);
-    color: var(--text-accent); text-decoration: none; border-radius: 20px; font-size: 0.85rem;
+  .userContainer { display: flex; justify-content: flex-end; width: 100%; }
+  .userBubble {
+    background: var(--user-bubble); padding: 12px 18px;
+    border-radius: 20px 4px 20px 20px; max-width: 80%; font-size: 0.9rem;
   }
 
-  button {
-    width: 100%; padding: 16px; border-radius: 10px; border: none; font-family: var(--font-serif);
-    font-weight: bold; cursor: pointer; transition: 0.3s;
+  #bottom-area { background: #050208; border-top: 1px solid var(--purple-main); padding-bottom: env(safe-area-inset-bottom); }
+  #storyForm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; max-width: 900px; margin: 0 auto; }
+
+  input {
+    background: rgba(255,255,255,0.07); border: 1px solid #333; color: #fff;
+    padding: 12px; border-radius: 8px; font-size: 16px; outline: none; font-family: var(--font-serif);
+  }
+  .full-width { grid-column: span 2; }
+
+  button[type="submit"] {
+    grid-column: span 2; padding: 16px; border-radius: 8px; border: none;
+    background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
+    color: #fff; font-weight: bold; cursor: pointer; font-family: var(--font-serif); font-size: 1.1rem;
   }
 
-  .btn-save { background: linear-gradient(135deg, var(--purple-main), var(--purple-dark)); color: #fff; margin-bottom: 15px; }
-  .btn-back { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--purple-main); }
+  .loading-eye { animation: blink 1.2s infinite; color: var(--text-accent); display: inline-block; }
+  @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1.1); } 50% { opacity: 0.3; transform: scale(0.9); } }
 
-  #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--text-accent); color: #000; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; font-weight: bold; }
+  .site-footer { padding: 15px; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+  .gemini-text { font-weight: bold; background: linear-gradient(90deg, #4E89FF, #FF7FDE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>境界の管理（設定）</h1>
+  <h1>⛩ 幻想郷ジェネレーター</h1>
+  <a href="./setting/" class="setting-link">⚙ 設定</a>
 </header>
 
-<main>
-  <form id="settings-form" onsubmit="saveSettings(event)">
-    <div class="card">
-      <label for="apiKey">境界の鍵 (Gemini API Key)</label>
-      <input type="password" id="apiKey" placeholder="AI Studioで発行したAIza...から始まる鍵を入力" required>
-      
-      <div class="description">
-        物語を紡ぐために必要な「通行証」よ。<br>
-        コピーしたときに<b>余計なスペース（空白）</b>が入っていると動かないから気をつけて。
-      </div>
-
-      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="external-link-btn">
-        Google AI Studio で鍵を入手する <i class="fas fa-external-link-alt"></i>
-      </a>
+<main id="chat-container">
+  <div class="botContainer">
+    <div class="icon-wrapper"><img src="" class="botIcon" onerror="handleIconError(this)"></div>
+    <div class="botText">
+      あら、境界を越えて何をしに来たのかしら？<br>
+      あなたの名と、今持っている物を教えてちょうだい。<br>
+      私が「境界」を弄って、あなたの行く末を少しだけ覗いてあげるわ。
     </div>
-
-    <button type="submit" class="btn-save">設定を保存する</button>
-    <button type="button" class="btn-back" onclick="location.href='../'">← 戻る</button>
-  </form>
+  </div>
 </main>
 
-<div id="toast">設定を保存したわ。</div>
+<div id="bottom-area">
+  <form id="storyForm">
+    <input id="name" placeholder="名前" required autocomplete="off">
+    <input id="action" placeholder="行動" required autocomplete="off">
+    <input id="item" placeholder="持ち物" required autocomplete="off">
+    <input id="companion" placeholder="お供" required autocomplete="off">
+    <input id="enemy" class="full-width" placeholder="遭遇者 (任意)" autocomplete="off">
+    <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
+  </form>
+  <footer class="site-footer">
+    <div style="margin-bottom:6px;">Powered by <span class="gemini-text">Gemini 2.5 Flash</span></div>
+    <div>Copyright © toshiria 2026 - <span id="year"></span> All Rights Reserved.</div>
+  </footer>
+</div>
 
 <script>
-  window.onload = () => {
-    const savedKey = localStorage.getItem("GEMINI_API_KEY");
-    if (savedKey) document.getElementById("apiKey").value = savedKey;
+  const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V3';
+  const chatContainer = document.getElementById('chat-container');
+  const storyForm = document.getElementById('storyForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  function handleIconError(img) {
+    img.style.display = 'none';
+    const parent = img.parentElement;
+    if (!parent.querySelector('.fb')) {
+      const fb = document.createElement('div'); fb.className = 'fb'; fb.innerText = '紫';
+      fb.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-accent);font-weight:bold;';
+      parent.appendChild(fb);
+    }
+  }
+
+  function initIcon() {
+    const saved = localStorage.getItem(STORAGE_KEY_ICON);
+    if (saved) {
+      document.querySelectorAll('.botIcon').forEach(i => {
+        i.src = saved; i.style.display = 'block';
+        const fb = i.parentElement.querySelector('.fb'); if (fb) fb.remove();
+      });
+    }
+  }
+  window.addEventListener('load', initIcon);
+
+  async function typeWriter(element, markdown) {
+    const html = marked.parse(markdown);
+    element.innerHTML = "";
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    
+    const nodes = Array.from(tempDiv.childNodes);
+    for (let node of nodes) {
+      const newNode = node.cloneNode(true);
+      if (newNode.nodeType === Node.TEXT_NODE) {
+        const text = newNode.textContent;
+        const textNode = document.createTextNode("");
+        element.appendChild(textNode);
+        for (let i = 0; i < text.length; i++) {
+          textNode.textContent += text[i];
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          await new Promise(r => setTimeout(r, 15));
+        }
+      } else {
+        element.appendChild(newNode);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        await new Promise(r => setTimeout(r, 30));
+      }
+    }
+  }
+
+  storyForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const apiKey = (localStorage.getItem("GEMINI_API_KEY") || "").trim();
+    
+    if(!apiKey) { 
+      pushBotMsg("鍵を登録してこないと、境界の向こう側は見せてあげられないわ。設定画面へ行ってらっしゃい。"); 
+      return; 
+    }
+    
+    const data = { 
+      n: document.getElementById('name').value, 
+      a: document.getElementById('action').value, 
+      i: document.getElementById('item').value, 
+      c: document.getElementById('companion').value, 
+      e: document.getElementById('enemy').value || "特になし" 
+    };
+    
+    pushUserMsg(`${data.n}は「${data.a}」を試みる。`);
+    
+    const botMsgId = pushBotMsg("境界を弄っているわ…… <span class='loading-eye'>👁️</span>");
+    const botTextElem = document.getElementById(botMsgId).querySelector('.botText');
+    
+    storyForm.reset();
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = "0.5";
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+          contents: [{ parts: [{ text: `あなたは東方Projectの八雲紫です。以下の要素を元に、境界を操る妖怪らしい、余裕があり底知れない口調で物語を語ってください。\n\n【要素】\n名前:${data.n}\n行動:${data.a}\n持ち物:${data.i}\nお供:${data.c}\n遭遇者:${data.e}\n\n【構成要件】\n1. ### あらすじ\n明確な状況説明をしてください。幻想郷のどのあたりで、何が起きているのかを詳細に描写してください。\n\n2. ### 境界の向こう側\n物語の展開を記述してください。紫の視点で、皮肉や興味を交えて綴ってください。\n\n3. ### 生存率\n0%〜100%の間で指定してください。小数点第2位まで入れること（例：42.15%）。ただし、整数ちょうどの場合（例：1%、50%）は小数点を含めないこと。\n\n4. ### 結末\n以下のいずれかの運命を明確に記してください：\n・生存して元の世界へ帰還\n・生存して幻想郷に残留\n・命を落とし、帰ることができない（演出上の死亡）\n\n結末は幻想郷の法則（弱肉強食や妖怪の気まぐれ）に基づいた残酷または不思議な結末にしてください。` }] }] 
+        })
+      });
+      
+      const res = await response.json();
+      if (res.error) throw new Error(res.error.message);
+      
+      const answer = res.candidates[0].content.parts[0].text;
+      await typeWriter(botTextElem, answer);
+      
+    } catch (err) {
+      console.error(err);
+      botTextElem.innerHTML = `<span style='color:var(--red-eye)'><strong>境界が不安定ね……</strong><br><small>${err.message}</small><br><br>APIキーが最新か、スペルミスがないか確認してちょうだい。</span>`;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = "1";
+    }
   };
 
-  function saveSettings(event) {
-    event.preventDefault();
-    // 保存時に空白を徹底的に除去（前後および改行）
-    const rawValue = document.getElementById("apiKey").value;
-    const cleanKey = rawValue.replace(/[\s\n\r]/g, '');
-    
-    localStorage.setItem("GEMINI_API_KEY", cleanKey);
-    
-    const toast = document.getElementById("toast");
-    toast.style.display = "block"; 
-    setTimeout(() => { toast.style.display = "none"; }, 2500);
+  function pushBotMsg(t) {
+    const id = "b" + Date.now();
+    const div = document.createElement('div');
+    div.className = "botContainer";
+    div.id = id;
+    const src = localStorage.getItem(STORAGE_KEY_ICON);
+    div.innerHTML = `
+      <div class="icon-wrapper">
+        <img src="${src||''}" class="botIcon" style="${src?'':'display:none'}" onerror="handleIconError(this)">
+      </div>
+      <div class="botText">${t}</div>
+    `;
+    chatContainer.appendChild(div);
+    div.scrollIntoView({behavior:'smooth'});
+    return id;
+  }
+
+  function pushUserMsg(t) {
+    const div = document.createElement('div');
+    div.className = "userContainer";
+    div.innerHTML = `<div class="userBubble">${t}</div>`;
+    chatContainer.appendChild(div);
+    div.scrollIntoView({behavior:'smooth'});
   }
 </script>
 </body>
