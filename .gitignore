@@ -1,0 +1,31 @@
+--- API Keys and Secrets ---
+​絶対にGitHubに公開してはいけない設定ファイル
+​.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+​--- Dependencies ---
+​ライブラリ本体（npm installで再現できるためアップロード不要）
+​node_modules/
+/dist
+/.next/
+/out/
+/build
+​--- Debug logs ---
+​エラーログなどの一時ファイル
+​npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+​--- OS & IDE Specific ---
+​OSやエディタが自動生成するキャッシュファイル
+​.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+​--- Environment Template ---
+​.env.example はテンプレートなので無視リストには入れない（GitHubに上げる）
+​!.env.example
