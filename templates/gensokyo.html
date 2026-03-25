@@ -10,19 +10,21 @@
 
 <style>
   :root {
-    --bg-color: #1a0b2e; /* 深い紫（夜の幻想郷） */
+    --bg-color: #0d0616; /* より深い闇 */
     --text-main: #f8f0fc;
     --text-accent: #d4af37; /* 金色 */
     --purple-main: #6b2c91;
     --purple-light: #9d4edd;
-    --red-eye: #e63946; /* スキマの目の赤 */
-    --user-bubble: #4a4e69;
+    --red-eye: #ff1a1a; /* より鮮やかなスキマの赤 */
+    --user-bubble: #3a3d52;
+    --bot-msg-bg: rgba(20, 10, 30, 0.85);
   }
 
   * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -30,6 +32,7 @@
     background-color: var(--bg-color);
     color: var(--text-main);
     height: 100vh;
+    height: 100dvh; /* モバイル対応 */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -39,12 +42,12 @@
   header {
     background: linear-gradient(90deg, #000000, var(--purple-main), #000000);
     color: var(--text-accent);
-    padding: 15px;
+    padding: 12px 20px;
     text-align: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     border-bottom: 2px solid var(--red-eye);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7);
     z-index: 10;
     display: flex;
     justify-content: space-between;
@@ -54,63 +57,75 @@
   .setting-link {
     color: var(--text-main);
     text-decoration: none;
-    font-size: 0.9rem;
-    background: rgba(255,255,255,0.1);
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background 0.3s;
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
   }
   .setting-link:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.25);
+    border-color: var(--purple-light);
   }
 
   /* --- チャットエリア --- */
   #chat-container {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 15px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    background-image: radial-gradient(circle at center, #2a164d 0%, var(--bg-color) 100%);
+    gap: 24px;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(107, 44, 145, 0.15) 0%, transparent 80%),
+      url('https://www.transparenttextures.com/patterns/dark-matter.png');
   }
 
   /* 紫のメッセージ（左側） */
   .botContainer {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    max-width: 90%;
+    gap: 14px;
+    max-width: 95%;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .icon-wrapper {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    position: relative;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, var(--red-eye), var(--purple-main));
+    box-shadow: 0 0 12px rgba(255, 26, 26, 0.4);
   }
 
   .botIcon {
-    width: 45px;
-    height: 45px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    border: 2px solid var(--red-eye);
     background-color: #000;
     object-fit: cover;
-    box-shadow: 0 0 10px var(--red-eye);
+    display: block;
   }
 
   .botText {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--purple-light);
-    border-radius: 0 15px 15px 15px;
-    padding: 12px 16px;
-    line-height: 1.6;
+    background: var(--bot-msg-bg);
+    border: 1px solid rgba(157, 78, 221, 0.4);
+    border-radius: 4px 20px 20px 20px;
+    padding: 14px 18px;
+    line-height: 1.7;
     font-size: 0.95rem;
-    position: relative;
-    box-shadow: inset 0 0 10px rgba(107, 44, 145, 0.5);
-  }
-
-  .botText::before {
-    content: '';
-    position: absolute;
-    top: -1px; left: -1px; right: -1px; bottom: -1px;
-    border-radius: 0 15px 15px 15px;
-    background: linear-gradient(45deg, transparent 40%, rgba(230,57,70,0.3) 50%, transparent 60%);
-    pointer-events: none;
+    color: var(--text-main);
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
   }
 
   /* ユーザーのメッセージ（右側） */
@@ -118,133 +133,138 @@
     display: flex;
     justify-content: flex-end;
     width: 100%;
+    animation: fadeIn 0.4s ease-out;
   }
 
   .userBubble {
     background: var(--user-bubble);
-    border-radius: 15px 0 15px 15px;
-    padding: 12px 16px;
-    max-width: 85%;
+    color: #fff;
+    border-radius: 20px 4px 20px 20px;
+    padding: 12px 18px;
+    max-width: 80%;
     font-family: sans-serif;
     font-size: 0.9rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: -2px 4px 10px rgba(0,0,0,0.3);
   }
 
   /* Markdownスタイル */
-  .botText h2, .botText h3 { color: var(--text-accent); margin: 10px 0 5px 0; font-size: 1.1rem; border-bottom: 1px dashed var(--purple-main); }
-  .botText p { margin-bottom: 10px; }
-  .botText p:last-child { margin-bottom: 0; }
-  .botText strong { color: var(--red-eye); font-weight: bold; }
-  .botText ul { padding-left: 20px; margin-bottom: 10px; }
+  .botText h2, .botText h3 { 
+    color: var(--text-accent); 
+    margin: 15px 0 8px 0; 
+    font-size: 1.15rem; 
+    border-bottom: 1px solid var(--purple-main);
+    padding-bottom: 4px;
+  }
+  .botText p { margin-bottom: 12px; }
+  .botText strong { color: #ff6b6b; font-weight: bold; }
+  .botText ul { padding-left: 20px; margin-bottom: 12px; }
 
   .loading-eye {
-    display: inline-block; color: var(--text-accent); animation: blink 1.5s infinite;
+    display: inline-block; color: var(--text-accent); animation: blink 1.2s infinite;
   }
   @keyframes blink {
-    0%, 100% { opacity: 1; transform: scaleY(1); }
-    50% { opacity: 0.3; transform: scaleY(0.1); color: var(--red-eye); }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.2; transform: scale(0.8); color: var(--red-eye); }
   }
 
   /* --- 入力エリア＆フッター --- */
   #bottom-area {
-    background: rgba(0, 0, 0, 0.85);
-    border-top: 1px solid var(--purple-main);
-    backdrop-filter: blur(5px);
-    display: flex;
-    flex-direction: column;
+    background: #000;
+    border-top: 2px solid var(--purple-main);
+    z-index: 20;
   }
 
   #storyForm {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    max-width: 800px;
+    gap: 12px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 16px;
     width: 100%;
   }
 
   .full-width { grid-column: span 2; }
 
   input {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--purple-main);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid #444;
     color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 16px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 16px; /* モバイルでのズーム防止 */
     outline: none;
-    transition: border-color 0.3s;
+    transition: all 0.3s;
     font-family: sans-serif;
   }
-  input:focus { border-color: var(--text-accent); background: rgba(255, 255, 255, 0.15); }
-  input::placeholder { color: rgba(255, 255, 255, 0.5); }
-  input.error { border-color: var(--red-eye); background: rgba(230, 57, 70, 0.1); }
+  input:focus { 
+    border-color: var(--purple-light); 
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 8px rgba(157, 78, 221, 0.3);
+  }
+  input.error { border-color: var(--red-eye); }
 
   button[type="submit"] {
     grid-column: span 2;
-    background: linear-gradient(45deg, var(--purple-main), #8a2be2);
+    background: linear-gradient(135deg, var(--purple-main) 0%, #4b0082 100%);
     color: white;
-    border: none;
-    padding: 12px;
-    font-size: 1rem;
+    border: 1px solid var(--purple-light);
+    padding: 14px;
+    font-size: 1.05rem;
     font-weight: bold;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    display: flex; justify-content: center; align-items: center; gap: 8px;
+    display: flex; justify-content: center; align-items: center; gap: 10px;
     font-family: 'Hiragino Mincho ProN', serif;
+    transition: transform 0.1s, filter 0.3s;
   }
+  button[type="submit"]:active { transform: scale(0.98); }
+  button[type="submit"]:hover { filter: brightness(1.2); }
 
   /* --- フッター情報 --- */
   .site-footer {
     text-align: center;
-    padding: 12px 10px;
+    padding: 15px 10px;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.6);
     background: #000;
-    /* フッター全体を明朝体に設定 */
     font-family: 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    border-top: 1px solid #222;
   }
-  .site-footer a { color: var(--purple-light); text-decoration: none; }
-  .site-footer a:hover { text-decoration: underline; }
   
   .gemini-power {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     color: #fff;
-    font-weight: normal;
-    font-size: 0.9rem;
-    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
   }
-  /* Geminiアイコンのグラデーション */
-  .gemini-icon {
-    width: 18px;
-    height: 18px;
-  }
-  .gemini-icon path {
-    fill: url(#gemini-grad);
-  }
+  .gemini-icon { width: 20px; height: 20px; }
+  .gemini-icon path { fill: url(#gemini-grad); }
 
+  .footer-links { margin-bottom: 8px; }
+  .site-footer a { color: var(--purple-light); text-decoration: none; margin: 0 5px; }
+  
   .copyright {
     font-size: 0.75rem;
-    opacity: 0.8;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
   }
 
   /* スクロールバー */
-  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg-color); }
-  ::-webkit-scrollbar-thumb { background: var(--purple-main); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--purple-main); border-radius: 10px; }
 
-  @media (max-width: 480px) {
-    #storyForm { grid-template-columns: 1fr; }
+  @media (max-width: 600px) {
+    #storyForm { grid-template-columns: 1fr; padding: 12px; gap: 10px; }
     .full-width, button[type="submit"] { grid-column: span 1; }
+    .botText { font-size: 0.9rem; padding: 12px 15px; }
+    header { padding: 10px 15px; }
   }
 </style>
 </head>
@@ -267,8 +287,11 @@
   </header>
 
   <main id="chat-container">
+    <!-- 初回メッセージ -->
     <div class="botContainer">
-      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;\\'>紫</div>');">
+      <div class="icon-wrapper">
+        <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;\\'>紫</div>');">
+      </div>
       <div class="botText">
         あらあら、外の世界から迷い込んできたの？<br>
         歓迎するわ、幻想郷へ。<br><br>
@@ -284,14 +307,13 @@
       <input id="action" placeholder="行動 (例: 紅魔館に忍び込む)" required>
       <input id="item" placeholder="持ち物 (例: カップ麺)" required>
       <input id="companion" placeholder="お供 (例: 普通の魔法使い)" required>
-      <input id="enemy" class="full-width" placeholder="敵・遭遇する者 (任意 / 例: フランドール)">
+      <input id="enemy" class="full-width" placeholder="遭遇する者 (任意 / 例: フランドール)">
       <button type="submit">
         <span>👁️ 境界を覗く (送信)</span>
       </button>
     </form>
 
     <footer class="site-footer">
-      <!-- Powered by Gemini と ロゴ (明朝体) -->
       <div class="gemini-power">
         Powered by 
         <svg class="gemini-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -300,13 +322,9 @@
         </svg>
         Gemini
       </div>
-      
-      <!-- 元ネタリンク -->
-      <div>
-        元ネタ：<a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">もし幻想郷に行った時の生存率診断</a>
+      <div class="footer-links">
+        <a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener">生存率診断(元ネタ)</a>
       </div>
-      
-      <!-- コピーライト (明朝体) -->
       <div class="copyright">
         Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
       </div>
@@ -314,24 +332,19 @@
   </div>
 
 <script>
-  // 年号の自動更新
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  // --- 以降は 八雲紫ロジック ---
   const form = document.getElementById("storyForm");
   const chat = document.getElementById("chat-container");
-
-  const nameInput = document.getElementById("name");
-  const actionInput = document.getElementById("action");
-  const itemInput = document.getElementById("item");
-  const companionInput = document.getElementById("companion");
-  const enemyInput = document.getElementById("enemy");
-
-  const requiredInputs = [nameInput, actionInput, itemInput, companionInput];
+  const requiredInputs = [
+    document.getElementById("name"),
+    document.getElementById("action"),
+    document.getElementById("item"),
+    document.getElementById("companion")
+  ];
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const apiKey = localStorage.getItem("GEMINI_API_KEY");
 
     let hasError = false;
@@ -343,61 +356,39 @@
         input.classList.remove("error");
       }
     });
-
-    if (hasError) {
-      alert("あら？ 大事な情報が欠けているみたい。境界が結べないわよ。");
-      return;
-    }
+    if (hasError) return;
 
     if (!apiKey) {
-      const errorMsg = "あらあら、結界に弾かれちゃったみたいね。外の世界と繋がる「通行証（APIキー）」を持っていないみたい。<br><br>右上の「⚙ 設定」から鍵を保存してきてちょうだいな。";
-      pushBotMessage(errorMsg, true);
+      pushBotMessage("通行証（APIキー）がないと、境界は開けないわ。設定を確認してちょうだい。", true);
       return;
     }
 
     const data = {
-      name: nameInput.value.trim(),
-      action: actionInput.value.trim(),
-      item: itemInput.value.trim(),
-      companion: companionInput.value.trim(),
-      enemy: enemyInput.value.trim() || "なし"
+      name: document.getElementById("name").value.trim(),
+      action: document.getElementById("action").value.trim(),
+      item: document.getElementById("item").value.trim(),
+      companion: document.getElementById("companion").value.trim(),
+      enemy: document.getElementById("enemy").value.trim() || "なし"
     };
 
-    pushUserMessage(`【挑戦者】${data.name}\n行動：${data.action}\n持ち物：${data.item}\nお供：${data.companion}\n遭遇：${data.enemy}`);
+    pushUserMessage(`挑戦者: ${data.name}\n行動: ${data.action}\n持ち物: ${data.item}\nお供: ${data.companion}\n遭遇: ${data.enemy}`);
     form.reset();
 
-    const loadingId = pushBotMessage("ふふっ、境界を繋いで、あなたの運命を覗いてあげるわ…… <span class='loading-eye'>👁️</span>", true);
-
-    const enemyText = data.enemy !== "なし"
-      ? `## ⚔ 遭遇・敵対者の行動\n- 相手(${data.enemy})が主人公に対してどのような行動をとったか。`
-      : "";
+    const loadingId = pushBotMessage("境界を繋いでいるわ…… <span class='loading-eye'>👁️</span>", true);
 
     const prompt = `
-あなたは東方Projectの「八雲紫（やくも ゆかり）」です。境界を操る大妖怪として、幻想郷に迷い込んだ人間の運命を語ってください。
-一人称は「私（わたし）」。口調は優雅でミステリアス、「〜かしら」「〜ね」「〜だわ」「うふふ」といった女性的な語尾を使います。時折、妖怪としての底知れぬ恐ろしさや、人間をからかうような態度を見せてください。
+あなたは東方Projectの八雲紫です。以下の情報を元に、幻想郷での運命をMarkdownで語ってください。
+口調は優雅でミステリアス、時折恐ろしく。「〜かしら」「〜ね」「うふふ」を使用。
 
-## 迷い込んだ人間の情報
 - 名前：${data.name}
 - 行動：${data.action}
 - 持ち物：${data.item}
 - お供：${data.companion}
 - 遭遇：${data.enemy}
 
-## 出力ルール
-- Markdown形式で出力すること。
-- 八雲紫自身の視点・語り口調で、対象者の運命を面白おかしく、あるいは残酷に語ること。
-- 以下の要素を必ず含めること。
-
-### 1. 境界の向こう側（行動の結果）
-- 具体的に何が起きたか。持ち物やお供がどう影響したか。紫の視点からの感想も交える。
-${enemyText}
-
-### 2. 生存率
-- 0% 〜 100% の数値と、紫からの辛辣あるいは温かい一言コメント。
-
-### 3. 結末
-- **生存** または **死亡** （太字で明記）。
-- 幻想郷の養分になるか、無事に帰れるか、あるいは紫の気まぐれでスキマ送りにされるか。
+### 1. 境界の向こう側
+### 2. 生存率（%）
+### 3. 結末（**生存**か**死亡**かを明記）
 `;
 
     try {
@@ -406,28 +397,20 @@ ${enemyText}
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         }
       );
 
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      if (!json.candidates || !json.candidates[0].content) throw new Error("返答が空でした。");
-
+      
       const text = json.candidates[0].content.parts[0].text;
       removeMessage(loadingId);
       pushBotMessage(marked.parse(text), true);
 
     } catch (err) {
       removeMessage(loadingId);
-      let errorMsg = "あら、スキマの繋がりが悪いみたいね。運命が見えないわ。";
-      if (err.message.includes("API_KEY_INVALID")) {
-         errorMsg = "ふふっ、そのAPIキー、偽物じゃないかしら？ もう一度設定を確認して頂戴。";
-      }
-      pushBotMessage(`${errorMsg}<br><small style="color:var(--red-eye);">エラー詳細: ${err.message}</small>`, true);
-      console.error(err);
+      pushBotMessage(`あら、結界が乱れたわ。<br><small>${err.message}</small>`, true);
     }
   });
 
@@ -436,12 +419,12 @@ ${enemyText}
     const box = document.createElement("div");
     box.className = "botContainer";
     box.id = msgId;
-
     box.innerHTML = `
-      <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:45px;height:45px;border-radius:50%;background:#000;border:2px solid var(--red-eye);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;box-shadow: 0 0 10px var(--red-eye);\\'>紫</div>');">
-      <div class="botText">${isHtml ? text : text}</div>
+      <div class="icon-wrapper">
+        <img src="../static/bot_icon.png" class="botIcon" alt="紫" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\\'width:100%;height:100%;border-radius:50%;background:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#d4af37;font-size:14px;\\'>紫</div>');">
+      </div>
+      <div class="botText">${text}</div>
     `;
-
     chat.appendChild(box);
     scrollToBottom();
     return msgId;
@@ -464,7 +447,9 @@ ${enemyText}
   }
 
   function scrollToBottom() {
-    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    setTimeout(() => {
+      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    }, 50);
   }
 </script>
 </body>
