@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>境界の管理 - 設定</title>
-<!-- アイコンライブラリ -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
   :root {
@@ -26,7 +25,6 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
   }
 
   header {
@@ -35,184 +33,51 @@
     padding: 15px;
     text-align: center;
     border-bottom: 2px solid var(--red-eye);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-    z-index: 10;
   }
-  header h1 { font-size: 1.1rem; letter-spacing: 0.2em; }
 
-  main {
-    flex: 1;
-    padding: 20px;
-    max-width: 700px;
-    margin: 0 auto;
-    width: 100%;
-    background: radial-gradient(circle at top, rgba(107, 44, 145, 0.15), transparent 70%);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
+  main { flex: 1; padding: 20px; max-width: 700px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; }
 
   .card {
-    background: rgba(30, 15, 45, 0.8);
-    border: 1px solid rgba(157, 78, 221, 0.3);
-    padding: 20px;
-    border-radius: 12px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    margin-bottom: 20px;
+    background: rgba(30, 15, 45, 0.8); border: 1px solid rgba(157, 78, 221, 0.3);
+    padding: 20px; border-radius: 12px; backdrop-filter: blur(12px); margin-bottom: 20px;
   }
 
-  .label-group { margin-bottom: 25px; }
+  label { display: block; color: var(--text-accent); margin-bottom: 12px; font-weight: bold; border-left: 3px solid var(--red-eye); padding-left: 10px; }
 
-  label {
-    display: block;
-    color: var(--text-accent);
-    margin-bottom: 12px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border-left: 3px solid var(--red-eye);
-    padding-left: 10px;
+  .hidden-user { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+  input[type="password"] {
+    width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid var(--purple-main);
+    color: #fff; padding: 14px; border-radius: 8px; font-size: 1rem; outline: none; font-family: var(--font-serif);
   }
 
-  /* パスワードマネージャーに認識させるための隠しフィールド */
-  .hidden-user {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    border: 0;
-  }
-
-  input[type="password"], input[type="text"] {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--purple-main);
-    color: #fff;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 1rem;
-    outline: none;
-    transition: 0.3s;
-    font-family: var(--font-serif);
-  }
-
-  input[type="password"]::placeholder {
-    font-family: var(--font-serif);
-    color: rgba(255, 255, 255, 0.3);
-    font-style: italic;
-  }
-
-  input:focus {
-    border-color: var(--text-accent);
-    box-shadow: 0 0 12px rgba(171, 71, 188, 0.4);
-  }
-
-  .description {
-    font-size: 0.85rem;
-    color: rgba(248, 240, 252, 0.6);
-    margin-top: 12px;
-    line-height: 1.7;
-  }
+  .description { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin: 15px 0; line-height: 1.6; }
 
   .external-link-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: rgba(212, 175, 55, 0.1);
-    border: 1px solid var(--text-accent);
-    color: var(--text-accent);
-    text-decoration: none;
-    border-radius: 20px;
-    font-size: 0.85rem;
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 5px; padding: 10px 18px;
+    background: rgba(212, 175, 55, 0.1); border: 1px solid var(--text-accent);
+    color: var(--text-accent); text-decoration: none; border-radius: 20px; font-size: 0.85rem;
     transition: 0.3s;
   }
   .external-link-btn:hover { background: var(--text-accent); color: #000; }
 
   button {
-    width: 100%;
-    padding: 16px;
-    border-radius: 10px;
-    border: none;
-    font-family: var(--font-serif);
-    font-weight: bold;
-    font-size: 1.05rem;
-    cursor: pointer;
-    transition: all 0.3s;
-    letter-spacing: 0.1em;
+    width: 100%; padding: 16px; border-radius: 10px; border: none; font-family: var(--font-serif);
+    font-weight: bold; cursor: pointer; transition: 0.3s;
   }
 
-  .btn-save {
-    background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(107, 44, 145, 0.5);
-    margin-bottom: 15px;
-  }
+  .btn-save { background: linear-gradient(135deg, var(--purple-main), var(--purple-dark)); color: #fff; margin-bottom: 15px; }
+  .btn-back { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--purple-main); }
+  .btn-reset { background: transparent; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3); font-size: 0.9rem; margin-top: 20px; }
 
-  .btn-save:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-  .btn-back {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-main);
-    border: 1px solid var(--purple-main);
-  }
-
-  .btn-reset {
-    background: transparent;
-    color: #ff4d4d;
-    border: 1px solid rgba(255, 77, 77, 0.3);
-    font-size: 0.9rem;
-    margin-top: 10px;
-  }
-
-  /* モーダル */
   #modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9); display: none; align-items: center; justify-content: center; z-index: 2000;
   }
+  .modal-content { background: var(--purple-dark); border: 2px solid var(--red-eye); padding: 30px; border-radius: 15px; text-align: center; width: 90%; max-width: 400px; }
 
-  .modal-content {
-    background: var(--purple-dark);
-    border: 2px solid var(--red-eye);
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-  }
-
-  /* 通知 */
-  #toast {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--text-accent);
-    color: #000;
-    padding: 12px 25px;
-    border-radius: 30px;
-    font-weight: bold;
-    display: none;
-    z-index: 1000;
-  }
-
-  footer {
-    padding: 25px;
-    text-align: center;
-    color: rgba(255,255,255,0.3);
-    font-size: 0.8rem;
-    background: rgba(0,0,0,0.3);
-  }
+  #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--text-accent); color: #000; padding: 12px 25px; border-radius: 30px; display: none; z-index: 1000; font-weight: bold; }
+  footer { padding: 25px; text-align: center; color: rgba(255,255,255,0.3); font-size: 0.8rem; }
 </style>
 </head>
 <body>
@@ -222,101 +87,72 @@
 </header>
 
 <main>
-  <!-- パスワードマネージャー対応のためにFormタグを使用 -->
   <form id="settings-form" onsubmit="saveSettings(event)">
     <div class="card">
-      <div class="label-group">
-        <label for="apiKey">境界の鍵 (Gemini API Key)</label>
-        
-        <!-- マネージャーにIDとして認識させるための隠しフィールド（username属性の代わり） -->
-        <input type="text" name="username" value="GeminiUser" class="hidden-user" autocomplete="username">
-        
-        <input type="password" id="apiKey" name="password" 
-               placeholder="鍵を入力してちょうだい..." 
-               autocomplete="current-password" required>
-        
-        <div class="description">
-          物語を紡ぐために必要な「通行証」よ。まだ持っていないのなら、下のリンクから外の世界へ取りに行ってらっしゃい。
-        </div>
-        
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="external-link-btn">
-          Google AI Studio で鍵を入手する <i class="fas fa-external-link-alt"></i>
-        </a>
+      <label for="apiKey">境界の鍵 (Gemini API Key)</label>
+      <input type="text" name="username" value="GeminiUser" class="hidden-user" autocomplete="username">
+      <input type="password" id="apiKey" name="password" placeholder="鍵を入力してちょうだい..." autocomplete="current-password" required>
+      
+      <div class="description">
+        物語を紡ぐために必要な「通行証」よ。<br>
+        もし、まだ「鍵」を持っていないのなら、外の世界（Google AI Studio）へ取りに行ってらっしゃい。
       </div>
 
-      <div class="label-group" style="margin-bottom: 0;">
-        <label>記録の整理</label>
-        <div class="description" style="margin-bottom: 15px;">
-          もし、すべての「境界」を閉じて、最初からやり直したいのなら……。
-        </div>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="external-link-btn">
+        Google AI Studio で鍵を入手する <i class="fas fa-external-link-alt"></i>
+      </a>
+      
+      <div style="border-top: 1px solid rgba(157, 78, 221, 0.2); margin-top: 25px; padding-top: 10px;">
         <button type="button" class="btn-reset" onclick="showResetModal()">記憶をすべて消去する</button>
       </div>
     </div>
 
-    <div class="btn-group">
-      <button type="submit" class="btn-save">設定を保存する</button>
-      <button type="button" class="btn-back" onclick="location.href= 'https://toshiria500.f5.si/gensoko'>← 戻る</button>
-    </div>
+    <button type="submit" class="btn-save">設定を保存する</button>
+    <button type="button" class="btn-back" onclick="location.href='../'">← 戻る</button>
   </form>
 </main>
 
-<!-- 確認モーダル -->
 <div id="modal-overlay">
   <div class="modal-content">
     <h2 style="color:var(--red-eye); margin-bottom:15px;">境界の破棄</h2>
-    <p>本当に、あなたとの思い出（データ）を<br>すべて消し去ってもいいのかしら？</p>
+    <p>本当に、あなたとの思い出をすべて消し去ってもいいのかしら？</p>
     <div style="display:flex; gap:10px; margin-top:25px;">
-      <button type="button" style="background:#444; color:#fff;" onclick="hideResetModal()">やめておく</button>
-      <button type="button" style="background:var(--red-eye); color:#fff;" onclick="executeReset()">消去する</button>
+      <button type="button" style="background:#444; color:#fff; flex:1;" onclick="hideResetModal()">やめておく</button>
+      <button type="button" style="background:var(--red-eye); color:#fff; flex:1;" onclick="executeReset()">消去する</button>
     </div>
   </div>
 </div>
 
 <div id="toast">設定を保存したわ。</div>
-
-<footer>
-  Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
-</footer>
+<footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
 
 <script>
   document.getElementById("year").textContent = new Date().getFullYear();
-
   window.onload = () => {
     const savedKey = localStorage.getItem("GEMINI_API_KEY");
-    if (savedKey) {
-      document.getElementById("apiKey").value = savedKey;
-    }
+    if (savedKey) document.getElementById("apiKey").value = savedKey;
   };
 
   function saveSettings(event) {
-    event.preventDefault(); // 画面遷移を防止
-    const key = document.getElementById("apiKey").value.trim();
-    localStorage.setItem("GEMINI_API_KEY", key);
-    
-    // トースト表示
+    event.preventDefault();
+    localStorage.setItem("GEMINI_API_KEY", document.getElementById("apiKey").value.trim());
     const toast = document.getElementById("toast");
-    toast.textContent = "設定を保存したわ。";
-    toast.style.display = "block";
+    toast.style.display = "block"; 
     setTimeout(() => { toast.style.display = "none"; }, 2500);
-
-    // ブラウザに「パスワード保存」のトリガーを引かせるために、
-    // 成功時に少し時間を置いてから完了とするのが一般的です。
   }
 
   const modal = document.getElementById("modal-overlay");
   function showResetModal() { modal.style.display = "flex"; }
   function hideResetModal() { modal.style.display = "none"; }
-
   function executeReset() {
-    localStorage.clear();
+    localStorage.clear(); 
     hideResetModal();
-    const toast = document.getElementById("toast");
-    toast.textContent = "……うふふ、すべて忘れたわ。";
+    const toast = document.getElementById("toast"); 
+    toast.textContent = "……すべて忘れたわ。"; 
     toast.style.display = "block";
     setTimeout(() => { location.reload(); }, 1500);
   }
 </script>
-
 </body>
 </html>
 
