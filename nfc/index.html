@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC マルチ・コレクター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        .font-pixel { font-family: 'DotGothic16', sans-serif; }
+        .mode-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .active-mode { transform: translateY(-8px); border-color: #4f46e5; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2); }
+        .scan-pulse { animation: scan-pulse 1.5s infinite; }
+        @keyframes scan-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 pb-20 font-sans text-slate-800">
+
+    <div class="max-w-md mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-black text-indigo-900 tracking-tighter italic">NFC MULTI SCANNER</h1>
+            <p class="text-slate-500 text-xs mt-1 uppercase tracking-widest font-bold">Mode Select & Collect</p>
+        </header>
+
+        <!-- Mode Selection -->
+        <div class="grid grid-cols-3 gap-3 mb-8">
+            <button onclick="setMode('card')" id="btn-card" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm">
+                <span class="text-2xl mb-1">💳</span>
+                <span class="text-[10px] font-bold">CARD</span>
+            </button>
+            <button onclick="setMode('amiibo')" id="btn-amiibo" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm">
+                <span class="text-2xl mb-1">🧸</span>
+                <span class="text-[10px] font-bold">amiibo</span>
+            </button>
+            <button onclick="setMode('dream')" id="btn-dream" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm">
+                <span class="text-2xl mb-1">🌀</span>
+                <span class="text-[10px] font-bold text-center leading-tight">妖怪メダル</span>
+            </button>
+        </div>
+
+        <!-- Main Scanner UI -->
+        <div id="scanner-ui" class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden mb-8 border border-slate-200">
+            <div id="mode-header" class="bg-slate-800 p-4 text-white text-center transition-colors duration-500">
+                <span id="mode-label" class="text-xs font-black tracking-widest uppercase">CARD MODE</span>
+            </div>
+            
+            <div class="p-8 flex flex-col items-center">
+                <div id="nfc-circle" class="w-32 h-32 rounded-full bg-slate-100 flex items-center justify-center mb-6 transition-all duration-500">
+                    <div id="inner-icon" class="text-5xl">💳</div>
+                </div>
+                
+                <h2 id="status-title" class="text-xl font-bold mb-1">スキャン待機中</h2>
+                <p id="status-sub" class="text-sm text-slate-400 mb-8 text-center">選択したモードのアイテムを<br>スマホの背面にかざしてください</p>
+
+                <button id="action-btn" class="w-full py-4 rounded-2xl bg-slate-800 text-white font-black text-sm tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg">
+                    SCAN START
+                </button>
+            </div>
+        </div>
+
+        <!-- Registration Pop-up (Absolute) -->
+        <div id="reg-overlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 animate-in slide-in-from-bottom-8 duration-300">
+                <div class="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6"></div>
+                <h3 class="text-2xl font-black mb-2">NEW ENTRY!</h3>
+                <p class="text-xs font-mono text-slate-400 mb-6" id="scanned-id"></p>
+                <input type="text" id="name-input" placeholder="名前を入力してください" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl mb-4 focus:border-indigo-500 outline-none font-bold">
+                <div class="flex gap-2">
+                    <button onclick="closeReg()" class="flex-1 py-4 text-slate-400 font-bold text-sm">キャンセル</button>
+                    <button id="save-btn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg shadow-indigo-200">登録する</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection List -->
+        <div class="px-2">
+            <div class="flex justify-between items-end mb-4">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tighter">Collection Log</h3>
+                <button onclick="clearAll()" class="text-[10px] font-bold text-slate-400 hover:text-red-500">CLEAR ALL</button>
+            </div>
+            <div id="list-container" class="space-y-3">
+                <!-- Items -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'card';
+        let currentId = '';
+        const modes = {
+            card: { label: 'CARD MODE', icon: '💳', color: '#1e293b', sub: 'ICカード/交通系カード等' },
+            amiibo: { label: 'amiibo MODE', icon: '🧸', color: '#ef4444', sub: 'amiiboフィギュア/カード等' },
+            dream: { label: 'DREAM MEDAL MODE', icon: '🌀', color: '#4f46e5', sub: '妖怪ドリームメダル/YCチップ' }
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            // UI Update
+            document.querySelectorAll('.mode-card').forEach(btn => btn.classList.remove('active-mode'));
+            document.getElementById(`btn-${mode}`).classList.add('active-mode');
+            
+            const config = modes[mode];
+            document.getElementById('mode-header').style.backgroundColor = config.color;
+            document.getElementById('mode-label').innerText = config.label;
+            document.getElementById('inner-icon').innerText = config.icon;
+            document.getElementById('status-sub').innerHTML = config.sub + '<br>をスマホの背面にかざしてください';
+            
+            // Reset scan state if needed
+            stopScanUI();
+        }
+
+        function stopScanUI() {
+            document.getElementById('nfc-circle').classList.remove('scan-pulse');
+            document.getElementById('status-title').innerText = "スキャン待機中";
+            document.getElementById('action-btn').innerText = "SCAN START";
+            document.getElementById('action-btn').disabled = false;
+        }
+
+        async function startScan() {
+            if (!('NDEFReader' in window)) {
+                alert("お使いのブラウザはNFCに対応していません。AndroidのChromeで開いてください。");
+                return;
+            }
+
+            try {
+                const ndef = new NDEFReader();
+                await ndef.scan();
+                
+                document.getElementById('nfc-circle').classList.add('scan-pulse');
+                document.getElementById('status-title').innerText = "スキャン中...";
+                document.getElementById('action-btn').innerText = "WAITING FOR TAG...";
+                document.getElementById('action-btn').disabled = true;
+
+                ndef.onreading = event => {
+                    const id = event.serialNumber;
+                    const data = JSON.parse(localStorage.getItem('nfc_multi_col') || '{}');
+
+                    if (data[id]) {
+                        // Known tag
+                        document.getElementById('status-title').innerText = "認識成功！";
+                        document.getElementById('status-sub').innerHTML = `<span class="text-indigo-600 font-bold text-lg">「${data[id].name}」</span><br>(${data[id].type})`;
+                        setTimeout(stopScanUI, 2000);
+                    } else {
+                        // New tag
+                        currentId = id;
+                        document.getElementById('scanned-id').innerText = `ID: ${id}`;
+                        document.getElementById('reg-overlay').classList.remove('hidden');
+                    }
+                };
+            } catch (error) {
+                alert("NFCエラー: " + error);
+                stopScanUI();
+            }
+        }
+
+        function saveEntry() {
+            const name = document.getElementById('name-input').value.trim();
+            if(!name) return;
+
+            const data = JSON.parse(localStorage.getItem('nfc_multi_col') || '{}');
+            data[currentId] = {
+                name: name,
+                type: currentMode,
+                date: new Date().toLocaleDateString()
+            };
+            localStorage.setItem('nfc_multi_col', JSON.stringify(data));
+            
+            closeReg();
+            loadList();
+            stopScanUI();
+        }
+
+        function closeReg() {
+            document.getElementById('reg-overlay').classList.add('hidden');
+            document.getElementById('name-input').value = "";
+            stopScanUI();
+        }
+
+        function loadList() {
+            const data = JSON.parse(localStorage.getItem('nfc_multi_col') || '{}');
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            
+            const ids = Object.keys(data).reverse();
+            if(ids.length === 0) {
+                container.innerHTML = '<p class="text-center py-8 text-slate-400 text-xs">NO COLLECTIONS YET</p>';
+                return;
+            }
+
+            ids.forEach(id => {
+                const item = data[id];
+                const icon = modes[item.type]?.icon || '❓';
+                const el = document.createElement('div');
+                el.className = "bg-white p-4 rounded-2xl flex items-center gap-4 border border-slate-100 shadow-sm";
+                el.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-2xl">${icon}</div>
+                    <div class="flex-1">
+                        <div class="font-black text-slate-800">${item.name}</div>
+                        <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${item.type} | ${id}</div>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function clearAll() {
+            if(confirm("すべてのデータを削除しますか？")) {
+                localStorage.removeItem('nfc_multi_col');
+                loadList();
+            }
+        }
+
+        document.getElementById('action-btn').addEventListener('click', startScan);
+        document.getElementById('save-btn').addEventListener('click', saveEntry);
+        
+        // Init
+        setMode('card');
+        loadList();
+    </script>
+</body>
+</html>
+
