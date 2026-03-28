@@ -5,6 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>幻想郷ジェネレーター - 境界の語り部</title>
+    
+    <!-- OGP (Open Graph Protocol) -->
+    <meta name="description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
+    <meta property="og:title" content="幻想郷ジェネレーター - 境界の語り部">
+    <meta property="og:description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://toshiria.f5.si/gensokyo">
+    <meta property="og:site_name" content="幻想郷ジェネレーター">
+    <meta property="og:image" content="https://toshiria.f5.si/gensokyo/gensokyo_ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="幻想郷ジェネレーター - 境界の語り部">
+    <meta name="twitter:description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
+    <meta name="twitter:image" content="https://toshiria.f5.si/gensokyo/gensokyo_ogp.png">
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -110,6 +124,7 @@
                 transform: translateY(10px);
                 filter: blur(4px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -649,12 +664,12 @@
         <form id="storyForm" autocomplete="off">
             <input type="text" id="name" name="name-field-unique" placeholder="名前 (例: 外来人)" required autocomplete="off"
                 spellcheck="false">
-            <input type="text" id="action" name="action-field-unique" placeholder="行動 (例: 外の世界へ帰る方法を探す)" required autocomplete="off"
-                spellcheck="false">
-            <input type="text" id="item" name="item-field-unique" placeholder="持ち物 (例: スマートフォン)" required autocomplete="off"
-                spellcheck="false">
-            <input type="text" id="companion" name="companion-field-unique" list="touhou-chars" placeholder="お供 (例: 霧雨魔理沙)"
-                required autocomplete="off" spellcheck="false">
+            <input type="text" id="action" name="action-field-unique" placeholder="行動 (例: 外の世界へ帰る方法を探す)" required
+                autocomplete="off" spellcheck="false">
+            <input type="text" id="item" name="item-field-unique" placeholder="持ち物 (例: スマートフォン)" required
+                autocomplete="off" spellcheck="false">
+            <input type="text" id="companion" name="companion-field-unique" list="touhou-chars"
+                placeholder="お供 (例: 霧雨魔理沙)" required autocomplete="off" spellcheck="false">
             <input type="text" id="enemy" class="full-width" name="enemy-field-unique" list="touhou-chars"
                 placeholder="遭遇者(任意) (例: ルーミア)" autocomplete="off" spellcheck="false">
             <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
@@ -930,7 +945,7 @@
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'x-goog-api-key': currentApiKey
                         },
