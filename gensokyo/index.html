@@ -99,7 +99,6 @@
     box-shadow: 4px 4px 15px rgba(0,0,0,0.5);
   }
   
-  /* Markdownのスタイル調整 */
   .botText h3 { color: var(--text-accent); margin-top: 1em; margin-bottom: 0.5em; font-size: 1.1em; border-bottom: 1px solid var(--purple-main); padding-bottom: 4px;}
   .botText p { margin-bottom: 0.8em; }
   .botText p:last-child { margin-bottom: 0; }
@@ -116,12 +115,12 @@
   
   #storyForm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; max-width: 900px; margin: 0 auto; }
 
-  input[type="text"] {
+  input[type="text"], input[type="password"] {
     background: rgba(255,255,255,0.07); border: 1px solid #333; color: #fff;
     padding: 12px; border-radius: 8px; font-size: 16px; outline: none; font-family: var(--font-serif);
     width: 100%; transition: border-color 0.3s;
   }
-  input[type="text"]:focus { border-color: var(--purple-light); }
+  input[type="text"]:focus, input[type="password"]:focus { border-color: var(--purple-light); }
   .full-width { grid-column: span 2; }
 
   button[type="submit"] {
@@ -195,7 +194,6 @@
   }
 </style>
 <script>
-  // アイコン読み込みエラー時のフォールバック
   function handleIconError(img) {
     img.style.display = 'none';
     const parent = img.parentElement;
@@ -220,13 +218,11 @@
       <img src="" class="botIcon" onerror="handleIconError(this)">
     </div>
     <div class="botText" id="first-greeting">
-      <!-- JavaScriptでランダムに挿入 -->
     </div>
   </div>
 </main>
 
 <div id="bottom-area">
-  <!-- datalist要素にキャラクター一覧を定義 -->
   <datalist id="touhou-chars">
     <option value="博麗霊夢"><option value="霧雨魔理沙"><option value="ルーミア"><option value="チルノ">
     <option value="紅美鈴"><option value="パチュリー・ノーレッジ"><option value="十六夜咲夜"><option value="レミリア・スカーレット">
@@ -303,15 +299,15 @@
   </div>
 </div>
 
-<!-- 設定モーダル -->
+<!-- 設定モーダル (修正: type="password") -->
 <div id="settingModal" class="modal-overlay">
   <div class="modal-content">
     <h2>⚙ 外の世界の設定</h2>
     <div class="form-group">
       <label for="apiKeyInput">Gemini API キー</label>
-      <input type="text" id="apiKeyInput" placeholder="AIzaSy...">
+      <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
       <p class="help-text">
-        境界を繋ぐための鍵よ。<br>
+        境界を繋ぐための鍵よ。伏せ字にしておいたわ。<br>
         取得は<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>からできるわ。この鍵はあなたのブラウザ(localStorage)にだけ保存されるから安心してちょうだい。
       </p>
     </div>
@@ -372,7 +368,6 @@
       greetingElem.innerHTML = greetings[randomIndex];
     }
     
-    // アイコンの復元
     const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
     if (savedIcon) {
       document.querySelectorAll('.botIcon').forEach(i => {
@@ -381,7 +376,6 @@
       });
     }
 
-    // APIキーの復元
     currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
   }
   window.addEventListener('load', initApp);
@@ -414,7 +408,6 @@
     showToast('設定を保存したわ。');
   }
 
-  // 設定モーダルの外側クリックで閉じる
   settingModal.addEventListener('click', (e) => {
     if (e.target === settingModal) closeSettingModal();
   });
@@ -467,7 +460,6 @@
     const dataUrl = canvas.toDataURL('image/png');
     localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
     
-    // 全てのアイコンを更新
     document.querySelectorAll('.botIcon').forEach(i => {
       i.src = dataUrl; i.style.display = 'block';
       const fb = i.parentElement.querySelector('.fb'); if (fb) fb.remove();
@@ -475,7 +467,6 @@
     closeCropModal();
   }
 
-  // ドラッグ操作（マウス・タッチ共通）
   let isDragging = false, lastX, lastY;
   const onStart = (e) => {
     if (e.type === 'mousedown' && e.button !== 0) return;
@@ -534,7 +525,7 @@
     updateCropTransform();
   };
 
-  // --- API通信とリトライ（Exponential Backoff） ---
+  // --- API通信 ---
   async function generateContentWithRetry(payload, maxRetries = 5) {
     if (!currentApiKey) throw new Error("API_KEY_MISSING");
 
@@ -560,10 +551,7 @@
             throw new Error("Invalid response structure from Gemini API.");
         }
       } catch (error) {
-        if (attempt === maxRetries) {
-          throw error; // 最大再試行回数に達したらエラーを投げる
-        }
-        // 指数バックオフ: 1s, 2s, 4s, 8s, 16s
+        if (attempt === maxRetries) throw error;
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
       }
@@ -587,7 +575,6 @@
 
   storyForm.onsubmit = async (e) => {
     e.preventDefault();
-    
     if (!currentApiKey) {
       pushBotMsg("鍵（APIキー）が設定されていないわ。右上の「⚙ 設定」から設定してちょうだい。");
       openSettingModal();
@@ -615,10 +602,6 @@
 
 【挑戦者】名前:${data.n}, 行動:${data.a}, 持ち物:${data.i}, お供:${data.c}, 遭遇者:${data.e}
 
-【補足知識】
-・「朱鷺子（ときこ）」は通称であり、公式では「本読み妖怪」と呼ばれる。
-・最新作『東方錦上京 ～ Metalic Melancholy.』などのキャラが指定された場合、ユーザーが入力した行動や文脈からその能力や性格を汲み取り、幻想郷の新たな異変として扱ってください。
-
 【出力構成】
 1. ### あらすじ
 2. ### 境界の向こう側
@@ -632,11 +615,7 @@
       await typeWriter(botTextElem, answer);
     } catch (err) {
       console.error("Story Generation Error:", err);
-      if (err.message === "API_KEY_MISSING") {
-        botTextElem.innerHTML = `<span style='color:var(--red-eye)'>APIキーが設定されていないわ。設定を確認してちょうだい。</span>`;
-      } else {
-        botTextElem.innerHTML = `<span style='color:var(--red-eye)'>境界の接続に失敗したわ。（通信エラー）<br>時間を置いてもう一度試すか、APIキーが正しいか確認してちょうだい。</span>`;
-      }
+      botTextElem.innerHTML = `<span style='color:var(--red-eye)'>境界の接続に失敗したわ。（通信エラー）<br>時間を置いてもう一度試すか、APIキーが正しいか確認してちょうだい。</span>`;
     } finally {
       document.getElementById('submitBtn').disabled = false;
     }
