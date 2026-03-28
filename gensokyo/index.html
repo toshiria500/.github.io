@@ -189,7 +189,7 @@
             line-height: 1.7;
             font-size: 0.95rem;
             backdrop-filter: blur(10px);
-            max-width: 85%;
+            max-width: 100%;
             box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.5);
         }
 
@@ -208,6 +208,92 @@
 
         .botText p:last-child {
             margin-bottom: 0;
+        }
+
+        .msg-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 85%;
+            width: 100%;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            margin-left: 8px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.active {
+            color: var(--purple-light);
+            background: rgba(157, 78, 221, 0.1);
+        }
+
+        .copy-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .copy-dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 110%;
+            left: -50px;
+            background-color: var(--bot-msg-bg);
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+            border: 1px solid var(--purple-main);
+            border-radius: 8px;
+            z-index: 100;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .copy-dropdown-content.show {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        .copy-dropdown-content button {
+            color: var(--text-main);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.3);
+            cursor: pointer;
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .copy-dropdown-content button:last-child {
+            border-bottom: none;
+        }
+
+        .copy-dropdown-content button:hover {
+            background-color: rgba(157, 78, 221, 0.2);
         }
 
         .userContainer {
@@ -1045,6 +1131,12 @@
                 const answer = await generateContentWithRetry(payload);
                 botTextElem.innerHTML = "";
                 await typeWriter(botTextElem, answer);
+
+                const actionBar = document.getElementById(`action-${botMsgId}`);
+                if (actionBar) {
+                    renderActionBar(actionBar, answer, botTextElem.innerText);
+                    actionBar.style.opacity = '1';
+                }
             } catch (err) {
                 console.error("Story Generation Error:", err);
                 botTextElem.innerHTML = `<span style='color:var(--red-eye)'>境界の接続に失敗したわ。（通信エラー）<br>時間を置いてもう一度試すか、APIキーが正しいか確認してちょうだい。</span>`;
@@ -1052,6 +1144,134 @@
                 document.getElementById('submitBtn').disabled = false;
             }
         };
+
+        // --- アクションバーUIのロジック ---
+        function toggleFeedback(btn, feedbackType) {
+            const icon = btn.querySelector('i');
+            const isFas = icon.classList.contains('fas');
+            
+            if (isFas) {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                btn.classList.remove('active');
+            } else {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                btn.classList.add('active');
+                
+                const parent = btn.parentElement;
+                if (feedbackType === 'good') {
+                    const badBtn = parent.querySelector('.btn-bad');
+                    if(badBtn) {
+                        badBtn.classList.remove('active');
+                        badBtn.querySelector('i').classList.remove('fas');
+                        badBtn.querySelector('i').classList.add('far');
+                    }
+                } else if (feedbackType === 'bad') {
+                    const goodBtn = parent.querySelector('.btn-good');
+                    if(goodBtn) {
+                        goodBtn.classList.remove('active');
+                        goodBtn.querySelector('i').classList.remove('fas');
+                        goodBtn.querySelector('i').classList.add('far');
+                    }
+                }
+            }
+        }
+
+        async function handleShare(text) {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: '幻想郷ジェネレーター',
+                        text: text,
+                        url: window.location.href,
+                    });
+                } catch(e) {
+                    console.error("Share failed:", e);
+                }
+            } else {
+                const shareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text + "\n" + window.location.href);
+                window.open(shareUrl, '_blank');
+            }
+        }
+
+        function copyContent(text, type) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`コピーしたわ。(${type})`);
+            }).catch(() => {
+                showToast("コピーに失敗したみたいね。");
+            });
+            document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
+        }
+
+        function toggleCopyDropdown(e, dropdownId) {
+            e.stopPropagation();
+            const dropdown = document.getElementById(dropdownId);
+            const isShown = dropdown.classList.contains('show');
+            document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
+            if (!isShown) dropdown.classList.add('show');
+        }
+
+        window.addEventListener('click', () => {
+             document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
+        });
+
+        function renderActionBar(container, markdownText, plainText) {
+            const uid = "drop-" + Date.now();
+            
+            const goodBtn = document.createElement('button');
+            goodBtn.className = 'action-btn btn-good';
+            goodBtn.title = 'Good';
+            goodBtn.innerHTML = '<i class="far fa-thumbs-up"></i>';
+            goodBtn.onclick = () => toggleFeedback(goodBtn, 'good');
+            
+            const badBtn = document.createElement('button');
+            badBtn.className = 'action-btn btn-bad';
+            badBtn.title = 'Bad';
+            badBtn.innerHTML = '<i class="far fa-thumbs-down"></i>';
+            badBtn.onclick = () => toggleFeedback(badBtn, 'bad');
+
+            const copyDir = document.createElement('div');
+            copyDir.className = 'copy-dropdown';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'action-btn btn-copy';
+            copyBtn.title = 'Copy';
+            copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+            copyBtn.onclick = (e) => toggleCopyDropdown(e, uid);
+            
+            const dropContent = document.createElement('div');
+            dropContent.id = uid;
+            dropContent.className = 'copy-dropdown-content';
+            
+            const btnMd = document.createElement('button');
+            btnMd.innerText = 'Markdownのままコピー';
+            btnMd.onclick = (e) => { e.stopPropagation(); copyContent(markdownText, 'Markdown'); };
+            
+            const btnPlain = document.createElement('button');
+            btnPlain.innerText = 'プレーンテキストでコピー';
+            btnPlain.onclick = (e) => { e.stopPropagation(); copyContent(plainText, 'テキスト'); };
+            
+            dropContent.appendChild(btnMd);
+            dropContent.appendChild(btnPlain);
+            copyDir.appendChild(copyBtn);
+            copyDir.appendChild(dropContent);
+
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'action-btn btn-share';
+            shareBtn.title = 'Share';
+            shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+            shareBtn.onclick = () => {
+                 let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
+                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                 handleShare(shareText);
+            };
+
+            container.appendChild(goodBtn);
+            container.appendChild(badBtn);
+            container.appendChild(copyDir);
+            container.appendChild(shareBtn);
+        }
 
         function pushBotMsg(t) {
             const id = "b" + Date.now();
@@ -1062,7 +1282,10 @@
       <div class="icon-wrapper" onclick="triggerFileSelect()" title="私の姿を書き換えるというの？ うふふ、いいわよ。">
         <img src="${src || ''}" class="botIcon" style="${src ? '' : 'display:none'}" onerror="handleIconError(this)">
       </div>
-      <div class="botText">${t}</div>
+      <div class="msg-body">
+        <div class="botText">${t}</div>
+        <div class="action-bar" id="action-${id}"></div>
+      </div>
     `;
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
