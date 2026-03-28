@@ -126,8 +126,10 @@
   .crop-container {
     width: 300px; height: 300px; border-radius: 50%; border: 2px solid var(--text-accent);
     overflow: hidden; position: relative; background: #111; touch-action: none;
+    cursor: grab;
   }
-  #crop-image { position: absolute; transform-origin: top left; cursor: move; user-select: none; }
+  .crop-container:active { cursor: grabbing; }
+  #crop-image { position: absolute; transform-origin: top left; pointer-events: none; user-select: none; }
   .modal-controls { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 80%; }
   .modal-btns { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
   .modal-btns button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
@@ -216,7 +218,7 @@
   </div>
   <div class="modal-controls">
     <input type="range" id="zoomSlider" min="0.1" max="3" step="0.01" style="width: 100%;">
-    <p style="font-size: 0.8rem; color: #ccc;">ドラッグで位置調整、スライダーで拡大縮小</p>
+    <p style="font-size: 0.8rem; color: #ccc;">ホイールでズーム、ドラッグで位置調整</p>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeCropModal()">キャンセル</button>
       <button class="btn-save" onclick="applyCrop()">保存する</button>
@@ -234,7 +236,6 @@
   const zoomSlider = document.getElementById('zoomSlider');
   const cropViewport = document.getElementById('cropViewport');
 
-  // 挨拶のバリエーション
   const greetings = [
     "あらあら、外の世界から迷い込んできたの？<br>歓迎するわ、幻想郷へ。<br><br>あなたの名や、持っている物を教えてちょうだい。<br>この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。",
     "おや、境界の綻びから迷い子が一人……。<br>怖がらなくていいわ。ここは忘れ去られた者たちが集う楽園。<br><br>あなたが何者で、何を成そうとしているのか……聞かせてもらおうかしら？",
@@ -245,14 +246,11 @@
   document.getElementById("year").textContent = new Date().getFullYear();
 
   function initApp() {
-    // 挨拶のランダム設定
     const greetingElem = document.getElementById('first-greeting');
     if (greetingElem) {
       const randomIndex = Math.floor(Math.random() * greetings.length);
       greetingElem.innerHTML = greetings[randomIndex];
     }
-
-    // アイコンの復元
     const saved = localStorage.getItem(STORAGE_KEY_ICON);
     if (saved) {
       document.querySelectorAll('.botIcon').forEach(i => {
@@ -280,8 +278,8 @@
         imgState.scale = baseScale;
         imgState.x = (viewportSize - cropImg.width * baseScale) / 2;
         imgState.y = (viewportSize - cropImg.height * baseScale) / 2;
-        zoomSlider.min = baseScale * 0.5;
-        zoomSlider.max = baseScale * 5;
+        zoomSlider.min = baseScale * 0.1;
+        zoomSlider.max = baseScale * 10;
         zoomSlider.value = baseScale;
         updateCropTransform();
         cropModal.style.display = 'flex';
@@ -310,8 +308,6 @@
     ctx.restore();
     const dataUrl = canvas.toDataURL('image/png');
     localStorage.setItem(STORAGE_KEY_ICON, dataUrl);
-    
-    // 全てのアイコンを更新
     document.querySelectorAll('.botIcon').forEach(i => {
       i.src = dataUrl; i.style.display = 'block';
       const fb = i.parentElement.querySelector('.fb'); if (fb) fb.remove();
@@ -319,9 +315,11 @@
     closeCropModal();
   }
 
-  // ドラッグ操作
+  // ドラッグ操作（マウス・タッチ共通）
   let isDragging = false, lastX, lastY;
   const onStart = (e) => {
+    // 左クリック(button 0)またはタッチのみ反応
+    if (e.type === 'mousedown' && e.button !== 0) return;
     isDragging = true;
     const ev = e.touches ? e.touches[0] : e;
     lastX = ev.clientX; lastY = ev.clientY;
@@ -334,9 +332,33 @@
     imgState.x += deltaX; imgState.y += deltaY;
     lastX = ev.clientX; lastY = ev.clientY;
     updateCropTransform();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
   };
   const onEnd = () => isDragging = false;
+
+  // ホイールズーム
+  const onWheel = (e) => {
+    e.preventDefault();
+    const zoomSpeed = 0.001;
+    const delta = -e.deltaY;
+    const oldScale = imgState.scale;
+    const newScale = Math.min(Math.max(imgState.scale + delta * zoomSpeed, parseFloat(zoomSlider.min)), parseFloat(zoomSlider.max));
+    
+    // カーソル位置を中心にズームするための計算
+    const rect = cropViewport.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const worldX = (mouseX - imgState.x) / oldScale;
+    const worldY = (mouseY - imgState.y) / oldScale;
+    
+    imgState.scale = newScale;
+    imgState.x = mouseX - worldX * newScale;
+    imgState.y = mouseY - worldY * newScale;
+    
+    zoomSlider.value = newScale;
+    updateCropTransform();
+  };
 
   cropViewport.addEventListener('mousedown', onStart);
   window.addEventListener('mousemove', onMove);
@@ -344,7 +366,21 @@
   cropViewport.addEventListener('touchstart', onStart, {passive: false});
   window.addEventListener('touchmove', onMove, {passive: false});
   window.addEventListener('touchend', onEnd);
-  zoomSlider.oninput = () => { imgState.scale = parseFloat(zoomSlider.value); updateCropTransform(); };
+  cropViewport.addEventListener('wheel', onWheel, {passive: false});
+
+  zoomSlider.oninput = () => {
+    // スライダー操作時は中心固定でズーム
+    const oldScale = imgState.scale;
+    const newScale = parseFloat(zoomSlider.value);
+    const centerX = viewportSize / 2;
+    const centerY = viewportSize / 2;
+    const worldX = (centerX - imgState.x) / oldScale;
+    const worldY = (centerY - imgState.y) / oldScale;
+    imgState.scale = newScale;
+    imgState.x = centerX - worldX * newScale;
+    imgState.y = centerY - worldY * newScale;
+    updateCropTransform();
+  };
 
   // --- ストーリー生成 ---
   async function typeWriter(element, markdown) {
