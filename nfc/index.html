@@ -54,9 +54,9 @@
                     <span id="main-emoji" class="text-5xl">💳</span>
                 </div>
                 <h2 id="status-text" class="text-lg font-black mb-1">スキャン待機中</h2>
-                <p id="status-sub" class="text-xs text-slate-400 text-center mb-8 leading-relaxed">
+                <div id="status-sub" class="text-xs text-slate-400 text-center mb-8 leading-relaxed">
                     選択したアイテムをスマホの背面に<br>近づけてください
-                </p>
+                </div>
                 <button id="scan-btn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg opacity-50 cursor-not-allowed transition-all" disabled>
                     SCAN START
                 </button>
@@ -100,6 +100,7 @@
         const guideBox = document.getElementById('guide-box');
         const logList = document.getElementById('log-list');
         const regModal = document.getElementById('reg-modal');
+        const statusSub = document.getElementById('status-sub');
         
         let currentMode = 'card';
         let currentScannedId = '';
@@ -126,6 +127,7 @@
             document.getElementById('header-bar').style.backgroundColor = m.color;
             document.getElementById('main-emoji').innerText = m.emoji;
             document.getElementById('icon-circle').classList.remove('scan-pulse');
+            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
         }
 
         function init() {
@@ -178,18 +180,31 @@
                 scanBtn.innerText = "WAITING FOR TAG...";
                 scanBtn.disabled = true;
 
+                // スキャン中のアドバイス表示を追加
+                statusSub.innerHTML = `
+                    <div class="text-left bg-blue-50 p-3 rounded-lg mt-2 mx-auto max-w-[240px]">
+                        <p class="font-bold text-blue-800 text-[10px]">💡 反応しないときは：</p>
+                        <ul class="text-[9px] text-blue-600 list-disc ml-3 leading-tight space-y-1 mt-1">
+                            <li>カードのケースから金属を外す</li>
+                            <li>他のICカードと重ねない</li>
+                            <li>スマホのカメラ横に密着させる</li>
+                        </ul>
+                    </div>
+                `;
+
                 ndef.onreading = (event) => {
                     const id = event.serialNumber;
                     const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
 
                     if (data[id]) {
                         document.getElementById('status-text').innerText = "認識成功！";
-                        document.getElementById('status-sub').innerHTML = `<span class="text-indigo-600 font-bold text-lg">${data[id].name}</span><br>(${data[id].type})`;
+                        statusSub.innerHTML = `<span class="text-indigo-600 font-bold text-lg">${data[id].name}</span><br>(${data[id].type})`;
                         setTimeout(() => {
                             document.getElementById('status-text').innerText = "準備完了";
-                            document.getElementById('status-sub').innerText = "次をどうぞ！";
+                            statusSub.innerHTML = "次をどうぞ！";
                             scanBtn.disabled = false;
                             scanBtn.innerText = "SCAN START";
+                            document.getElementById('icon-circle').classList.remove('scan-pulse');
                         }, 2500);
                     } else {
                         currentScannedId = id;
@@ -221,6 +236,7 @@
             document.getElementById('icon-circle').classList.remove('scan-pulse');
             scanBtn.disabled = false;
             scanBtn.innerText = "SCAN START";
+            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
         }
 
         function loadCollection() {
