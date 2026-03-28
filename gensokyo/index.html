@@ -109,6 +109,7 @@
   input {
     background: rgba(255,255,255,0.07); border: 1px solid #333; color: #fff;
     padding: 12px; border-radius: 8px; font-size: 16px; outline: none; font-family: var(--font-serif);
+    width: 100%;
   }
   .full-width { grid-column: span 2; }
 
@@ -190,13 +191,152 @@
 </main>
 
 <div id="bottom-area">
-  <!-- ブラウザの自動入力を強力に無効化するため、autocomplete="off"に加え、一部のブラウザで有効なone-time-code等を設定 -->
+  <!-- datalist要素にキャラクター一覧を定義 -->
+  <datalist id="touhou-chars">
+    <option value="博麗霊夢">
+    <option value="霧雨魔理沙">
+    <option value="ルーミア">
+    <option value="チルノ">
+    <option value="紅美鈴">
+    <option value="パチュリー・ノーレッジ">
+    <option value="十六夜咲夜">
+    <option value="レミリア・スカーレット">
+    <option value="フランドール・スカーレット">
+    <option value="小悪魔">
+    <option value="大妖精">
+    <option value="レティ・ホワイトロック">
+    <option value="橙">
+    <option value="アリス・マーガトロイド">
+    <option value="ルナサ・プリズムリバー">
+    <option value="メルラン・プリズムリバー">
+    <option value="リリカ・プリズムリバー">
+    <option value="魂魄妖夢">
+    <option value="西行寺幽々子">
+    <option value="八雲藍">
+    <option value="リリーホワイト">
+    <option value="リグル・ナイトバグ">
+    <option value="ミスティア・ローレライ">
+    <option value="上白沢慧音">
+    <option value="因幡てゐ">
+    <option value="鈴仙・優曇華院・イナバ">
+    <option value="八意永琳">
+    <option value="蓬莱山輝夜">
+    <option value="藤原妹紅">
+    <option value="伊吹萃香">
+    <option value="射命丸文">
+    <option value="メディスン・メランコリー">
+    <option value="風見幽香">
+    <option value="小野塚小町">
+    <option value="四季映姫・ヤマザナドゥ">
+    <option value="秋静葉">
+    <option value="秋穣子">
+    <option value="鍵山雛">
+    <option value="河城にとり">
+    <option value="東風谷早苗">
+    <option value="八坂神奈子">
+    <option value="洩矢諏訪子">
+    <option value="犬走椛">
+    <option value="永江衣玖">
+    <option value="比那名居天子">
+    <option value="キスメ">
+    <option value="黒谷ヤマメ">
+    <option value="水橋パルスィ">
+    <option value="星熊勇儀">
+    <option value="古明地さとり">
+    <option value="火焔猫燐">
+    <option value="霊烏路空">
+    <option value="古明地こいし">
+    <option value="ナズーリン">
+    <option value="多々良小傘">
+    <option value="雲居一輪">
+    <option value="雲山">
+    <option value="村紗水蜜">
+    <option value="寅丸星">
+    <option value="聖白蓮">
+    <option value="封獣ぬえ">
+    <option value="姫海棠はたて">
+    <option value="サニーミルク">
+    <option value="ルナチャイルド">
+    <option value="スターサファイア">
+    <option value="幽谷響子">
+    <option value="宮古芳香">
+    <option value="霍青娥">
+    <option value="蘇我屠自古">
+    <option value="物部布都">
+    <option value="豊聡耳神子">
+    <option value="二ッ岩マミゾウ">
+    <option value="秦こころ">
+    <option value="わかさぎ姫">
+    <option value="赤蛮奇">
+    <option value="今泉影狼">
+    <option value="九十九弁々">
+    <option value="九十九八橋">
+    <option value="鬼人正邪">
+    <option value="少名針妙丸">
+    <option value="堀川雷鼓">
+    <option value="宇佐見菫子">
+    <option value="茨木華扇">
+    <option value="清蘭">
+    <option value="鈴瑚">
+    <option value="ドレミー・スイート">
+    <option value="稀神サグメ">
+    <option value="クラウンピース">
+    <option value="純子">
+    <option value="ヘカーティア・ラピスラズリ">
+    <option value="エタニティラルバ">
+    <option value="坂田ネムノ">
+    <option value="高麗野あうん">
+    <option value="矢田寺成美">
+    <option value="爾子田里乃">
+    <option value="丁礼田舞">
+    <option value="摩多羅隠岐奈">
+    <option value="依神女苑">
+    <option value="依神紫苑">
+    <option value="戎瓔花">
+    <option value="牛崎潤美">
+    <option value="庭渡久侘歌">
+    <option value="吉弔八千慧">
+    <option value="杖刀偶磨弓">
+    <option value="埴安神袿姫">
+    <option value="驪駒早鬼">
+    <option value="豪徳寺ミケ">
+    <option value="山城たかね">
+    <option value="駒草山如">
+    <option value="玉造魅須丸">
+    <option value="菅牧典">
+    <option value="飯綱丸龍">
+    <option value="天弓千亦">
+    <option value="饕餮尤魔">
+    <option value="孫美天">
+    <option value="三頭慧ノ子">
+    <option value="天火人ちやり">
+    <option value="豫母都日狭美">
+    <option value="日白残無">
+    <option value="塵塚ウバメ">
+    <option value="封獣チミ">
+    <option value="道神馴子">
+    <option value="ユイマン・浅間">
+    <option value="磐永阿梨夜">
+    <option value="渡里ニナ">
+    <option value="宇佐見蓮子">
+    <option value="マエリベリー・ハーン(メリー)">
+    <option value="森近霖之助">
+    <option value="朱鷺子">
+    <option value="稗田阿求">
+    <option value="綿月豊姫">
+    <option value="綿月依姫">
+    <option value="レイセン">
+    <option value="本居小鈴">
+    <option value="宮出口瑞霊">
+    <option value="奥野田美宵">
+  </datalist>
+
   <form id="storyForm" autocomplete="off">
-    <input id="name" name="dummy-name-field" placeholder="名前" required autocomplete="one-time-code" spellcheck="false">
-    <input id="action" name="dummy-action-field" placeholder="行動" required autocomplete="one-time-code" spellcheck="false">
-    <input id="item" name="dummy-item-field" placeholder="持ち物" required autocomplete="one-time-code" spellcheck="false">
-    <input id="companion" name="dummy-companion-field" placeholder="お供" required autocomplete="one-time-code" spellcheck="false">
-    <input id="enemy" class="full-width" name="dummy-enemy-field" placeholder="遭遇者 (任意)" autocomplete="one-time-code" spellcheck="false">
+    <input id="name" name="name-field-unique" placeholder="名前" required autocomplete="one-time-code" spellcheck="false">
+    <input id="action" name="action-field-unique" placeholder="行動" required autocomplete="one-time-code" spellcheck="false">
+    <input id="item" name="item-field-unique" placeholder="持ち物" required autocomplete="one-time-code" spellcheck="false">
+    <input id="companion" name="companion-field-unique" list="touhou-chars" placeholder="お供" required autocomplete="one-time-code" spellcheck="false">
+    <input id="enemy" class="full-width" name="enemy-field-unique" list="touhou-chars" placeholder="遭遇者 (任意)" autocomplete="one-time-code" spellcheck="false">
     <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
   </form>
   <footer class="site-footer">
@@ -319,7 +459,6 @@
   // ドラッグ操作（マウス・タッチ共通）
   let isDragging = false, lastX, lastY;
   const onStart = (e) => {
-    // 左クリック(button 0)またはタッチのみ反応
     if (e.type === 'mousedown' && e.button !== 0) return;
     isDragging = true;
     const ev = e.touches ? e.touches[0] : e;
@@ -337,26 +476,20 @@
   };
   const onEnd = () => isDragging = false;
 
-  // ホイールズーム
   const onWheel = (e) => {
     e.preventDefault();
     const zoomSpeed = 0.001;
     const delta = -e.deltaY;
     const oldScale = imgState.scale;
     const newScale = Math.min(Math.max(imgState.scale + delta * zoomSpeed, parseFloat(zoomSlider.min)), parseFloat(zoomSlider.max));
-    
-    // カーソル位置を中心にズームするための計算
     const rect = cropViewport.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
     const worldX = (mouseX - imgState.x) / oldScale;
     const worldY = (mouseY - imgState.y) / oldScale;
-    
     imgState.scale = newScale;
     imgState.x = mouseX - worldX * newScale;
     imgState.y = mouseY - worldY * newScale;
-    
     zoomSlider.value = newScale;
     updateCropTransform();
   };
@@ -370,7 +503,6 @@
   cropViewport.addEventListener('wheel', onWheel, {passive: false});
 
   zoomSlider.oninput = () => {
-    // スライダー操作時は中心固定でズーム
     const oldScale = imgState.scale;
     const newScale = parseFloat(zoomSlider.value);
     const centerX = viewportSize / 2;
