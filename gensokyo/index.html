@@ -190,12 +190,13 @@
 </main>
 
 <div id="bottom-area">
-  <form id="storyForm" autocomplete="new-password">
-    <input id="name" placeholder="名前" required autocomplete="off" spellcheck="false">
-    <input id="action" placeholder="行動" required autocomplete="off" spellcheck="false">
-    <input id="item" placeholder="持ち物" required autocomplete="off" spellcheck="false">
-    <input id="companion" placeholder="お供" required autocomplete="off" spellcheck="false">
-    <input id="enemy" class="full-width" placeholder="遭遇者 (任意)" autocomplete="off" spellcheck="false">
+  <!-- ブラウザの自動入力を強力に無効化するため、autocomplete="off"に加え、一部のブラウザで有効なone-time-code等を設定 -->
+  <form id="storyForm" autocomplete="off">
+    <input id="name" name="dummy-name-field" placeholder="名前" required autocomplete="one-time-code" spellcheck="false">
+    <input id="action" name="dummy-action-field" placeholder="行動" required autocomplete="one-time-code" spellcheck="false">
+    <input id="item" name="dummy-item-field" placeholder="持ち物" required autocomplete="one-time-code" spellcheck="false">
+    <input id="companion" name="dummy-companion-field" placeholder="お供" required autocomplete="one-time-code" spellcheck="false">
+    <input id="enemy" class="full-width" name="dummy-enemy-field" placeholder="遭遇者 (任意)" autocomplete="one-time-code" spellcheck="false">
     <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
   </form>
   <footer class="site-footer">
