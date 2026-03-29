@@ -893,6 +893,22 @@
         document.getElementById("year").textContent = new Date().getFullYear();
 
         function initApp() {
+            // 共有リンクチェック
+            const hash = window.location.hash;
+            if (hash.startsWith("#s=")) {
+                const encoded = hash.substring(3);
+                const json = safeB64Decode(encoded);
+                if (json) {
+                    try {
+                        const shareObj = JSON.parse(json);
+                        loadSharedContent(shareObj);
+                        return; // 共有モードの場合は初期挨拶をスキップ
+                    } catch (e) {
+                        console.error("Shared content load error", e);
+                    }
+                }
+            }
+
             const greetingElem = document.getElementById('first-greeting');
             if (greetingElem) {
                 const randomIndex = Math.floor(Math.random() * greetings.length);
@@ -913,6 +929,37 @@
             }
 
             currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
+        }
+
+        async function loadSharedContent(obj) {
+            // 背景などの初期化
+            const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
+            if (savedIcon) {
+                document.querySelectorAll('.botIcon').forEach(i => { i.src = savedIcon; i.style.display = 'block'; });
+            }
+            currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
+
+            const d = obj.d;
+            pushUserMsg(`${d.n}は「${d.a}」を試みたようだわ……。`);
+            
+            const botMsgId = pushBotMsg("境界の向こう側で、こんな運命を辿った者がいたわ……。");
+            const botTextElem = document.getElementById(botMsgId).querySelector('.botText');
+            
+            // 入力エリアを非表示にし、「自分も占う」ボタンを表示
+            document.getElementById('bottom-area').style.display = 'none';
+            const retryDiv = document.createElement('div');
+            retryDiv.style.cssText = 'padding: 20px; text-align: center; background: #050208; border-top: 1px solid var(--purple-main);';
+            retryDiv.innerHTML = `<button onclick="location.href=location.pathname" style="padding:14px 24px; border-radius:30px; border:none; background:linear-gradient(135deg, var(--purple-light), var(--purple-main)); color:white; font-weight:bold; cursor:pointer; font-family:var(--font-serif); box-shadow: 0 0 15px var(--purple-main);">👁️ 私も運命を占う</button>`;
+            document.body.appendChild(retryDiv);
+
+            // 内容を表示
+            botTextElem.innerHTML = marked.parse(obj.t);
+            const actionBar = document.getElementById(`action-${botMsgId}`);
+            if (actionBar) {
+                renderActionBar(actionBar, obj.t, obj.p, d);
+                actionBar.style.opacity = '1';
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
         window.addEventListener('DOMContentLoaded', initApp);
 
@@ -1331,6 +1378,46 @@
             container.insertBefore(feedbackDir, badBtn.nextSibling);
         }
 
+        // --- 共有リンク（サーバーレス）用ヘルパー ---
+        function safeB64Encode(str) {
+            try {
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+            } catch (e) {
+                console.error("Encode error:", e);
+                return "";
+            }
+        }
+
+        function safeB64Decode(str) {
+            try {
+                return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            } catch (e) {
+                console.error("Decode error:", e);
+                return "";
+            }
+        }
+
+        function triggerShareLink(markdownContent, plainContent, data) {
+            const shareObj = {
+                t: markdownContent,
+                p: plainContent,
+                d: data,
+                v: 1 // バージョン
+            };
+            const encoded = safeB64Encode(JSON.stringify(shareObj));
+            const shareUrl = window.location.origin + window.location.pathname + "#s=" + encoded;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showToast("共有リンクをコピーしたわ。このURLを誰かに送ってちょうだい。");
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(shareUrl, "共有URL");
+                });
+            } else {
+                fallbackCopyTextToClipboard(shareUrl, "共有URL");
+            }
+        }
+
         async function handleShare(text) {
             if (navigator.share) {
                 try {
@@ -1474,8 +1561,16 @@
             shareContent.id = suid;
             shareContent.className = 'copy-dropdown-content';
 
+            const btnLink = document.createElement('button');
+            btnLink.innerHTML = '<i class="fas fa-link" style="margin-right:8px; color:var(--text-accent);"></i> この会話の共有リンクを作成';
+            btnLink.onclick = (e) => {
+                 e.stopPropagation();
+                 shareContent.classList.remove('show');
+                 triggerShareLink(markdownText, plainText, requestData);
+            };
+
             const btnX = document.createElement('button');
-            btnX.innerHTML = '<i class="fab fa-twitter" style="margin-right:8px; color:#1DA1F2;"></i> X (Twitter) で共有';
+            btnX.innerHTML = '<i class="fab fa-twitter" style="margin-right:8px; color:#1DA1F2;"></i> X (Twitter) で投稿';
             btnX.onclick = (e) => {
                  e.stopPropagation();
                  shareContent.classList.remove('show');
@@ -1499,99 +1594,4 @@
                  e.stopPropagation();
                  shareContent.classList.remove('show');
                  let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
-                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
-                 handleShare(shareText);
-            };
-
-            shareContent.appendChild(btnX);
-            shareContent.appendChild(btnInsta);
-            shareContent.appendChild(btnNative);
-            shareDir.appendChild(shareBtn);
-            shareDir.appendChild(shareContent);
-
-            const ttsBtn = document.createElement('button');
-            ttsBtn.className = 'action-btn btn-tts';
-            ttsBtn.title = '読み上げ / 停止';
-            ttsBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-            ttsBtn.onclick = () => toggleTTS(ttsBtn, plainText);
-
-            const menuDir = document.createElement('div');
-            menuDir.className = 'copy-dropdown';
-
-            const menuBtn = document.createElement('button');
-            menuBtn.className = 'action-btn btn-menu';
-            menuBtn.title = 'メニュー';
-            menuBtn.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
-            const muid = "menu-" + Date.now();
-            menuBtn.onclick = (e) => toggleCopyDropdown(e, muid);
-            
-            const menuContent = document.createElement('div');
-            menuContent.id = muid;
-            menuContent.className = 'copy-dropdown-content';
-            menuContent.style.left = 'auto';
-            menuContent.style.right = '0'; 
-            
-            const regenBtn = document.createElement('button');
-            regenBtn.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:8px;"></i> 再生成する';
-            regenBtn.onclick = (e) => {
-                e.stopPropagation();
-                menuContent.classList.remove('show');
-                triggerRegenerate(requestData);
-            };
-            
-            menuContent.appendChild(regenBtn);
-            menuDir.appendChild(menuBtn);
-            menuDir.appendChild(menuContent);
-
-            container.appendChild(goodBtn);
-            container.appendChild(badBtn);
-            container.appendChild(copyDir);
-            container.appendChild(shareDir);
-            container.appendChild(ttsBtn);
-            container.appendChild(menuDir);
-        }
-
-        function triggerRegenerate(data) {
-            document.getElementById('name').value = data.n;
-            document.getElementById('action').value = data.a;
-            document.getElementById('item').value = data.i;
-            document.getElementById('companion').value = data.c;
-            document.getElementById('enemy').value = data.e === "なし" ? "" : data.e;
-            
-            const submitBtn = document.getElementById('submitBtn');
-            if(!submitBtn.disabled) {
-                showToast("同じ条件で別の運命を垣間見るわ…");
-                storyForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-            }
-        }
-
-        function pushBotMsg(t) {
-            const id = "b" + Date.now();
-            const div = document.createElement('div');
-            div.className = "botContainer"; div.id = id;
-            const src = localStorage.getItem(STORAGE_KEY_ICON);
-            div.innerHTML = `
-      <div class="icon-wrapper" onclick="triggerFileSelect()" title="私の姿を書き換えるというの？ うふふ、いいわよ。">
-        <img src="${src || ''}" class="botIcon" style="${src ? '' : 'display:none'}" onerror="handleIconError(this)">
-      </div>
-      <div class="msg-body">
-        <div class="botText">${t}</div>
-        <div class="action-bar" id="action-${id}"></div>
-      </div>
-    `;
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            return id;
-        }
-
-        function pushUserMsg(t) {
-            const div = document.createElement('div');
-            div.className = "userContainer";
-            div.innerHTML = `<div class="userBubble">${t}</div>`;
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    </script>
-</body>
-
-</html>
+       
