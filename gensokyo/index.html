@@ -210,6 +210,26 @@
             margin-bottom: 0;
         }
 
+        /* --- フレーバーテキスト用 --- */
+        .flavor-text {
+            display: block;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            text-shadow: 0 0 5px rgba(107, 44, 145, 0.5);
+        }
+
+        .system-instruction {
+            display: block;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.85rem;
+            border-top: 1px dashed rgba(157, 78, 221, 0.4);
+            padding-top: 10px;
+            line-height: 1.6;
+            margin-top: 4px;
+        }
+
         .msg-body {
             display: flex;
             flex-direction: column;
@@ -829,6 +849,8 @@
         const toast = document.getElementById('toast');
 
         let currentApiKey = "";
+        let currentUtterance = null;
+        let currentTtsBtn = null;
 
         const greetings = [
             "あらあら、外の世界から迷い込んできたの？<br>歓迎するわ、幻想郷へ。<br><br>あなたの名や、持っている物を教えてちょうだい。<br>この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。",
@@ -850,7 +872,22 @@
             "昼と夜の境界が曖昧になる逢魔が時……。<br>あなたが現れたのは、偶然じゃないのかもしれないわね。<br><br>あなたの選んだ道が、どこへ繋がっているのか見せてあげる。",
             "人間と妖怪の境界なんて、私にとっては紙一重なの。<br>あなたがどちら側に転ぶか……。<br><br>私がそっと、背中を押してあげてもいいのよ？",
             "お茶請けには少し物足りないけれど……。<br>あなたのその必死な足掻き、極上のスパイスになりそうね。<br><br>さあ、物語の幕を開けましょうか。",
-            "私のスキマは、どこへでも繋がっているの。<br>もちろん、あなたの最期の場所へもね……。<br><br>うふふ、冗談よ。さあ、あなたの情報を見せてちょうだい。"
+            "私のスキマは、どこへでも繋がっているの。<br>もちろん、あなたの最期の場所へもね……。<br><br>うふふ、冗談よ。さあ、あなたの情報を見せてちょうだい。",
+            "あら、随分と面白い匂いをさせているわね。<br>そのまま歩き回れば、すぐに誰かの胃袋に収まってしまうわよ。<br><br>あなたの名前と目的を教えて。生き残るための道標を描いてあげるから。",
+            "境界を越えるのは容易いけれど、帰るのは至難の業。<br>外の世界の知恵が、果たしてどこまで通用するかしら。<br><br>さあ、あなたが持つ切り札を見せてちょうだい。",
+            "人間、妖怪、神様……ここは種々の思惑が交差する箱庭。<br>あなたという異物が入ることで、どんな化学反応が起きるのかしらね。<br><br>あなたの行動が導く未来を、少し占ってあげましょうか。",
+            "綺麗な月夜ね。こんな夜は、迷い人がよく泣いているの。<br>無事に朝を迎えられるか、それとも闇に溶けてしまうか……。<br><br>あなたの持っている物と、行きたい場所を聞かせてちょうだい。",
+            "ふふっ、警戒しなくてもいいわ。今はね。<br>私のスキマの中から、あなたの運命の糸をこっそり手繰り寄せてあげる。<br><br>まずは、あなたの身の上話をしてくれないかしら？",
+            "幻想郷の土を踏んだ気分はどう？<br>外界の常識を抱えたままじゃ、長くは持たないわよ。<br><br>どう動くつもりか、私にこっそり教えてちょうだい。結末を見てあげる。",
+            "春の桜も秋の紅葉も、迷い人の血を吸って赤く染まるの……なんて、冗談よ。<br>でも、あなたの道筋によってはあながち嘘でもないわね。<br><br>運命の歯車を回すために、あなたの情報を入力してちょうだい。",
+            "あら、どこかで見た顔……なんてことはないわね。全くの異邦人。<br>あなたはこの世界で、モブで終わるか、それとも異変の中心になるか。<br><br>さあ、手っ取り早くあなたの設定を教えてもらえるかしら。",
+            "スキマの向こうの境界から、ずっとあなたのことを見ていたわよ。<br>……なんて言われたら、怖いかしら？ うふふ。<br><br>さあ、これからあなたがどんな絶望（あるいは希望）に直面するのか、シミュレートしましょうか。",
+            "幻想郷は全てを受け入れる。もちろん、あなたの命もね。<br>それが悲惨な結末だとしても、誰かの娯楽にはなるわ。<br><br>あなたが持ち込んだその道具、どう使う気なのかしら？",
+            "あらあら、靴の裏に外の土がべっとりついているわ。<br>急いで拭い落とさないと、敏感な妖怪に嗅ぎつけられるわよ。<br><br>どう逃げ回るつもりか、あなたのプランを見せてごらんなさい。",
+            "結界を抜ける時のあのゾクゾクする感覚、たまらないでしょう？<br>ここから先は、もっと刺激的な体験が待っているわ。<br><br>あなたの選択次第だけどね。さあ、どう行動するつもり？",
+            "こんなところに人間が一人でいるなんて、いい度胸ね。<br>それとも、ただの無知ゆえの蛮勇かしら。<br><br>あなたの持ち物と、連れがいればその名前を教えて。生存ルートを探ってみるわ。",
+            "ふふっ、なんだか面白そうなトラブルメーカーがやってきたわね。<br>霊夢の仕事が増える前に、私が少し遊んであげようかしら。<br><br>あなたの行動がどんな大惨事を引き起こすか、覗いてみましょう。",
+            "境界の向こう側から見れば、あなたの人生なんて一瞬の瞬き。<br>でも、だからこそ美しく散るかもしれないわね。<br><br>最後に残す言葉になるかもしれないけれど、あなたの計画を聞かせて。"
         ];
 
         document.getElementById("year").textContent = new Date().getFullYear();
@@ -859,7 +896,12 @@
             const greetingElem = document.getElementById('first-greeting');
             if (greetingElem) {
                 const randomIndex = Math.floor(Math.random() * greetings.length);
-                greetingElem.innerHTML = greetings[randomIndex];
+                let text = greetings[randomIndex];
+                if (text.includes("<br><br>")) {
+                    const parts = text.split("<br><br>");
+                    text = `<span class="flavor-text">${parts[0]}</span><span class="system-instruction">${parts.slice(1).join("<br><br>")}</span>`;
+                }
+                greetingElem.innerHTML = text;
             }
 
             const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
@@ -1078,6 +1120,17 @@
 
         storyForm.onsubmit = async (e) => {
             e.preventDefault();
+
+            if ('speechSynthesis' in window && speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                if (currentTtsBtn) {
+                    currentTtsBtn.querySelector('i').classList.remove('fa-stop');
+                    currentTtsBtn.querySelector('i').classList.add('fa-volume-up');
+                    currentTtsBtn.classList.remove('active');
+                    currentTtsBtn = null;
+                }
+            }
+
             if (!currentApiKey) {
                 pushBotMsg("鍵（APIキー）が設定されていないわ。右上の「⚙ 設定」から設定してちょうだい。");
                 openSettingModal();
@@ -1134,7 +1187,7 @@
 
                 const actionBar = document.getElementById(`action-${botMsgId}`);
                 if (actionBar) {
-                    renderActionBar(actionBar, answer, botTextElem.innerText);
+                    renderActionBar(actionBar, answer, botTextElem.innerText, data);
                     actionBar.style.opacity = '1';
                 }
             } catch (err) {
@@ -1146,36 +1199,136 @@
         };
 
         // --- アクションバーUIのロジック ---
-        function toggleFeedback(btn, feedbackType) {
+        function toggleTTS(btn, text) {
+            if (!('speechSynthesis' in window)) {
+                showToast("お使いのブラウザは読み上げ機能に対応していないみたいね。");
+                return;
+            }
+
             const icon = btn.querySelector('i');
-            const isFas = icon.classList.contains('fas');
-            
-            if (isFas) {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
-                btn.classList.remove('active');
-            } else {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
-                btn.classList.add('active');
-                
-                const parent = btn.parentElement;
-                if (feedbackType === 'good') {
-                    const badBtn = parent.querySelector('.btn-bad');
-                    if(badBtn) {
-                        badBtn.classList.remove('active');
-                        badBtn.querySelector('i').classList.remove('fas');
-                        badBtn.querySelector('i').classList.add('far');
-                    }
-                } else if (feedbackType === 'bad') {
-                    const goodBtn = parent.querySelector('.btn-good');
-                    if(goodBtn) {
-                        goodBtn.classList.remove('active');
-                        goodBtn.querySelector('i').classList.remove('fas');
-                        goodBtn.querySelector('i').classList.add('far');
-                    }
+            const isPlaying = icon.classList.contains('fa-stop');
+
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                if (currentTtsBtn) {
+                    currentTtsBtn.querySelector('i').classList.remove('fa-stop');
+                    currentTtsBtn.querySelector('i').classList.add('fa-volume-up');
+                    currentTtsBtn.classList.remove('active');
                 }
             }
+
+            if (isPlaying && currentTtsBtn === btn) {
+                currentUtterance = null;
+                currentTtsBtn = null;
+                return;
+            }
+
+            const ut = new SpeechSynthesisUtterance(text);
+            ut.lang = 'ja-JP';
+            ut.rate = 0.95; // 少しゆっくり
+            ut.pitch = 0.8; // 少し低め
+
+            ut.onend = () => {
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                btn.classList.remove('active');
+                if (currentTtsBtn === btn) {
+                    currentTtsBtn = null;
+                    currentUtterance = null;
+                }
+            };
+
+            ut.onerror = () => {
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                btn.classList.remove('active');
+                if (currentTtsBtn === btn) {
+                    currentTtsBtn = null;
+                    currentUtterance = null;
+                }
+            };
+
+            currentUtterance = ut;
+            currentTtsBtn = btn;
+            
+            icon.classList.remove('fa-volume-up');
+            icon.classList.add('fa-stop');
+            btn.classList.add('active');
+
+            speechSynthesis.speak(ut);
+        }
+
+        function toggleFeedback(btn, feedbackType) {
+            if (btn.classList.contains('active') || btn.classList.contains('disabled')) return;
+
+            const icon = btn.querySelector('i');
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            btn.classList.add('active');
+            
+            const parent = btn.parentElement;
+            
+            if (feedbackType === 'good') {
+                const badBtn = parent.querySelector('.btn-bad');
+                if (badBtn) badBtn.style.display = 'none';
+                showToast("評価を送信したわ。（Good）");
+            } else if (feedbackType === 'bad') {
+                const goodBtn = parent.querySelector('.btn-good');
+                if (goodBtn) goodBtn.style.display = 'none';
+                showBadFeedbackMenu(parent, btn);
+            }
+            
+            btn.classList.add('disabled');
+            btn.style.cursor = 'default';
+        }
+
+        function sendGoogleFeedback(reason) {
+            const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdXUnGhplKsDH4nVyvoMMF5xpuqRkuUZzO1DCLGY96a4tREtw/formResponse";
+            const formData = new FormData();
+            
+            if (reason === "その他") {
+                formData.append("entry.1991144860", "__other_option__");
+                formData.append("entry.1991144860.other_option_response", "その他（UIからの自動送信）");
+            } else {
+                formData.append("entry.1991144860", reason);
+            }
+
+            fetch(formUrl, {
+                method: "POST",
+                mode: "no-cors",
+                body: formData
+            }).catch(e => console.error("Feedback error", e));
+        }
+
+        function showBadFeedbackMenu(container, badBtn) {
+            const uid = "feedback-" + Date.now();
+            const feedbackDir = document.createElement('div');
+            feedbackDir.className = 'copy-dropdown';
+            feedbackDir.style.position = 'relative';
+            
+            const dropContent = document.createElement('div');
+            dropContent.id = uid;
+            dropContent.className = 'copy-dropdown-content show';
+            dropContent.style.left = '0';
+            dropContent.style.bottom = '110%';
+            dropContent.style.minWidth = '160px';
+            
+            const reasons = ["事実と異なる", "物語が不自然", "面白くない", "不適切な表現", "その他"];
+            reasons.forEach(reason => {
+                const btn = document.createElement('button');
+                btn.innerText = reason;
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    sendGoogleFeedback(reason);
+                    showToast(`フィードバック「${reason}」を送信したわ。`);
+                    dropContent.classList.remove('show');
+                    setTimeout(() => feedbackDir.remove(), 200);
+                };
+                dropContent.appendChild(btn);
+            });
+            
+            feedbackDir.appendChild(dropContent);
+            container.insertBefore(feedbackDir, badBtn.nextSibling);
         }
 
         async function handleShare(text) {
@@ -1190,17 +1343,67 @@
                     console.error("Share failed:", e);
                 }
             } else {
-                const shareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text + "\n" + window.location.href);
-                window.open(shareUrl, '_blank');
+                handleXShare(text);
             }
         }
 
+        function handleXShare(text) {
+            const shareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text + "\n" + window.location.href);
+            window.open(shareUrl, '_blank');
+        }
+
+        function handleInstaShare(text) {
+            // Instagramは直接投稿APIがないため、クリップボードにコピーして案内する
+            if (!navigator.clipboard || window.isSecureContext === false) {
+                fallbackCopyTextToClipboard(text + "\n" + window.location.href, 'Instagram用');
+            } else {
+                navigator.clipboard.writeText(text + "\n" + window.location.href).then(() => {
+                    showToast("Instagram用にコピーしたわ。アプリで貼り付けてね。");
+                    setTimeout(() => {
+                         window.open("https://www.instagram.com/", "_blank");
+                    }, 800);
+                }).catch((err) => {
+                    console.error("Clipboard API failed: ", err);
+                    fallbackCopyTextToClipboard(text + "\n" + window.location.href, 'Instagram用');
+                });
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text, type) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                if(document.execCommand('copy')) {
+                    showToast(`コピーしたわ。(${type})`);
+                } else {
+                    showToast("コピーに失敗したみたいね。");
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                showToast("コピー機能がサポートされていないみたい。");
+            }
+            document.body.removeChild(textArea);
+        }
+
         function copyContent(text, type) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(`コピーしたわ。(${type})`);
-            }).catch(() => {
-                showToast("コピーに失敗したみたいね。");
-            });
+            if (!navigator.clipboard || window.isSecureContext === false) {
+                fallbackCopyTextToClipboard(text, type);
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(`コピーしたわ。(${type})`);
+                }).catch((err) => {
+                    console.error("Clipboard API failed: ", err);
+                    fallbackCopyTextToClipboard(text, type);
+                });
+            }
             document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
         }
 
@@ -1216,18 +1419,18 @@
              document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
         });
 
-        function renderActionBar(container, markdownText, plainText) {
+        function renderActionBar(container, markdownText, plainText, requestData) {
             const uid = "drop-" + Date.now();
             
             const goodBtn = document.createElement('button');
             goodBtn.className = 'action-btn btn-good';
-            goodBtn.title = 'Good';
+            goodBtn.title = '高評価（いいね）';
             goodBtn.innerHTML = '<i class="far fa-thumbs-up"></i>';
             goodBtn.onclick = () => toggleFeedback(goodBtn, 'good');
             
             const badBtn = document.createElement('button');
             badBtn.className = 'action-btn btn-bad';
-            badBtn.title = 'Bad';
+            badBtn.title = '低評価（いまいち）';
             badBtn.innerHTML = '<i class="far fa-thumbs-down"></i>';
             badBtn.onclick = () => toggleFeedback(badBtn, 'bad');
 
@@ -1236,7 +1439,7 @@
 
             const copyBtn = document.createElement('button');
             copyBtn.className = 'action-btn btn-copy';
-            copyBtn.title = 'Copy';
+            copyBtn.title = 'コピー';
             copyBtn.innerHTML = '<i class="far fa-copy"></i>';
             copyBtn.onclick = (e) => toggleCopyDropdown(e, uid);
             
@@ -1257,20 +1460,109 @@
             copyDir.appendChild(copyBtn);
             copyDir.appendChild(dropContent);
 
+            const shareDir = document.createElement('div');
+            shareDir.className = 'copy-dropdown';
+
             const shareBtn = document.createElement('button');
             shareBtn.className = 'action-btn btn-share';
-            shareBtn.title = 'Share';
-            shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
-            shareBtn.onclick = () => {
+            shareBtn.title = '共有する';
+            shareBtn.innerHTML = '<i class="fas fa-share-square"></i>';
+            const suid = "share-" + Date.now();
+            shareBtn.onclick = (e) => toggleCopyDropdown(e, suid);
+
+            const shareContent = document.createElement('div');
+            shareContent.id = suid;
+            shareContent.className = 'copy-dropdown-content';
+
+            const btnX = document.createElement('button');
+            btnX.innerHTML = '<i class="fab fa-twitter" style="margin-right:8px; color:#1DA1F2;"></i> X (Twitter) で共有';
+            btnX.onclick = (e) => {
+                 e.stopPropagation();
+                 shareContent.classList.remove('show');
+                 let preview = plainText.substring(0, 100).replace(/\n/g, ' ') + "...";
+                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                 handleXShare(shareText);
+            };
+
+            const btnInsta = document.createElement('button');
+            btnInsta.innerHTML = '<i class="fab fa-instagram" style="margin-right:8px; color:#E4405F;"></i> Instagram用にコピー';
+            btnInsta.onclick = (e) => {
+                 e.stopPropagation();
+                 shareContent.classList.remove('show');
+                 let shareText = "幻想郷での私の運命はこれよ…！\n\n" + plainText + "\n#幻想郷ジェネレーター\n";
+                 handleInstaShare(shareText);
+            };
+
+            const btnNative = document.createElement('button');
+            btnNative.innerHTML = '<i class="fas fa-external-link-alt" style="margin-right:8px;"></i> 他のアプリで共有';
+            btnNative.onclick = (e) => {
+                 e.stopPropagation();
+                 shareContent.classList.remove('show');
                  let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
                  let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
                  handleShare(shareText);
             };
 
+            shareContent.appendChild(btnX);
+            shareContent.appendChild(btnInsta);
+            shareContent.appendChild(btnNative);
+            shareDir.appendChild(shareBtn);
+            shareDir.appendChild(shareContent);
+
+            const ttsBtn = document.createElement('button');
+            ttsBtn.className = 'action-btn btn-tts';
+            ttsBtn.title = '読み上げ / 停止';
+            ttsBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            ttsBtn.onclick = () => toggleTTS(ttsBtn, plainText);
+
+            const menuDir = document.createElement('div');
+            menuDir.className = 'copy-dropdown';
+
+            const menuBtn = document.createElement('button');
+            menuBtn.className = 'action-btn btn-menu';
+            menuBtn.title = 'メニュー';
+            menuBtn.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+            const muid = "menu-" + Date.now();
+            menuBtn.onclick = (e) => toggleCopyDropdown(e, muid);
+            
+            const menuContent = document.createElement('div');
+            menuContent.id = muid;
+            menuContent.className = 'copy-dropdown-content';
+            menuContent.style.left = 'auto';
+            menuContent.style.right = '0'; 
+            
+            const regenBtn = document.createElement('button');
+            regenBtn.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:8px;"></i> 再生成する';
+            regenBtn.onclick = (e) => {
+                e.stopPropagation();
+                menuContent.classList.remove('show');
+                triggerRegenerate(requestData);
+            };
+            
+            menuContent.appendChild(regenBtn);
+            menuDir.appendChild(menuBtn);
+            menuDir.appendChild(menuContent);
+
             container.appendChild(goodBtn);
             container.appendChild(badBtn);
             container.appendChild(copyDir);
-            container.appendChild(shareBtn);
+            container.appendChild(shareDir);
+            container.appendChild(ttsBtn);
+            container.appendChild(menuDir);
+        }
+
+        function triggerRegenerate(data) {
+            document.getElementById('name').value = data.n;
+            document.getElementById('action').value = data.a;
+            document.getElementById('item').value = data.i;
+            document.getElementById('companion').value = data.c;
+            document.getElementById('enemy').value = data.e === "なし" ? "" : data.e;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if(!submitBtn.disabled) {
+                showToast("同じ条件で別の運命を垣間見るわ…");
+                storyForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
         }
 
         function pushBotMsg(t) {
