@@ -7,16 +7,16 @@
     <title>幻想郷ジェネレーター - 境界の語り部</title>
 
     <!-- OGP (Open Graph Protocol) -->
-    <meta name="description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
-    <meta property="og:title" content="幻想郷ジェネレーター - 境界の語り部">
-    <meta property="og:description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
+    <meta name="description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
+    <meta property="og:title" content="{{ (ogp.title if ogp else '幻想郷ジェネレーター - 境界の語り部') }}">
+    <meta property="og:description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://toshiria500.f5.si/gensokyo">
+    <meta property="og:url" content="{{ (ogp.url if ogp else 'https://toshiria500.f5.si/gensokyo') }}">
     <meta property="og:site_name" content="幻想郷ジェネレーター">
     <meta property="og:image" content="https://toshiria500.f5.si/images/gensokyo.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="幻想郷ジェネレーター - 境界の語り部">
-    <meta name="twitter:description" content="もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。">
+    <meta name="twitter:title" content="{{ (ogp.title if ogp else '幻想郷ジェネレーター - 境界の語り部') }}">
+    <meta name="twitter:description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
     <meta name="twitter:image" content="https://toshiria500.f5.si/images/gensokyo.png">
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -893,20 +893,13 @@
         document.getElementById("year").textContent = new Date().getFullYear();
 
         function initApp() {
-            // 共有リンクチェック
-            const hash = window.location.hash;
-            if (hash.startsWith("#s=")) {
-                const encoded = hash.substring(3);
-                const json = safeB64Decode(encoded);
-                if (json) {
-                    try {
-                        const shareObj = JSON.parse(json);
-                        loadSharedContent(shareObj);
-                        return; // 共有モードの場合は初期挨拶をスキップ
-                    } catch (e) {
-                        console.error("Shared content load error", e);
-                    }
-                }
+            // 共有リンクチェック (パスベース: /share/ID)
+            const path = window.location.pathname;
+            const shareMatch = path.match(/\/share\/([a-zA-Z0-9]+)/);
+            if (shareMatch) {
+                const shareId = shareMatch[1];
+                loadSharedContentById(shareId);
+                return;
             }
 
             const greetingElem = document.getElementById('first-greeting');
@@ -931,6 +924,20 @@
             currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
         }
 
+        async function loadSharedContentById(shareId) {
+            try {
+                const response = await fetch(`/api/share/${shareId}`);
+                if (!response.ok) throw new Error("Not found");
+                const shareObj = await response.json();
+                loadSharedContent(shareObj);
+            } catch (e) {
+                console.error("Shared content load error", e);
+                showToast("共有データの読み込みに失敗したわ。リンクが古いかもしれないわね。");
+                // 失敗した場合は通常の初期化へ
+                location.href = "/";
+            }
+        }
+
         async function loadSharedContent(obj) {
             // 背景などの初期化
             const savedIcon = localStorage.getItem(STORAGE_KEY_ICON);
@@ -949,7 +956,7 @@
             document.getElementById('bottom-area').style.display = 'none';
             const retryDiv = document.createElement('div');
             retryDiv.style.cssText = 'padding: 20px; text-align: center; background: #050208; border-top: 1px solid var(--purple-main);';
-            retryDiv.innerHTML = `<button onclick="location.href=location.pathname" style="padding:14px 24px; border-radius:30px; border:none; background:linear-gradient(135deg, var(--purple-light), var(--purple-main)); color:white; font-weight:bold; cursor:pointer; font-family:var(--font-serif); box-shadow: 0 0 15px var(--purple-main);">👁️ 私も運命を占う</button>`;
+            retryDiv.innerHTML = `<button onclick="location.href='/'" style="padding:14px 24px; border-radius:30px; border:none; background:linear-gradient(135deg, var(--purple-light), var(--purple-main)); color:white; font-weight:bold; cursor:pointer; font-family:var(--font-serif); box-shadow: 0 0 15px var(--purple-main);">👁️ 私も運命を占う</button>`;
             document.body.appendChild(retryDiv);
 
             // 内容を表示
@@ -1378,43 +1385,40 @@
             container.insertBefore(feedbackDir, badBtn.nextSibling);
         }
 
-        // --- 共有リンク（サーバーレス）用ヘルパー ---
-        function safeB64Encode(str) {
-            try {
-                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-            } catch (e) {
-                console.error("Encode error:", e);
-                return "";
-            }
-        }
+        // --- 共有リンク（サーバー保存型）用ヘルパー ---
+        let lastCreatedShareUrl = "";
 
-        function safeB64Decode(str) {
-            try {
-                return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-            } catch (e) {
-                console.error("Decode error:", e);
-                return "";
-            }
-        }
-
-        function triggerShareLink(markdownContent, plainContent, data) {
+        async function triggerShareLink(markdownContent, plainContent, data, silent = false) {
             const shareObj = {
                 t: markdownContent,
                 p: plainContent,
                 d: data,
-                v: 1 // バージョン
+                v: 2 // サーバー保存版
             };
-            const encoded = safeB64Encode(JSON.stringify(shareObj));
-            const shareUrl = window.location.origin + window.location.pathname + "#s=" + encoded;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    showToast("共有リンクをコピーしたわ。このURLを誰かに送ってちょうだい。");
-                }).catch(() => {
-                    fallbackCopyTextToClipboard(shareUrl, "共有URL");
+
+            try {
+                const response = await fetch('/api/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(shareObj)
                 });
-            } else {
-                fallbackCopyTextToClipboard(shareUrl, "共有URL");
+                if (!response.ok) throw new Error("API error");
+                const res = await response.json();
+                lastCreatedShareUrl = window.location.origin + "/share/" + res.share_id;
+                
+                if (!silent) {
+                    if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(lastCreatedShareUrl);
+                        showToast("スッキリした共有リンクをコピーしたわ。");
+                    } else {
+                        fallbackCopyTextToClipboard(lastCreatedShareUrl, "共有URL");
+                    }
+                }
+                return lastCreatedShareUrl;
+            } catch (e) {
+                console.error("Share API error:", e);
+                if (!silent) showToast("共有リンクの作成に失敗したわ……。");
+                return window.location.origin; // フォールバック
             }
         }
 
@@ -1434,9 +1438,10 @@
             }
         }
 
-        function handleXShare(text) {
-            const shareUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text + "\n" + window.location.href);
-            window.open(shareUrl, '_blank');
+        async function handleXShare(text, shareUrl = "") {
+            const finalUrl = shareUrl || window.location.origin;
+            const xlink = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text + "\n" + finalUrl);
+            window.open(xlink, '_blank');
         }
 
         function handleInstaShare(text) {
@@ -1571,20 +1576,24 @@
 
             const btnX = document.createElement('button');
             btnX.innerHTML = '<i class="fab fa-twitter" style="margin-right:8px; color:#1DA1F2;"></i> X (Twitter) で投稿';
-            btnX.onclick = (e) => {
+            btnX.onclick = async (e) => {
                  e.stopPropagation();
                  shareContent.classList.remove('show');
+                 showToast("共有リンクを準備しているわ……");
+                 const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
                  let preview = plainText.substring(0, 100).replace(/\n/g, ' ') + "...";
-                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
-                 handleXShare(shareText);
+                 let shareText = "運命の境界を覗き見たわ……\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                 handleXShare(shareText, sUrl);
             };
 
             const btnInsta = document.createElement('button');
             btnInsta.innerHTML = '<i class="fab fa-instagram" style="margin-right:8px; color:#E4405F;"></i> Instagram用にコピー';
-            btnInsta.onclick = (e) => {
+            btnInsta.onclick = async (e) => {
                  e.stopPropagation();
                  shareContent.classList.remove('show');
-                 let shareText = "幻想郷での私の運命はこれよ…！\n\n" + plainText + "\n#幻想郷ジェネレーター\n";
+                 showToast("共有リンクを準備しているわ……");
+                 const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
+                 let shareText = "幻想郷での私の運命はこれよ……！\n\n" + plainText + "\n" + sUrl + "\n#幻想郷ジェネレーター";
                  handleInstaShare(shareText);
             };
 
