@@ -1594,4 +1594,100 @@
                  e.stopPropagation();
                  shareContent.classList.remove('show');
                  let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
-       
+                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                 handleShare(shareText);
+            };
+
+            shareContent.appendChild(btnLink);
+            shareContent.appendChild(btnX);
+            shareContent.appendChild(btnInsta);
+            shareContent.appendChild(btnNative);
+            shareDir.appendChild(shareBtn);
+            shareDir.appendChild(shareContent);
+
+            const ttsBtn = document.createElement('button');
+            ttsBtn.className = 'action-btn btn-tts';
+            ttsBtn.title = '読み上げ / 停止';
+            ttsBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            ttsBtn.onclick = () => toggleTTS(ttsBtn, plainText);
+
+            const menuDir = document.createElement('div');
+            menuDir.className = 'copy-dropdown';
+
+            const menuBtn = document.createElement('button');
+            menuBtn.className = 'action-btn btn-menu';
+            menuBtn.title = 'メニュー';
+            menuBtn.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+            const muid = "menu-" + Date.now();
+            menuBtn.onclick = (e) => toggleCopyDropdown(e, muid);
+            
+            const menuContent = document.createElement('div');
+            menuContent.id = muid;
+            menuContent.className = 'copy-dropdown-content';
+            menuContent.style.left = 'auto';
+            menuContent.style.right = '0'; 
+            
+            const regenBtn = document.createElement('button');
+            regenBtn.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:8px;"></i> 再生成する';
+            regenBtn.onclick = (e) => {
+                e.stopPropagation();
+                menuContent.classList.remove('show');
+                triggerRegenerate(requestData);
+            };
+            
+            menuContent.appendChild(regenBtn);
+            menuDir.appendChild(menuBtn);
+            menuDir.appendChild(menuContent);
+
+            container.appendChild(goodBtn);
+            container.appendChild(badBtn);
+            container.appendChild(copyDir);
+            container.appendChild(shareDir);
+            container.appendChild(ttsBtn);
+            container.appendChild(menuDir);
+        }
+
+        function triggerRegenerate(data) {
+            document.getElementById('name').value = data.n;
+            document.getElementById('action').value = data.a;
+            document.getElementById('item').value = data.i;
+            document.getElementById('companion').value = data.c;
+            document.getElementById('enemy').value = data.e === "なし" ? "" : data.e;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            if(!submitBtn.disabled) {
+                showToast("同じ条件で別の運命を垣間見るわ…");
+                storyForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+
+        function pushBotMsg(t) {
+            const id = "b" + Date.now();
+            const div = document.createElement('div');
+            div.className = "botContainer"; div.id = id;
+            const src = localStorage.getItem(STORAGE_KEY_ICON);
+            div.innerHTML = `
+      <div class="icon-wrapper" onclick="triggerFileSelect()" title="私の姿を書き換えるというの？ うふふ、いいわよ。">
+        <img src="${src || ''}" class="botIcon" style="${src ? '' : 'display:none'}" onerror="handleIconError(this)">
+      </div>
+      <div class="msg-body">
+        <div class="botText">${t}</div>
+        <div class="action-bar" id="action-${id}"></div>
+      </div>
+    `;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return id;
+        }
+
+        function pushUserMsg(t) {
+            const div = document.createElement('div');
+            div.className = "userContainer";
+            div.innerHTML = `<div class="userBubble">${t}</div>`;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
