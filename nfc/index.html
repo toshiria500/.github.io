@@ -23,12 +23,9 @@
     <div class="max-w-md mx-auto">
         <header class="mb-6 text-center pt-4">
             <h1 class="text-3xl font-black text-slate-900 tracking-tighter italic uppercase">NFC Collector</h1>
-            
-            <!-- デバイス状態バッジ -->
             <div id="badge-container" class="flex flex-wrap justify-center gap-2 mt-3"></div>
         </header>
 
-        <!-- モード選択 -->
         <div class="grid grid-cols-3 gap-3 mb-6">
             <button onclick="setMode('card')" id="btn-card" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm active-mode">
                 <span class="text-2xl mb-1">💳</span>
@@ -44,7 +41,6 @@
             </button>
         </div>
 
-        <!-- スキャナー本体 -->
         <div id="main-card" class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden mb-6 border border-slate-200">
             <div id="header-bar" class="bg-slate-800 p-3 text-white text-center text-[10px] font-black tracking-widest uppercase transition-colors duration-500">
                 CARD MODE
@@ -63,27 +59,23 @@
             </div>
         </div>
 
-        <!-- デバイス警告ガイド -->
         <div id="guide-box" class="hidden rounded-2xl p-5 mb-6 text-sm">
             <h3 id="guide-title" class="font-bold mb-1 flex items-center gap-2"></h3>
             <p id="guide-text" class="text-[11px] leading-relaxed"></p>
         </div>
 
-        <!-- 登録済みリスト -->
         <div class="px-2">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-sm font-black text-slate-400 tracking-widest uppercase">My Collection</h3>
                 <button onclick="clearCollection()" class="text-[10px] font-bold text-red-400">CLEAR</button>
             </div>
-            <div id="log-list" class="space-y-3">
-                <!-- リストアイテムがここに入ります -->
-            </div>
+            <div id="log-list" class="space-y-3"></div>
         </div>
     </div>
 
     <!-- 登録用ポップアップ -->
     <div id="reg-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 animate-in slide-in-from-bottom-8">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8">
             <h3 class="text-2xl font-black mb-2">NEW DISCOVERY!</h3>
             <p id="scanned-id" class="text-[10px] font-mono text-slate-400 mb-6 uppercase tracking-widest"></p>
             <input type="text" id="name-input" placeholder="名前を入力してください" class="w-full bg-slate-100 p-4 rounded-xl mb-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500">
@@ -94,6 +86,12 @@
         </div>
     </div>
 
+    <!-- メッセージボックス -->
+    <div id="msg-box" class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-4 rounded-2xl z-[100] shadow-2xl w-11/12 max-w-sm text-center">
+        <p id="msg-content" class="text-sm font-bold leading-relaxed"></p>
+        <button onclick="closeMsg()" class="mt-3 px-4 py-2 bg-white text-slate-800 rounded-lg text-xs font-black uppercase">OK</button>
+    </div>
+
     <script>
         const scanBtn = document.getElementById('scan-btn');
         const badgeContainer = document.getElementById('badge-container');
@@ -101,14 +99,28 @@
         const logList = document.getElementById('log-list');
         const regModal = document.getElementById('reg-modal');
         const statusSub = document.getElementById('status-sub');
-        
+        const msgBox = document.getElementById('msg-box');
+        const msgContent = document.getElementById('msg-content');
+
         let currentMode = 'card';
         let currentScannedId = '';
+        let ndef = null;
+        let abortController = null;
+
         const modes = {
             card: { label: 'CARD MODE', emoji: '💳', color: '#1e293b' },
             amiibo: { label: 'amiibo MODE', emoji: '🧸', color: '#ef4444' },
             dream: { label: '妖怪メダル MODE', emoji: '🌀', color: '#4f46e5' }
         };
+
+        function showMsg(text) {
+            msgContent.innerText = text;
+            msgBox.classList.remove('hidden');
+        }
+
+        function closeMsg() {
+            msgBox.classList.add('hidden');
+        }
 
         function addBadge(text, colorClass) {
             const b = document.createElement('div');
@@ -121,7 +133,6 @@
             currentMode = mode;
             document.querySelectorAll('.mode-card').forEach(b => b.classList.remove('active-mode'));
             document.getElementById('btn-'+mode).classList.add('active-mode');
-            
             const m = modes[mode];
             document.getElementById('header-bar').innerText = m.label;
             document.getElementById('header-bar').style.backgroundColor = m.color;
@@ -131,66 +142,52 @@
         }
 
         function init() {
-            const ua = navigator.userAgent;
-            const isiPhone = /iPhone|iPad|iPod/i.test(ua);
-            const isAndroid = /Android/i.test(ua);
-            const isCriOS = /CriOS/i.test(ua);
             const hasNFC = 'NDEFReader' in window;
+            const ua = navigator.userAgent;
+            const isAndroid = /Android/i.test(ua);
+            const isChrome = /Chrome/i.test(ua);
 
-            // バッジ表示
-            if (isiPhone) {
-                addBadge("iPhone / iOS", "bg-orange-100 text-orange-600");
-                if (isCriOS) addBadge("Chrome on iOS", "bg-blue-100 text-blue-600");
-            } else if (isAndroid) {
-                addBadge("Android Device", "bg-green-100 text-green-600");
-            } else {
-                addBadge("Desktop / PC", "bg-slate-200 text-slate-600");
-            }
-            addBadge(hasNFC ? "Web NFC: OK" : "Web NFC: NO", hasNFC ? "bg-indigo-600 text-white" : "bg-red-500 text-white");
+            addBadge(isAndroid ? "Android OK" : "Desktop/Other", isAndroid ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-600");
+            addBadge(hasNFC ? "NFC Support: YES" : "NFC Support: NO", hasNFC ? "bg-indigo-600 text-white" : "bg-red-500 text-white");
 
-            // ガイド判定
             guideBox.classList.remove('hidden');
             if (hasNFC) {
-                document.getElementById('status-text').innerText = "準備完了";
                 scanBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 scanBtn.disabled = false;
                 guideBox.className = "bg-green-50 border border-green-100 text-green-700 p-5 rounded-2xl mb-6";
-                document.getElementById('guide-title').innerText = "✅ スキャン可能です";
-                document.getElementById('guide-text').innerText = "お使いのデバイスはNFCに対応しています。下のボタンを押して開始してください。";
-            } else if (isiPhone) {
-                guideBox.className = "bg-orange-50 border border-orange-100 text-orange-700 p-5 rounded-2xl mb-6";
-                document.getElementById('guide-title').innerText = "⚠️ iPhoneをご利用の方へ";
-                document.getElementById('guide-text').innerText = "iPhoneではAppleの制限により、Chromeを含む全てのブラウザでWeb NFCが利用できません。Androidスマホをご利用ください。";
+                document.getElementById('guide-title').innerText = "✅ 準備完了";
+                document.getElementById('guide-text').innerText = "AndroidのChromeで開いていますね。ボタンを押してスキャンを開始してください。";
             } else {
-                guideBox.className = "bg-slate-100 border border-slate-200 text-slate-500 p-5 rounded-2xl mb-6";
-                document.getElementById('guide-title').innerText = "ℹ️ 非対応環境";
-                document.getElementById('guide-text').innerText = "このブラウザではNFC機能が利用できません。Android版Google Chromeでお試しください。";
+                guideBox.className = "bg-red-50 border border-red-100 text-red-700 p-5 rounded-2xl mb-6";
+                document.getElementById('guide-title').innerText = "❌ 非対応のブラウザです";
+                document.getElementById('guide-text').innerText = "Web NFCは現在Android版Google Chromeのみ対応しています。環境を確認してください。";
             }
-            
             loadCollection();
         }
 
         async function startScan() {
+            if (!('NDEFReader' in window)) {
+                showMsg("このブラウザはNFCに対応していません。Android Chromeをお使いください。");
+                return;
+            }
+
             try {
-                const ndef = new NDEFReader();
-                await ndef.scan();
-                
+                // スキャン開始前に以前の状態をクリア
+                if (abortController) abortController.abort();
+                abortController = new AbortController();
+
+                ndef = new NDEFReader();
+                // ここでブラウザの許可ポップアップが出るはずです
+                await ndef.scan({ signal: abortController.signal });
+
                 document.getElementById('icon-circle').classList.add('scan-pulse');
                 document.getElementById('status-text').innerText = "スキャン中...";
-                scanBtn.innerText = "WAITING FOR TAG...";
-                scanBtn.disabled = true;
+                scanBtn.innerText = "スキャンを停止";
+                scanBtn.onclick = stopScan;
 
-                // スキャン中のアドバイス表示を追加
-                statusSub.innerHTML = `
-                    <div class="text-left bg-blue-50 p-3 rounded-lg mt-2 mx-auto max-w-[240px]">
-                        <p class="font-bold text-blue-800 text-[10px]">💡 反応しないときは：</p>
-                        <ul class="text-[9px] text-blue-600 list-disc ml-3 leading-tight space-y-1 mt-1">
-                            <li>カードのケースから金属を外す</li>
-                            <li>他のICカードと重ねない</li>
-                            <li>スマホのカメラ横に密着させる</li>
-                        </ul>
-                    </div>
-                `;
+                ndef.onreadingerror = () => {
+                    showMsg("読み取りエラーです。タグを近づけたままにしてください。");
+                };
 
                 ndef.onreading = (event) => {
                     const id = event.serialNumber;
@@ -199,13 +196,13 @@
                     if (data[id]) {
                         document.getElementById('status-text').innerText = "認識成功！";
                         statusSub.innerHTML = `<span class="text-indigo-600 font-bold text-lg">${data[id].name}</span><br>(${data[id].type})`;
+                        // 連続スキャンを考慮して一定時間後に戻す
                         setTimeout(() => {
-                            document.getElementById('status-text').innerText = "準備完了";
-                            statusSub.innerHTML = "次をどうぞ！";
-                            scanBtn.disabled = false;
-                            scanBtn.innerText = "SCAN START";
-                            document.getElementById('icon-circle').classList.remove('scan-pulse');
-                        }, 2500);
+                            if (ndef) {
+                                document.getElementById('status-text').innerText = "スキャン中...";
+                                statusSub.innerHTML = "次のアイテムをスキャンできます";
+                            }
+                        }, 2000);
                     } else {
                         currentScannedId = id;
                         document.getElementById('scanned-id').innerText = `ID: ${id}`;
@@ -213,19 +210,37 @@
                         document.getElementById('name-input').focus();
                     }
                 };
-            } catch (err) {
-                alert("スキャンを開始できませんでした: " + err);
+
+            } catch (error) {
+                console.log(error);
+                if (error.name === "NotAllowedError") {
+                    showMsg("NFCへのアクセスが拒否されました。設定から許可してください。");
+                } else if (error.name === "NotSupportedError") {
+                    showMsg("NFCがサポートされていないか、無効になっています。");
+                } else {
+                    showMsg("エラーが発生しました: " + error.message);
+                }
             }
+        }
+
+        function stopScan() {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+            }
+            document.getElementById('icon-circle').classList.remove('scan-pulse');
+            document.getElementById('status-text').innerText = "準備完了";
+            scanBtn.innerText = "SCAN START";
+            scanBtn.onclick = startScan;
+            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
         }
 
         function saveEntry() {
             const name = document.getElementById('name-input').value.trim();
             if (!name) return;
-
             const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
             data[currentScannedId] = { name, type: currentMode };
             localStorage.setItem('nfc_data', JSON.stringify(data));
-            
             closeReg();
             loadCollection();
         }
@@ -233,22 +248,16 @@
         function closeReg() {
             regModal.classList.add('hidden');
             document.getElementById('name-input').value = "";
-            document.getElementById('icon-circle').classList.remove('scan-pulse');
-            scanBtn.disabled = false;
-            scanBtn.innerText = "SCAN START";
-            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
         }
 
         function loadCollection() {
             const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
             logList.innerHTML = '';
             const ids = Object.keys(data).reverse();
-
             if (ids.length === 0) {
-                logList.innerHTML = '<p class="text-center py-10 text-slate-300 text-xs font-bold italic tracking-widest uppercase">No Collection</p>';
+                logList.innerHTML = '<p class="text-center py-10 text-slate-300 text-xs font-bold uppercase">No Collection</p>';
                 return;
             }
-
             ids.forEach(id => {
                 const item = data[id];
                 const div = document.createElement('div');
@@ -261,21 +270,27 @@
                             <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest">${item.type} | ${id}</div>
                         </div>
                     </div>
+                    <button onclick="deleteItem('${id}')" class="text-slate-300 hover:text-red-400 p-2">✕</button>
                 `;
                 logList.appendChild(div);
             });
         }
 
+        function deleteItem(id) {
+            const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
+            delete data[id];
+            localStorage.setItem('nfc_data', JSON.stringify(data));
+            loadCollection();
+        }
+
         function clearCollection() {
-            if (confirm("コレクションをすべて消去しますか？")) {
-                localStorage.removeItem('nfc_data');
-                loadCollection();
-            }
+            localStorage.removeItem('nfc_data');
+            loadCollection();
+            showMsg("コレクションを削除しました");
         }
 
         scanBtn.onclick = startScan;
         document.getElementById('save-btn').onclick = saveEntry;
-        
         init();
     </script>
 </body>
