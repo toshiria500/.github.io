@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v26.8 | Ultimate Pure</title>
+    <title>Celestial Clock v28.0 | Gemini Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #fbbf24;
+            --gemini-color: #4f46e5;
             --text-main: #ffffff;
             --text-dim: rgba(255, 255, 255, 0.7);
             --glass-bg: rgba(255, 255, 255, 0.08);
@@ -23,12 +24,23 @@
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; margin-bottom: -1rem; }
         .btn-mini { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-mini:hover { background: rgba(255,255,255,0.2); border-color: var(--accent); }
-        .main-display { position: relative; padding: clamp(3rem, 10vh, 7rem) 1rem; text-align: center; overflow: hidden; margin-top: 1rem; }
+        .btn-gemini { background: var(--gemini-color); border: none; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); }
+        
+        .main-display { position: relative; padding: clamp(3rem, 10vh, 5rem) 1rem; text-align: center; overflow: hidden; margin-top: 1rem; }
         #digital-time { font-family: 'Share Tech Mono', monospace; font-size: clamp(4.5rem, 18vw, 11rem); line-height: 1; z-index: 10; position: relative; text-shadow: 0 0 40px rgba(0,0,0,0.8); }
         #digital-date { font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 300; letter-spacing: 0.3em; margin-top: 1rem; opacity: 0.8; z-index: 10; position: relative; }
+        
         .astro-details { margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; font-size: 0.8rem; font-weight: 700; z-index: 10; position: relative; }
         .astro-item { display: flex; flex-direction: column; gap: 4px; }
         .astro-label { font-size: 0.61rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em; }
+        
+        /* Gemini Insight Section */
+        .gemini-container { margin-top: 2rem; padding: 1.5rem; display: none; text-align: left; }
+        #gemini-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-dim); min-height: 2em; }
+        .loading-dots::after { content: '...'; animation: dots 1.5s infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+
+        /* Existing Styles */
         .celestial-stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .celestial-object { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); transition: left 1s ease, bottom 1s ease; }
         .sun { width: 60px; height: 60px; background: radial-gradient(circle, #fff7ed 0%, #fbbf24 50%, #f59e0b 100%); box-shadow: 0 0 60px #fbbf24, 0 0 120px rgba(251, 191, 36, 0.4); }
@@ -38,11 +50,8 @@
         .city-box { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 3; pointer-events: none; }
         .building { fill: rgba(0, 0, 0, 0.4); transition: fill 2s ease; }
         .window { fill: var(--window-lit); opacity: 0; transition: opacity 2s ease; }
-        .window.pulse { animation: window-glow var(--d) infinite alternate; }
-        @keyframes window-glow { 0% { opacity: 0.4; filter: blur(0px); } 100% { opacity: 1; filter: blur(1px); } }
         .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; width: 100%; }
         .world-card { padding: 1.5rem 1rem; text-align: center; position: relative; overflow: hidden; transition: 0.3s; }
-        .world-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .world-city { font-size: 0.8rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.3rem; z-index: 5; position: relative; }
         .world-time { font-family: 'Share Tech Mono', monospace; font-size: 1.5rem; color: #fff; margin-bottom: 0.2rem; z-index: 5; position: relative; }
         .world-date { font-size: 0.6rem; opacity: 0.5; margin-bottom: 0.6rem; z-index: 5; position: relative; }
@@ -65,59 +74,141 @@
                 <button class="btn-mini" id="lang-btn" onclick="toggleLang()">JPN</button>
                 <button class="btn-mini" onclick="toggleFullscreen()">FULLSCREEN</button>
             </div>
+            <button class="btn-gemini" onclick="getGeminiInsight()">✨ AI天体リーディング</button>
             <button class="btn-mini" id="chime-btn" onclick="cycleChimeMode()"><span id="chime-icon">🔔</span> <span id="chime-text">CHIME OFF</span></button>
         </div>
 
         <div class="glass-box main-display" id="main-sky">
-            <div class="celestial-stage"><div id="sun-main" class="celestial-object sun" style="display:none;"></div><div id="moon-main" class="celestial-object moon" style="display:none;"><div id="moon-fixed-main" class="moon-fixed"></div><div id="moon-term-main" class="moon-term"></div></div></div>
-            <div id="digital-time">--:--:--</div><div id="digital-date">----/--/--</div>
+            <div class="celestial-stage">
+                <div id="sun-main" class="celestial-object sun" style="display:none;"></div>
+                <div id="moon-main" class="celestial-object moon" style="display:none;">
+                    <div id="moon-fixed-main" class="moon-fixed"></div>
+                    <div id="moon-term-main" class="moon-term"></div>
+                </div>
+            </div>
+            <div id="digital-time">--:--:--</div>
+            <div id="digital-date">----/--/--</div>
             <div class="astro-details">
                 <div class="astro-item"><span class="astro-label" id="lbl-loc">LOCATION</span><span id="loc-val">📍 -</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-age">月齢</span><span id="age-val">--.-</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-sun">日の出入り</span><span id="sun-val">--:-- / --:--</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-moon">月の出入り</span><span id="moon-val">--:-- / --:--</span></div>
             </div>
+            
+            <div id="gemini-box" class="gemini-container glass-box">
+                <div style="font-size:0.6rem; opacity:0.5; text-transform:uppercase; margin-bottom:10px; display:flex; justify-content:space-between;">
+                    <span>✨ Gemini Observatory Report</span>
+                    <span onclick="document.getElementById('gemini-box').style.display='none'" style="cursor:pointer;">CLOSE</span>
+                </div>
+                <div id="gemini-text">宇宙のデータを解析中...</div>
+            </div>
+
             <div class="city-box"><svg id="city-svg-main" style="width:100%; height:100%;" preserveAspectRatio="none" viewBox="0 0 1000 120"></svg></div>
             <div id="ripple-hook" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
         </div>
 
         <section id="world-stations">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 10px;"><h3 id="world-title" style="margin:0; font-size:0.8rem; opacity:0.5; letter-spacing:0.2em; text-transform:uppercase;">World Stations</h3><button class="btn-mini" onclick="showAddModal()">+ STATION</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 10px;">
+                <h3 id="world-title" style="margin:0; font-size:0.8rem; opacity:0.5; letter-spacing:0.2em; text-transform:uppercase;">World Stations</h3>
+                <button class="btn-mini" onclick="showAddModal()">+ STATION</button>
+            </div>
             <div id="world-clocks" class="world-grid"></div>
         </section>
     </main>
 
     <footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
     
-    <div id="add-modal" class="modal-overlay"><div class="modal-content"><h3 style="margin-top:0; font-size:1.2rem; color:var(--accent);">ADD OBSERVATORY</h3><input type="text" id="city-search" class="modal-input" placeholder="City name" list="city-list" oninput="onCitySelect()"><datalist id="city-list"></datalist><input type="text" id="custom-label" class="modal-input" placeholder="Display Label"><input type="hidden" id="selected-tz"><input type="hidden" id="selected-lat"><input type="hidden" id="selected-lng"><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn-mini" onclick="addZone()" style="flex:1; padding:12px;">ADD</button><button class="btn-mini" onclick="hideAddModal()" style="flex:1; padding:12px;">CANCEL</button></div></div></div>
+    <div id="add-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0; font-size:1.2rem; color:var(--accent);">ADD OBSERVATORY</h3>
+            <input type="text" id="city-search" class="modal-input" placeholder="City name" list="city-list" oninput="onCitySelect()">
+            <datalist id="city-list"></datalist>
+            <input type="text" id="custom-label" class="modal-input" placeholder="Display Label">
+            <input type="hidden" id="selected-tz">
+            <input type="hidden" id="selected-lat">
+            <input type="hidden" id="selected-lng">
+            <div style="display:flex; gap:1rem; margin-top:1rem;">
+                <button class="btn-mini" onclick="addZone()" style="flex:1; padding:12px;">ADD</button>
+                <button class="btn-mini" onclick="hideAddModal()" style="flex:1; padding:12px;">CANCEL</button>
+            </div>
+        </div>
+    </div>
     
     <script>
+        const apiKey = ""; // Built-in API key handled by environment
         const LEAP_SECONDS = 37, D2R = Math.PI/180, R2D = 180/Math.PI;
-        let serverOffset = 0, currentLang = navigator.language.startsWith('ja')?'jp':'en';
-        let geoLat = 35.66, geoLng = 139.73, geoName = "📍 Tokyo", lastFullMinute = -1, chimeMode = 'off', audioCtx = null;
-        
+        let serverOffset = 0; 
+        let currentLang = navigator.language.startsWith('ja')?'jp':'en';
+        let geoLat = 35.66, geoLng = 139.73, geoName = "📍 Tokyo";
+        let lastFullMinute = -1, chimeMode = 'off', audioCtx = null;
+        let currentAstroData = null;
+
         const L10N = {
             en: { world: "World Stations", age: "AGE", sun: "SOLAR", moon: "LUNAR", ch_off: "CHIME OFF", ch_hh: "CHIME HOURLY", ch_mm: "CHIME MINUTE" },
             jp: { world: "世界時計 / 観測所", age: "月齢", sun: "日の出入り", moon: "月の出入り", ch_off: "時報 オフ", ch_hh: "時報 毎時", ch_mm: "時報 毎分" }
         };
+
         const CITY_DATA = [ {label: "Tokyo", tz: "Asia/Tokyo", lat: 35.66, lng: 139.73}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
-        let zones = JSON.parse(localStorage.getItem('jst-zones-v26.3')) || [ {label: "TAI", tz: "UTC", lat: 0, lng: 0, isTAI: true}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
+        let zones = JSON.parse(localStorage.getItem('jst-zones-v28.0')) || [ {label: "TAI", tz: "UTC", lat: 0, lng: 0, isTAI: true}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
         
-        function t(key) { return L10N[currentLang][key] || key; }
-        function toggleLang() { currentLang = currentLang==='jp'?'en':'jp'; document.getElementById('lang-btn').textContent = currentLang==='jp'?'JPN':'ENG'; updateUI(); }
-        function updateUI() { document.getElementById('world-title').textContent = t('world'); document.getElementById('lbl-age').textContent = t('age'); document.getElementById('lbl-sun').textContent = t('sun'); document.getElementById('lbl-moon').textContent = t('moon'); const cBtn = document.getElementById('chime-text'); if(cBtn) cBtn.textContent = t('ch_'+chimeMode); }
-        
-        async function initSync() { 
+        // --- GEMINI API INTEGRATION ---
+        async function getGeminiInsight() {
+            const box = document.getElementById('gemini-box');
+            const text = document.getElementById('gemini-text');
+            box.style.display = 'block';
+            text.innerHTML = '<span class="loading-dots">宇宙の知識へアクセス中</span>';
+            
+            const now = getAccurateNow();
+            const prompt = `
+            以下の天体観測データを基に、短く詩的でインスピレーションを与える「天体アドバイス」を生成してください。
+            - 現在日時: ${now.toLocaleString()}
+            - 観測地点: ${geoName} (緯度:${geoLat}, 経度:${geoLng})
+            - 月齢: ${currentAstroData?.age.toFixed(2)}
+            - 日の出入り: ${fmtUTC(currentAstroData?.sr+9)} / ${fmtUTC(currentAstroData?.ss+9)}
+            言語: ${currentLang === 'jp' ? '日本語' : 'English'}
+            形式: 今の空の様子（想像上のものも含む）と、この時間にふさわしい過ごし方を150文字以内で。`;
+
+            let retries = 0;
+            const callGemini = async () => {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: "あなたはプロの天文学者であり占星術師です。ユーザーの今の瞬間に寄り添った優しく知的なアドバイスをします。" }] }
+                        })
+                    });
+                    const result = await response.json();
+                    text.textContent = result.candidates?.[0]?.content?.parts?.[0]?.text || "宇宙との通信が途絶えました。";
+                } catch (e) {
+                    if (retries < 5) {
+                        retries++;
+                        const delay = Math.pow(2, retries) * 500;
+                        setTimeout(callGemini, delay);
+                    } else {
+                        text.textContent = "星々の声が届きにくいようです。後で再試行してください。";
+                    }
+                }
+            };
+            callGemini();
+        }
+
+        // --- SYNC LOGIC ---
+        async function syncTime() { 
             try { 
-                const start=Date.now(); 
-                const res=await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo'); 
-                const data=await res.json(); 
+                const start = Date.now(); 
+                const res = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC'); 
+                const data = await res.json(); 
                 const end = Date.now();
                 const latency = (end - start) / 2;
                 serverOffset = (data.unixtime * 1000 + latency) - end; 
-            } catch(e) { console.warn("Sync failed, using device time."); } 
+            } catch(e) { setTimeout(syncTime, 10000); } 
         }
 
+        function getAccurateNow() { return new Date(Date.now() + serverOffset); }
+
+        // --- ASTRO LOGIC ---
         function getAstro(lat, lng, date) {
             const d = (date.getTime() / 86400000) - 10957.5;
             const L = (280.466+0.9856474*d)%360, g = (357.528+0.9856003*d)%360;
@@ -129,7 +220,6 @@
             const cosH = (Math.sin(hor*D2R)-Math.sin(lat*D2R)*Math.sin(dec*D2R))/(Math.cos(lat*D2R)*Math.cos(dec*D2R));
             const ha = (cosH>1)?0:(cosH<-1)?180:Math.acos(cosH)*R2D;
             const srUTC = (720-4*(lng+ha)-eqt)/60, ssUTC = (720-4*(lng-ha)-eqt)/60;
-
             const msRef = new Date(Date.UTC(2026, 3, 17, 13, 27, 0)).getTime();
             let age = ((date.getTime()-msRef)/86400000)%29.53058867; if(age<0)age+=29.53058867;
 
@@ -140,7 +230,7 @@
                 const sid = (280.460+360.985647*dd+lng)%360;
                 const raM = Math.atan2(Math.sin(lonM*D2R)*Math.cos(23.439*D2R), Math.cos(lonM*D2R))*R2D;
                 const alt = Math.asin(Math.sin(lat*D2R)*Math.sin(decM*D2R) + Math.cos(lat*D2R)*Math.cos(decM*D2R)*Math.cos((sid-raM)*D2R))*R2D;
-                return { alt, sid, raM };
+                return { alt };
             }
             let mr=null, ms=null, lastAlt=getMoonPos(-18).alt;
             for(let i=-17.9; i<=18; i+=0.1) {
@@ -161,11 +251,12 @@
                     if(Math.random()>0.3) {
                         const win = document.createElementNS("http://www.w3.org/2000/svg","rect");
                         win.setAttribute("x",x+6+c*9); win.setAttribute("y",120-h+6+r*11); win.setAttribute("width",4); win.setAttribute("height",5);
-                        win.setAttribute("class","window"+(Math.random()>0.8?" pulse":"")); win.style.setProperty("--d",(2+Math.random()*3)+"s"); svg.appendChild(win);
+                        win.setAttribute("class","window"); svg.appendChild(win);
                     }
                 }}
             }
         }
+
         function cycleChimeMode() { chimeMode=(chimeMode==='off')?'hh':(chimeMode==='hh'?'mm':'off'); document.getElementById('chime-icon').textContent=(chimeMode==='off'?'🔕':'🔔'); document.getElementById('chime-text').textContent=t('ch_'+chimeMode); if(chimeMode!=='off'&&!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
         function playB(f, d) { if(!audioCtx)return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0,audioCtx.currentTime); g.gain.linearRampToValueAtTime(0.3,audioCtx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); }
         function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
@@ -174,46 +265,46 @@
         function getSkyGrad(h, sr, ss) { const rel = (h-sr+24)%24, dur = (ss-sr+24)%24; if(rel<dur){ if(rel<1) return 'linear-gradient(to bottom, #1e1b4b, #fb923c)'; if(rel>dur-1) return 'linear-gradient(to bottom, #f97316, #4c1d95)'; return 'linear-gradient(to bottom, #0ea5e9, #bae6fd)'; } return 'linear-gradient(to bottom, #020617, #0f172a)'; }
         
         function update() {
-            const deviceNow = new Date(); 
-            const accurateNow = new Date(deviceNow.getTime() + serverOffset); 
+            const accurateNow = getAccurateNow();
             const hUTC = accurateNow.getUTCHours() + accurateNow.getUTCMinutes()/60 + accurateNow.getUTCSeconds()/3600;
 
-            document.getElementById('digital-time').textContent = accurateNow.toTimeString().split(' ')[0];
+            const h = pad(accurateNow.getHours()), m = pad(accurateNow.getMinutes()), s = pad(accurateNow.getSeconds());
+            document.getElementById('digital-time').textContent = `${h}:${m}:${s}`;
             document.getElementById('digital-date').textContent = accurateNow.toLocaleDateString(currentLang==='jp'?'ja-JP':'en-US',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
             
-            const astro = getAstro(geoLat, geoLng, accurateNow);
+            currentAstroData = getAstro(geoLat, geoLng, accurateNow);
             document.getElementById('loc-val').textContent = geoName; 
-            document.getElementById('age-val').textContent = astro.age.toFixed(1);
-            document.getElementById('sun-val').textContent = `${fmtUTC(astro.sr+9)} / ${fmtUTC(astro.ss+9)}`;
-            document.getElementById('moon-val').textContent = `${fmtAbs(accurateNow, astro.mr)} / ${fmtAbs(accurateNow, astro.ms)}`;
+            document.getElementById('age-val').textContent = currentAstroData.age.toFixed(1);
+            document.getElementById('sun-val').textContent = `${fmtUTC(currentAstroData.sr+9)} / ${fmtUTC(currentAstroData.ss+9)}`;
+            document.getElementById('moon-val').textContent = `${fmtAbs(accurateNow, currentAstroData.mr)} / ${fmtAbs(accurateNow, currentAstroData.ms)}`;
             
             const sunE = document.getElementById('sun-main'), moonE = document.getElementById('moon-main'), termE = document.getElementById('moon-term-main'), fixedE = document.getElementById('moon-fixed-main');
-            const isDay = ((hUTC-astro.sr+24)%24 < (astro.ss-astro.sr+24)%24); 
+            const isDay = ((hUTC-currentAstroData.sr+24)%24 < (currentAstroData.ss-currentAstroData.sr+24)%24); 
             sunE.style.display = isDay ? 'block' : 'none';
-            if(isDay){ const p=(hUTC-astro.sr+24)%24/((astro.ss-astro.sr+24)%24); sunE.style.left=`${10+p*80}%`; sunE.style.bottom=`${15+Math.sin(p*Math.PI)*65}%`; }
+            if(isDay){ const p=(hUTC-currentAstroData.sr+24)%24/((currentAstroData.ss-currentAstroData.sr+24)%24); sunE.style.left=`${10+p*80}%`; sunE.style.bottom=`${15+Math.sin(p*Math.PI)*65}%`; }
             
             moonE.style.display = isDay ? 'none' : 'block';
             if(!isDay){ 
-                const p=(hUTC-astro.ss+24)%24/(24-((astro.ss-astro.sr+24)%24)); moonE.style.left=`${10+p*80}%`; moonE.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
-                const mp=(astro.age/29.53)%1; fixedE.style.display='block'; 
+                const p=(hUTC-currentAstroData.ss+24)%24/(24-((currentAstroData.ss-currentAstroData.sr+24)%24)); moonE.style.left=`${10+p*80}%`; moonE.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
+                const mp=(currentAstroData.age/29.53)%1; fixedE.style.display='block'; 
                 if(mp<=0.5){ fixedE.style.left='50%'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.25)?'#111':'#fff'; termE.style.transform=`scaleX(${(mp<=0.25)?(1-mp*4):(mp*4-1)})`; }
                 else { fixedE.style.left='0'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.75)?'#fff':'#111'; termE.style.transform=`scaleX(${(mp<=0.75)?(1-(mp-0.5)*4):((mp-0.5)*4-1)})`; }
             }
             
-            document.getElementById('main-sky').style.backgroundImage = getSkyGrad(hUTC, astro.sr, astro.ss);
-            const relSS = (hUTC-astro.ss+24)%24; const winOp = (!isDay || relSS<0.3)?0.85:0;
+            document.getElementById('main-sky').style.backgroundImage = getSkyGrad(hUTC, currentAstroData.sr, currentAstroData.ss);
+            const relSS = (hUTC-currentAstroData.ss+24)%24; const winOp = (!isDay || relSS<0.3)?0.85:0;
             document.querySelectorAll('#city-svg-main .window').forEach(w => w.style.opacity = winOp);
             
-            const s = accurateNow.getSeconds(); 
+            const currentSec = accurateNow.getSeconds(); 
             if(chimeMode !== 'off') { 
-                if(((chimeMode==='hh' && accurateNow.getMinutes()===59) || (chimeMode==='mm')) && (s>=57 && s<=59)) { 
-                    if(s!==lastFullMinute){ playB(440,0.15); lastFullMinute=s; }
-                } else if(((chimeMode==='hh' && accurateNow.getMinutes()===0) || (chimeMode==='mm' && s===0)) && s===0) { 
-                    if(s!==lastFullMinute){ 
+                if(((chimeMode==='hh' && accurateNow.getMinutes()===59) || (chimeMode==='mm')) && (currentSec>=57 && currentSec<=59)) { 
+                    if(currentSec!==lastFullMinute){ playB(440,0.15); lastFullMinute=currentSec; }
+                } else if(((chimeMode==='hh' && accurateNow.getMinutes()===0) || (chimeMode==='mm' && currentSec===0)) && currentSec===0) { 
+                    if(currentSec!==lastFullMinute){ 
                         playB(880,0.8); 
                         const r=document.createElement('div'); r.className='ripple'; document.getElementById('ripple-hook').appendChild(r); 
                         setTimeout(()=>r.remove(),2000); 
-                        lastFullMinute=s; 
+                        lastFullMinute=currentSec; 
                     }
                 }
             }
@@ -229,8 +320,9 @@
             }
             
             zones.forEach((z,i) => {
-                const zTime = new Date(accurateNow.getTime() + (z.isTAI ? LEAP_SECONDS * 1000 : 0));
-                const fmtZ = new Intl.DateTimeFormat('en-US',{timeZone:z.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+                const baseTime = accurateNow.getTime() + (z.isTAI ? LEAP_SECONDS * 1000 : 0);
+                const zTime = new Date(baseTime);
+                const fmtZ = new Intl.DateTimeFormat('en-US', {timeZone:z.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
                 const pts = fmtZ.formatToParts(zTime); 
                 document.getElementById(`wt-${i}`).textContent = `${pts[0].value}:${pts[2].value}:${pts[4].value}`;
                 document.getElementById(`wd-${i}`).textContent = new Intl.DateTimeFormat(currentLang==='jp'?'ja-JP':'en-US',{timeZone:z.tz,month:'short',day:'numeric'}).format(zTime);
@@ -251,10 +343,8 @@
                     const d = await r.json();
                     geoLat = parseFloat(d.latitude); geoLng = parseFloat(d.longitude);
                     geoName = `📍 ${d.city || d.country}`;
-                } catch(e) {
-                    geoName = "📍 Tokyo (Default)";
-                    document.getElementById('loc-val').textContent = geoName;
-                }
+                } catch(e) { geoName = "📍 Tokyo (Default)"; }
+                document.getElementById('loc-val').textContent = geoName;
             };
 
             if(navigator.geolocation){
@@ -265,33 +355,32 @@
                     try{ 
                         const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10&accept-language=${currentLang==='jp'?'ja':'en'}`);
                         const d = await r.json(); 
-                        if(d&&d.address){ 
-                            geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; 
-                        }
-                    }catch(e){ console.warn("Geocoding failed", e.message); } 
-                }, (err) => {
-                    console.warn("Geolocation error:", err.message || err.code);
-                    fallbackGeo();
-                }, { timeout: 10000 });
-            } else {
-                fallbackGeo();
-            }
+                        if(d&&d.address){ geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; }
+                    }catch(e){} 
+                    document.getElementById('loc-val').textContent = geoName;
+                }, (err) => { fallbackGeo(); }, { timeout: 10000 });
+            } else { fallbackGeo(); }
         }
 
+        function t(key) { return L10N[currentLang][key] || key; }
+        function toggleLang() { currentLang = currentLang==='jp'?'en':'jp'; document.getElementById('lang-btn').textContent = currentLang==='jp'?'JPN':'ENG'; updateUI(); }
+        function updateUI() { document.getElementById('world-title').textContent = t('world'); document.getElementById('lbl-age').textContent = t('age'); document.getElementById('lbl-sun').textContent = t('sun'); document.getElementById('lbl-moon').textContent = t('moon'); const cBtn = document.getElementById('chime-text'); if(cBtn) cBtn.textContent = t('ch_'+chimeMode); }
+        
         function showAddModal(){ document.getElementById('city-list').innerHTML=CITY_DATA.map(c=>`<option value="${c.label}">${c.tz}</option>`).join(''); document.getElementById('add-modal').style.display='flex'; }
         function hideAddModal(){ document.getElementById('add-modal').style.display='none'; }
         function onCitySelect(){ const v=document.getElementById('city-search').value, c=CITY_DATA.find(x=>x.label===v); if(c){ document.getElementById('custom-label').value=c.label; document.getElementById('selected-tz').value=c.tz; document.getElementById('selected-lat').value=c.lat; document.getElementById('selected-lng').value=c.lng; } }
-        function addZone(){ const l=document.getElementById('custom-label').value, tz=document.getElementById('selected-tz').value; if(l&&tz){ zones.push({label:l,tz,lat:parseFloat(document.getElementById('selected-lat').value),lng:parseFloat(document.getElementById('selected-lng').value)}); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); hideAddModal(); } }
-        function removeZone(i){ zones.splice(i,1); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); }
+        function addZone(){ const l=document.getElementById('custom-label').value, tz=document.getElementById('selected-tz').value; if(l&&tz){ zones.push({label:l,tz,lat:parseFloat(document.getElementById('selected-lat').value),lng:parseFloat(document.getElementById('selected-lng').value)}); localStorage.setItem('jst-zones-v28.0',JSON.stringify(zones)); hideAddModal(); } }
+        function removeZone(i){ zones.splice(i,1); localStorage.setItem('jst-zones-v28.0',JSON.stringify(zones)); }
         function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
         
         window.onload = () => { 
             document.getElementById('year').textContent = new Date().getFullYear(); 
-            initSync(); 
+            syncTime(); 
             initGeo(); 
             updateUI(); 
             createCityscape('city-svg-main'); 
             requestAnimationFrame(update);
+            setInterval(syncTime, 300000);
         };
     </script>
 </body>
