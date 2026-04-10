@@ -202,7 +202,29 @@
                 document.getElementById(`wt-${i}`).parentElement.style.backgroundImage = getSkyGrad(zTime.getUTCHours()+zTime.getUTCMinutes()/60, za.sr, za.ss);
             });
         }
-        async function initGeo() { if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(async (p)=>{ geoLat=p.coords.latitude; geoLng=p.coords.longitude; try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10&accept-language=${currentLang==='jp'?'ja':'en'}`); const d = await r.json(); if(d&&d.address){ geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; }}catch(e){} }); } }
+        async function initGeo() { 
+            if(navigator.geolocation){
+                document.getElementById('loc-val').textContent = '📍 ACCESSING...';
+                navigator.geolocation.getCurrentPosition(async (p)=>{ 
+                    geoLat=p.coords.latitude; geoLng=p.coords.longitude; 
+                    geoName=`📍 ${geoLat.toFixed(2)}, ${geoLng.toFixed(2)}`; // Fallback to coords
+                    update(); // Update immediately with coords
+                    try{ 
+                        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10&accept-language=${currentLang==='jp'?'ja':'en'}`);
+                        const d = await r.json(); 
+                        if(d&&d.address){ 
+                            geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; 
+                            update();
+                        }
+                    }catch(e){ console.error("Geocoding failed", e); } 
+                }, (err) => {
+                    console.error("Geolocation error", err);
+                    document.getElementById('loc-val').textContent = '📍 PERMISSION DENIED';
+                }, { timeout: 10000 });
+            } else {
+                document.getElementById('loc-val').textContent = '📍 NOT SUPPORTED';
+            }
+        }
         function showAddModal(){ document.getElementById('city-list').innerHTML=CITY_DATA.map(c=>`<option value="${c.label}">${c.tz}</option>`).join(''); document.getElementById('add-modal').style.display='flex'; }
         function hideAddModal(){ document.getElementById('add-modal').style.display='none'; }
         function onCitySelect(){ const v=document.getElementById('city-search').value, c=CITY_DATA.find(x=>x.label===v); if(c){ document.getElementById('custom-label').value=c.label; document.getElementById('selected-tz').value=c.tz; document.getElementById('selected-lat').value=c.lat; document.getElementById('selected-lng').value=c.lng; } }
