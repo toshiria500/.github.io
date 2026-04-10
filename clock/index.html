@@ -141,7 +141,7 @@
                 if(lastAlt<=-0.5667 && curAlt>-0.5667) mr = i; else if(lastAlt>=-0.5667 && curAlt<-0.5667) ms = i;
                 lastAlt = curAlt;
             }
-            return { sr, ss: ssUTC, sr: srUTC, age, mr, ms };
+            return { sr: srUTC, ss: ssUTC, age, mr, ms };
         }
         function createCityscape(id) {
             const svg = document.getElementById(id); svg.innerHTML = '';
