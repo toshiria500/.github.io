@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v26.3 | Precision Perfected</title>
+    <title>Celestial Clock v26.8 | Ultimate Pure</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,10 +21,6 @@
         main { flex: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 2rem; }
         .glass-box { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 2rem; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6); }
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; margin-bottom: -1rem; }
-        .status-pill { display: flex; align-items: center; gap: 0.5rem; background: rgba(0, 0, 0, 0.3); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; border: 1px solid var(--glass-border); }
-        .signal-indicator { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
-        .signal-bar { width: 3px; background: rgba(255,255,255,0.2); border-radius: 1px; }
-        .signal-bar.active { background: var(--accent); }
         .btn-mini { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-mini:hover { background: rgba(255,255,255,0.2); border-color: var(--accent); }
         .main-display { position: relative; padding: clamp(3rem, 10vh, 7rem) 1rem; text-align: center; overflow: hidden; margin-top: 1rem; }
@@ -53,29 +49,25 @@
         .world-astro-row { display: flex; justify-content: center; gap: 0.8rem; font-size: 0.55rem; font-weight: 800; opacity: 0.7; z-index: 5; position: relative; margin-top: 4px; }
         .delete-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.4); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 8; opacity: 0; transition: 0.2s; }
         .world-card:hover .delete-btn { opacity: 1; }
-        .sync-monitor { margin: 1rem 0; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); border-radius: 2rem; }
-        .sync-label { font-size: 0.8rem; font-weight: 800; color: var(--accent); opacity: 0.8; letter-spacing: 0.15em; text-transform: uppercase; }
-        .sync-value { font-family: 'Share Tech Mono', monospace; font-size: clamp(2rem, 8vw, 4.5rem); color: #fff; line-height: 1; text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
-        .sync-lag-pill { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--accent); padding: 8px 25px; border-radius: 20px; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-top: 15px; font-family: 'Share Tech Mono', monospace; }
         footer { width: 100%; padding: 3rem 0; text-align: center; font-size: 0.75rem; color: var(--text-dim); }
         .ripple { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: none; animation: ripple-anim 2s ease-out forwards; }
         @keyframes ripple-anim { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 400%; height: 400%; opacity: 0; } }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: #1e293b; padding: 2rem; border-radius: 2rem; border: 1px solid var(--glass-border); width: 90%; max-width: 400px; }
         .modal-input { width: 100%; padding: 0.8rem 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; margin-bottom: 1rem; outline: none; }
-        @media (max-width: 600px) { .world-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; } .sync-value { font-size: 2.2rem; } }
+        @media (max-width: 600px) { .world-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; } }
     </style>
 </head>
 <body>
     <main>
         <div class="dashboard-header">
             <div style="display:flex; gap:0.5rem;">
-                <div class="status-pill"><div class="signal-indicator" id="signal-bars"><div class="signal-bar active"></div><div class="signal-bar active"></div><div class="signal-bar active"></div></div><span id="sync-status">STABILIZING</span></div>
                 <button class="btn-mini" id="lang-btn" onclick="toggleLang()">JPN</button>
+                <button class="btn-mini" onclick="toggleFullscreen()">FULLSCREEN</button>
             </div>
             <button class="btn-mini" id="chime-btn" onclick="cycleChimeMode()"><span id="chime-icon">🔔</span> <span id="chime-text">CHIME OFF</span></button>
-            <button class="btn-mini" onclick="toggleFullscreen()">FULLSCREEN</button>
         </div>
+
         <div class="glass-box main-display" id="main-sky">
             <div class="celestial-stage"><div id="sun-main" class="celestial-object sun" style="display:none;"></div><div id="moon-main" class="celestial-object moon" style="display:none;"><div id="moon-fixed-main" class="moon-fixed"></div><div id="moon-term-main" class="moon-term"></div></div></div>
             <div id="digital-time">--:--:--</div><div id="digital-date">----/--/--</div>
@@ -88,28 +80,44 @@
             <div class="city-box"><svg id="city-svg-main" style="width:100%; height:100%;" preserveAspectRatio="none" viewBox="0 0 1000 120"></svg></div>
             <div id="ripple-hook" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
         </div>
+
         <section id="world-stations">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 10px;"><h3 id="world-title" style="margin:0; font-size:0.8rem; opacity:0.5; letter-spacing:0.2em; text-transform:uppercase;">World Stations</h3><button class="btn-mini" onclick="showAddModal()">+ STATION</button></div>
             <div id="world-clocks" class="world-grid"></div>
         </section>
-        <section class="sync-monitor"><span class="sync-label" id="lbl-dev-time">DEVICE TIME</span><span id="val-dev-time" class="sync-value">--:--:--</span><div class="sync-lag-pill" id="val-sync-lag">SYNC LAG: 0.000s</div></section>
     </main>
+
     <footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
+    
     <div id="add-modal" class="modal-overlay"><div class="modal-content"><h3 style="margin-top:0; font-size:1.2rem; color:var(--accent);">ADD OBSERVATORY</h3><input type="text" id="city-search" class="modal-input" placeholder="City name" list="city-list" oninput="onCitySelect()"><datalist id="city-list"></datalist><input type="text" id="custom-label" class="modal-input" placeholder="Display Label"><input type="hidden" id="selected-tz"><input type="hidden" id="selected-lat"><input type="hidden" id="selected-lng"><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn-mini" onclick="addZone()" style="flex:1; padding:12px;">ADD</button><button class="btn-mini" onclick="hideAddModal()" style="flex:1; padding:12px;">CANCEL</button></div></div></div>
+    
     <script>
         const LEAP_SECONDS = 37, D2R = Math.PI/180, R2D = 180/Math.PI;
         let serverOffset = 0, currentLang = navigator.language.startsWith('ja')?'jp':'en';
         let geoLat = 35.66, geoLng = 139.73, geoName = "📍 Tokyo", lastFullMinute = -1, chimeMode = 'off', audioCtx = null;
+        
         const L10N = {
-            en: { world: "World Stations", dev: "DEVICE TIME", lag: "SYNC LAG", age: "AGE", sun: "SOLAR", moon: "LUNAR", ch_off: "CHIME OFF", ch_hh: "CHIME HOURLY", ch_mm: "CHIME MINUTE", accurate: "ACCURATE" },
-            jp: { world: "世界時計 / 観測所", dev: "端末時刻", lag: "同期遅延", age: "月齢", sun: "日の出入り", moon: "月の出入り", ch_off: "時報 オフ", ch_hh: "時報 毎時", ch_mm: "時報 毎分", accurate: "同期済み" }
+            en: { world: "World Stations", age: "AGE", sun: "SOLAR", moon: "LUNAR", ch_off: "CHIME OFF", ch_hh: "CHIME HOURLY", ch_mm: "CHIME MINUTE" },
+            jp: { world: "世界時計 / 観測所", age: "月齢", sun: "日の出入り", moon: "月の出入り", ch_off: "時報 オフ", ch_hh: "時報 毎時", ch_mm: "時報 毎分" }
         };
         const CITY_DATA = [ {label: "Tokyo", tz: "Asia/Tokyo", lat: 35.66, lng: 139.73}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
         let zones = JSON.parse(localStorage.getItem('jst-zones-v26.3')) || [ {label: "TAI", tz: "UTC", lat: 0, lng: 0, isTAI: true}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
+        
         function t(key) { return L10N[currentLang][key] || key; }
         function toggleLang() { currentLang = currentLang==='jp'?'en':'jp'; document.getElementById('lang-btn').textContent = currentLang==='jp'?'JPN':'ENG'; updateUI(); }
-        function updateUI() { document.getElementById('world-title').textContent = t('world'); document.getElementById('lbl-dev-time').textContent = t('dev'); document.getElementById('lbl-age').textContent = t('age'); document.getElementById('lbl-sun').textContent = t('sun'); document.getElementById('lbl-moon').textContent = t('moon'); const cBtn = document.getElementById('chime-text'); if(cBtn) cBtn.textContent = t('ch_'+chimeMode); }
-        async function initSync() { try { const start=Date.now(); const res=await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo'); const data=await res.json(); serverOffset=(data.unixtime*1000 + (Date.now()-start)/2) - Date.now(); document.getElementById('sync-status').textContent=t('accurate'); } catch(e) { document.getElementById('sync-status').textContent='OFFLINE'; } }
+        function updateUI() { document.getElementById('world-title').textContent = t('world'); document.getElementById('lbl-age').textContent = t('age'); document.getElementById('lbl-sun').textContent = t('sun'); document.getElementById('lbl-moon').textContent = t('moon'); const cBtn = document.getElementById('chime-text'); if(cBtn) cBtn.textContent = t('ch_'+chimeMode); }
+        
+        async function initSync() { 
+            try { 
+                const start=Date.now(); 
+                const res=await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo'); 
+                const data=await res.json(); 
+                const end = Date.now();
+                const latency = (end - start) / 2;
+                serverOffset = (data.unixtime * 1000 + latency) - end; 
+            } catch(e) { console.warn("Sync failed, using device time."); } 
+        }
+
         function getAstro(lat, lng, date) {
             const d = (date.getTime() / 86400000) - 10957.5;
             const L = (280.466+0.9856474*d)%360, g = (357.528+0.9856003*d)%360;
@@ -127,7 +135,6 @@
 
             function getMoonPos(hrs) {
                 const dt = new Date(date.getTime() + hrs*3600000), dd = (dt.getTime()-946728000000)/86400000;
-                // Corrected Lunar Theory (Major Terms)
                 const Lm = (218.316+13.176396*dd)%360, Mm = (134.963+13.064993*dd)%360, F = (93.272+13.229350*dd)%360;
                 const lonM = Lm + 6.289*Math.sin(Mm*D2R), decM = 5.128*Math.sin(F*D2R);
                 const sid = (280.460+360.985647*dd+lng)%360;
@@ -143,6 +150,7 @@
             }
             return { sr: srUTC, ss: ssUTC, age, mr, ms };
         }
+
         function createCityscape(id) {
             const svg = document.getElementById(id); svg.innerHTML = '';
             for(let i=0; i<15; i++) {
@@ -164,74 +172,127 @@
         function fmtAbs(baseDate, relHrs) { if(relHrs===null)return "--:--"; const d = new Date(baseDate.getTime() + relHrs*3600000); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
         function fmtUTC(h) { if(h===null)return "--:--"; return `${pad((h+48)%24)}:${pad(((h+48)%1)*60)}`; }
         function getSkyGrad(h, sr, ss) { const rel = (h-sr+24)%24, dur = (ss-sr+24)%24; if(rel<dur){ if(rel<1) return 'linear-gradient(to bottom, #1e1b4b, #fb923c)'; if(rel>dur-1) return 'linear-gradient(to bottom, #f97316, #4c1d95)'; return 'linear-gradient(to bottom, #0ea5e9, #bae6fd)'; } return 'linear-gradient(to bottom, #020617, #0f172a)'; }
+        
         function update() {
-            const now=new Date(), sTime=new Date(now.getTime()+serverOffset), hUTC = sTime.getUTCHours()+sTime.getUTCMinutes()/60+sTime.getUTCSeconds()/3600;
-            document.getElementById('digital-time').textContent=sTime.toTimeString().split(' ')[0];
-            document.getElementById('digital-date').textContent=sTime.toLocaleDateString(currentLang==='jp'?'ja-JP':'en-US',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
-            document.getElementById('val-dev-time').textContent = now.toTimeString().split(' ')[0];
-            document.getElementById('val-sync-lag').textContent = `${t('lag')}: ${(serverOffset/1000).toFixed(3)}s`;
-            const astro=getAstro(geoLat, geoLng, sTime);
-            document.getElementById('loc-val').textContent=geoName; document.getElementById('age-val').textContent=astro.age.toFixed(1);
-            // Display solar times (sTime is JST, astro.sr is UTC hrs)
-            document.getElementById('sun-val').textContent=`${fmtUTC(astro.sr+9)} / ${fmtUTC(astro.ss+9)}`;
-            // Display lunar times (relHrs, relative to sTime)
-            document.getElementById('moon-val').textContent=`${fmtAbs(sTime, astro.mr)} / ${fmtAbs(sTime, astro.ms)}`;
-            const sunE=document.getElementById('sun-main'), moonE=document.getElementById('moon-main'), termE=document.getElementById('moon-term-main'), fixedE=document.getElementById('moon-fixed-main');
-            const isDay = ((hUTC-astro.sr+24)%24 < (astro.ss-astro.sr+24)%24); sunE.style.display=isDay?'block':'none';
+            const deviceNow = new Date(); 
+            const accurateNow = new Date(deviceNow.getTime() + serverOffset); 
+            const hUTC = accurateNow.getUTCHours() + accurateNow.getUTCMinutes()/60 + accurateNow.getUTCSeconds()/3600;
+
+            document.getElementById('digital-time').textContent = accurateNow.toTimeString().split(' ')[0];
+            document.getElementById('digital-date').textContent = accurateNow.toLocaleDateString(currentLang==='jp'?'ja-JP':'en-US',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
+            
+            const astro = getAstro(geoLat, geoLng, accurateNow);
+            document.getElementById('loc-val').textContent = geoName; 
+            document.getElementById('age-val').textContent = astro.age.toFixed(1);
+            document.getElementById('sun-val').textContent = `${fmtUTC(astro.sr+9)} / ${fmtUTC(astro.ss+9)}`;
+            document.getElementById('moon-val').textContent = `${fmtAbs(accurateNow, astro.mr)} / ${fmtAbs(accurateNow, astro.ms)}`;
+            
+            const sunE = document.getElementById('sun-main'), moonE = document.getElementById('moon-main'), termE = document.getElementById('moon-term-main'), fixedE = document.getElementById('moon-fixed-main');
+            const isDay = ((hUTC-astro.sr+24)%24 < (astro.ss-astro.sr+24)%24); 
+            sunE.style.display = isDay ? 'block' : 'none';
             if(isDay){ const p=(hUTC-astro.sr+24)%24/((astro.ss-astro.sr+24)%24); sunE.style.left=`${10+p*80}%`; sunE.style.bottom=`${15+Math.sin(p*Math.PI)*65}%`; }
-            moonE.style.display=isDay?'none':'block';
-            if(!isDay){ const p=(hUTC-astro.ss+24)%24/(24-((astro.ss-astro.sr+24)%24)); moonE.style.left=`${10+p*80}%`; moonE.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
-                const mp=(astro.age/29.53)%1; fixedE.style.display='block'; if(mp<=0.5){ fixedE.style.left='50%'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.25)?'#111':'#fff'; termE.style.transform=`scaleX(${(mp<=0.25)?(1-mp*4):(mp*4-1)})`; }
+            
+            moonE.style.display = isDay ? 'none' : 'block';
+            if(!isDay){ 
+                const p=(hUTC-astro.ss+24)%24/(24-((astro.ss-astro.sr+24)%24)); moonE.style.left=`${10+p*80}%`; moonE.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
+                const mp=(astro.age/29.53)%1; fixedE.style.display='block'; 
+                if(mp<=0.5){ fixedE.style.left='50%'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.25)?'#111':'#fff'; termE.style.transform=`scaleX(${(mp<=0.25)?(1-mp*4):(mp*4-1)})`; }
                 else { fixedE.style.left='0'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.75)?'#fff':'#111'; termE.style.transform=`scaleX(${(mp<=0.75)?(1-(mp-0.5)*4):((mp-0.5)*4-1)})`; }
             }
+            
             document.getElementById('main-sky').style.backgroundImage = getSkyGrad(hUTC, astro.sr, astro.ss);
             const relSS = (hUTC-astro.ss+24)%24; const winOp = (!isDay || relSS<0.3)?0.85:0;
             document.querySelectorAll('#city-svg-main .window').forEach(w => w.style.opacity = winOp);
-            const s=sTime.getSeconds(); if(chimeMode!=='off'){ if(((chimeMode==='hh'&&sTime.getMinutes()===59)||(chimeMode==='mm'))&&(s>=57&&s<=59)){ if(s!==lastFullMinute){playB(440,0.15);lastFullMinute=s;}}
-            else if(((chimeMode==='hh'&&sTime.getMinutes()===0)||(chimeMode==='mm'&&s===0))&&s===0){ if(s!==lastFullMinute){playB(880,0.8); const r=document.createElement('div');r.className='ripple';document.getElementById('ripple-hook').appendChild(r);setTimeout(()=>r.remove(),2000);lastFullMinute=s;}}}
-            const world=document.getElementById('world-clocks'); if(world.children.length!==zones.length){ world.innerHTML=''; zones.forEach((z,i)=>{ const c=document.createElement('div'); c.className='glass-box world-card'; c.innerHTML=`<button class="delete-btn" onclick="removeZone(${i})">×</button><div class="world-city">${z.label}</div><div id="wt-${i}" class="world-time">--:--:--</div><div id="wd-${i}" class="world-date">--/--</div><div class="world-astro-row" id="wa-${i}">SR:--:-- SS:--:--</div>`; world.appendChild(c); }); }
-            zones.forEach((z,i)=>{
-                const zTime=new Date(now.getTime()+serverOffset+(z.isTAI?LEAP_SECONDS*1000:0));
-                const fmtZ=new Intl.DateTimeFormat('en-US',{timeZone:z.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-                const pts=fmtZ.formatToParts(zTime); document.getElementById(`wt-${i}`).textContent=`${pts[0].value}:${pts[2].value}:${pts[4].value}`;
-                document.getElementById(`wd-${i}`).textContent=new Intl.DateTimeFormat(currentLang==='jp'?'ja-JP':'en-US',{timeZone:z.tz,month:'short',day:'numeric'}).format(zTime);
-                const za=getAstro(z.lat, z.lng, zTime);
+            
+            const s = accurateNow.getSeconds(); 
+            if(chimeMode !== 'off') { 
+                if(((chimeMode==='hh' && accurateNow.getMinutes()===59) || (chimeMode==='mm')) && (s>=57 && s<=59)) { 
+                    if(s!==lastFullMinute){ playB(440,0.15); lastFullMinute=s; }
+                } else if(((chimeMode==='hh' && accurateNow.getMinutes()===0) || (chimeMode==='mm' && s===0)) && s===0) { 
+                    if(s!==lastFullMinute){ 
+                        playB(880,0.8); 
+                        const r=document.createElement('div'); r.className='ripple'; document.getElementById('ripple-hook').appendChild(r); 
+                        setTimeout(()=>r.remove(),2000); 
+                        lastFullMinute=s; 
+                    }
+                }
+            }
+
+            const world = document.getElementById('world-clocks'); 
+            if(world.children.length !== zones.length) { 
+                world.innerHTML=''; 
+                zones.forEach((z,i)=>{ 
+                    const c=document.createElement('div'); c.className='glass-box world-card'; 
+                    c.innerHTML=`<button class="delete-btn" onclick="removeZone(${i})">×</button><div class="world-city">${z.label}</div><div id="wt-${i}" class="world-time">--:--:--</div><div id="wd-${i}" class="world-date">--/--</div><div class="world-astro-row" id="wa-${i}">SR:--:-- SS:--:--</div>`; 
+                    world.appendChild(c); 
+                }); 
+            }
+            
+            zones.forEach((z,i) => {
+                const zTime = new Date(accurateNow.getTime() + (z.isTAI ? LEAP_SECONDS * 1000 : 0));
+                const fmtZ = new Intl.DateTimeFormat('en-US',{timeZone:z.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+                const pts = fmtZ.formatToParts(zTime); 
+                document.getElementById(`wt-${i}`).textContent = `${pts[0].value}:${pts[2].value}:${pts[4].value}`;
+                document.getElementById(`wd-${i}`).textContent = new Intl.DateTimeFormat(currentLang==='jp'?'ja-JP':'en-US',{timeZone:z.tz,month:'short',day:'numeric'}).format(zTime);
+                const za = getAstro(z.lat, z.lng, zTime);
                 const ofsS = (new Date().toLocaleString("en-US", {timeZone: z.tz, timeZoneName: "short"}).split("GMT")[1] || "").replace(":",".").replace("+","");
                 const ofsN = ofsS ? parseFloat(ofsS) : 0;
                 document.getElementById(`wa-${i}`).textContent = `↑ ${fmtUTC(za.sr+ofsN)} ↓ ${fmtUTC(za.ss+ofsN)}`;
                 document.getElementById(`wt-${i}`).parentElement.style.backgroundImage = getSkyGrad(zTime.getUTCHours()+zTime.getUTCMinutes()/60, za.sr, za.ss);
             });
+
+            requestAnimationFrame(update);
         }
+
         async function initGeo() { 
+            const fallbackGeo = async () => {
+                try {
+                    const r = await fetch('https://get.geojs.io/v1/ip/geo.json');
+                    const d = await r.json();
+                    geoLat = parseFloat(d.latitude); geoLng = parseFloat(d.longitude);
+                    geoName = `📍 ${d.city || d.country}`;
+                } catch(e) {
+                    geoName = "📍 Tokyo (Default)";
+                    document.getElementById('loc-val').textContent = geoName;
+                }
+            };
+
             if(navigator.geolocation){
                 document.getElementById('loc-val').textContent = '📍 ACCESSING...';
                 navigator.geolocation.getCurrentPosition(async (p)=>{ 
                     geoLat=p.coords.latitude; geoLng=p.coords.longitude; 
-                    geoName=`📍 ${geoLat.toFixed(2)}, ${geoLng.toFixed(2)}`; // Fallback to coords
-                    update(); // Update immediately with coords
+                    geoName=`📍 ${geoLat.toFixed(2)}, ${geoLng.toFixed(2)}`;
                     try{ 
                         const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10&accept-language=${currentLang==='jp'?'ja':'en'}`);
                         const d = await r.json(); 
                         if(d&&d.address){ 
                             geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; 
-                            update();
                         }
-                    }catch(e){ console.error("Geocoding failed", e); } 
+                    }catch(e){ console.warn("Geocoding failed", e.message); } 
                 }, (err) => {
-                    console.error("Geolocation error", err);
-                    document.getElementById('loc-val').textContent = '📍 PERMISSION DENIED';
+                    console.warn("Geolocation error:", err.message || err.code);
+                    fallbackGeo();
                 }, { timeout: 10000 });
             } else {
-                document.getElementById('loc-val').textContent = '📍 NOT SUPPORTED';
+                fallbackGeo();
             }
         }
+
         function showAddModal(){ document.getElementById('city-list').innerHTML=CITY_DATA.map(c=>`<option value="${c.label}">${c.tz}</option>`).join(''); document.getElementById('add-modal').style.display='flex'; }
         function hideAddModal(){ document.getElementById('add-modal').style.display='none'; }
         function onCitySelect(){ const v=document.getElementById('city-search').value, c=CITY_DATA.find(x=>x.label===v); if(c){ document.getElementById('custom-label').value=c.label; document.getElementById('selected-tz').value=c.tz; document.getElementById('selected-lat').value=c.lat; document.getElementById('selected-lng').value=c.lng; } }
-        function addZone(){ const l=document.getElementById('custom-label').value, tz=document.getElementById('selected-tz').value; if(l&&tz){ zones.push({label:l,tz,lat:parseFloat(document.getElementById('selected-lat').value),lng:parseFloat(document.getElementById('selected-lng').value)}); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); update(); hideAddModal(); } }
-        function removeZone(i){ zones.splice(i,1); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); update(); }
+        function addZone(){ const l=document.getElementById('custom-label').value, tz=document.getElementById('selected-tz').value; if(l&&tz){ zones.push({label:l,tz,lat:parseFloat(document.getElementById('selected-lat').value),lng:parseFloat(document.getElementById('selected-lng').value)}); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); hideAddModal(); } }
+        function removeZone(i){ zones.splice(i,1); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); }
         function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-        window.onload = () => { document.getElementById('year').textContent = new Date().getFullYear(); initSync(); initGeo(); updateUI(); createCityscape('city-svg-main'); setInterval(update, 1000); update(); };
+        
+        window.onload = () => { 
+            document.getElementById('year').textContent = new Date().getFullYear(); 
+            initSync(); 
+            initGeo(); 
+            updateUI(); 
+            createCityscape('city-svg-main'); 
+            requestAnimationFrame(update);
+        };
     </script>
 </body>
 </html>
