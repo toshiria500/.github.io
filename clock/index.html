@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v23 | Precise Time & Universe</title>
+    <title>Celestial Clock v26.3 | Precision Perfected</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,289 +14,202 @@
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-blur: blur(20px);
             --bg-default: #0f172a;
+            --window-lit: #fde68a;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            margin: 0; min-height: 100vh;
-            background: var(--bg-default);
-            font-family: 'Outfit', sans-serif;
-            color: var(--text-main);
-            overflow-x: hidden;
-            display: flex; flex-direction: column;
-            transition: background 3s ease;
-        }
-
+        body { margin: 0; min-height: 100vh; background: var(--bg-default); font-family: 'Outfit', sans-serif; color: var(--text-main); overflow-x: hidden; display: flex; flex-direction: column; transition: background 3s ease; }
         main { flex: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 2rem; }
-
-        .glass-box {
-            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border); border-radius: 2rem;
-            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6);
-        }
-
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
-
-        .status-pill {
-            display: flex; align-items: center; gap: 0.5rem; background: rgba(0, 0, 0, 0.3);
-            padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; border: 1px solid var(--glass-border);
-        }
-
+        .glass-box { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 2rem; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6); }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; margin-bottom: -1rem; }
+        .status-pill { display: flex; align-items: center; gap: 0.5rem; background: rgba(0, 0, 0, 0.3); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; border: 1px solid var(--glass-border); }
         .signal-indicator { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
         .signal-bar { width: 3px; background: rgba(255,255,255,0.2); border-radius: 1px; }
         .signal-bar.active { background: var(--accent); }
-
-        .btn-mini {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff;
-            padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-        }
-        .btn-mini:hover { background: rgba(255,255,255,0.15); }
-
-        .main-display { position: relative; padding: clamp(3rem, 10vh, 7rem) 1rem; text-align: center; overflow: hidden; }
-
-        #digital-time {
-            font-family: 'Share Tech Mono', monospace; font-size: clamp(4.5rem, 18vw, 11rem);
-            line-height: 1; z-index: 10; position: relative; text-shadow: 0 0 40px rgba(0,0,0,0.8);
-        }
-
+        .btn-mini { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-mini:hover { background: rgba(255,255,255,0.2); border-color: var(--accent); }
+        .main-display { position: relative; padding: clamp(3rem, 10vh, 7rem) 1rem; text-align: center; overflow: hidden; margin-top: 1rem; }
+        #digital-time { font-family: 'Share Tech Mono', monospace; font-size: clamp(4.5rem, 18vw, 11rem); line-height: 1; z-index: 10; position: relative; text-shadow: 0 0 40px rgba(0,0,0,0.8); }
         #digital-date { font-size: clamp(1rem, 3vw, 1.5rem); font-weight: 300; letter-spacing: 0.3em; margin-top: 1rem; opacity: 0.8; z-index: 10; position: relative; }
-
-        .astro-details {
-            margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
-            font-size: 0.8rem; font-weight: 700; opacity: 0.9; z-index: 10; position: relative; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
+        .astro-details { margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; font-size: 0.8rem; font-weight: 700; z-index: 10; position: relative; }
+        .astro-item { display: flex; flex-direction: column; gap: 4px; }
+        .astro-label { font-size: 0.61rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em; }
         .celestial-stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-
         .celestial-object { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); transition: left 1s ease, bottom 1s ease; }
         .sun { width: 60px; height: 60px; background: radial-gradient(circle, #fff7ed 0%, #fbbf24 50%, #f59e0b 100%); box-shadow: 0 0 60px #fbbf24, 0 0 120px rgba(251, 191, 36, 0.4); }
         .moon { width: 50px; height: 50px; background: #111; overflow: hidden; box-shadow: inset -2px -2px 5px rgba(255,255,255,0.1), 0 0 20px rgba(255,255,255,0.1); }
         .moon-fixed { position: absolute; top:0; width: 50%; height: 100%; background: #fff; display: none; }
         .moon-term { position: absolute; top:0; left:0; width: 100%; height: 100%; background: #fff; border-radius: 50%; }
-
-        /* Cityscape シルエット */
-        .cityscape-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 90px; z-index: 3; pointer-events: none; }
-        .cityscape-svg { width: 100%; height: 100%; display: block; overflow: visible; }
-        .cityscape-path { fill: rgba(0, 0, 0, 0.15); transition: fill 2s ease; }
-        .window-grid { fill: #fbbf24; opacity: 0; transition: opacity 1.5s ease-in-out; }
-        .window-pulse { animation: window-flicker var(--d) infinite alternate; }
-        @keyframes window-flicker { 0% { opacity: 0.2; } 100% { opacity: 0.8; } }
-
-        .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; width: 100%; }
-        .world-card { padding: 1.5rem; text-align: center; position: relative; overflow: hidden; transition: transform 0.3s; }
-        .world-card:hover { transform: translateY(-5px); }
-        .world-city { font-size: 0.85rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-        .world-time { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; margin: 0.3rem 0; color: var(--accent); }
-        .world-date { font-size: 0.7rem; opacity: 0.6; }
-
-        footer { width: 100%; padding: 2rem; text-align: center; font-size: 0.75rem; color: var(--text-dim); background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border); margin-top: 2rem; }
-
+        .city-box { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 3; pointer-events: none; }
+        .building { fill: rgba(0, 0, 0, 0.4); transition: fill 2s ease; }
+        .window { fill: var(--window-lit); opacity: 0; transition: opacity 2s ease; }
+        .window.pulse { animation: window-glow var(--d) infinite alternate; }
+        @keyframes window-glow { 0% { opacity: 0.4; filter: blur(0px); } 100% { opacity: 1; filter: blur(1px); } }
+        .world-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 15px; width: 100%; }
+        .world-card { padding: 1.5rem 1rem; text-align: center; position: relative; overflow: hidden; transition: 0.3s; }
+        .world-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .world-city { font-size: 0.8rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.3rem; z-index: 5; position: relative; }
+        .world-time { font-family: 'Share Tech Mono', monospace; font-size: 1.5rem; color: #fff; margin-bottom: 0.2rem; z-index: 5; position: relative; }
+        .world-date { font-size: 0.6rem; opacity: 0.5; margin-bottom: 0.6rem; z-index: 5; position: relative; }
+        .world-astro-row { display: flex; justify-content: center; gap: 0.8rem; font-size: 0.55rem; font-weight: 800; opacity: 0.7; z-index: 5; position: relative; margin-top: 4px; }
+        .delete-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.4); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; z-index: 8; opacity: 0; transition: 0.2s; }
+        .world-card:hover .delete-btn { opacity: 1; }
+        .sync-monitor { margin: 1rem 0; padding: 2rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); border-radius: 2rem; }
+        .sync-label { font-size: 0.8rem; font-weight: 800; color: var(--accent); opacity: 0.8; letter-spacing: 0.15em; text-transform: uppercase; }
+        .sync-value { font-family: 'Share Tech Mono', monospace; font-size: clamp(2rem, 8vw, 4.5rem); color: #fff; line-height: 1; text-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        .sync-lag-pill { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--accent); padding: 8px 25px; border-radius: 20px; font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-top: 15px; font-family: 'Share Tech Mono', monospace; }
+        footer { width: 100%; padding: 3rem 0; text-align: center; font-size: 0.75rem; color: var(--text-dim); }
         .ripple { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: none; animation: ripple-anim 2s ease-out forwards; }
         @keyframes ripple-anim { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 400%; height: 400%; opacity: 0; } }
-
-        @media (max-width: 600px) {
-            .world-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-            .dashboard-header { flex-direction: column; gap: 1rem; }
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #1e293b; padding: 2rem; border-radius: 2rem; border: 1px solid var(--glass-border); width: 90%; max-width: 400px; }
+        .modal-input { width: 100%; padding: 0.8rem 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; margin-bottom: 1rem; outline: none; }
+        @media (max-width: 600px) { .world-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; } .sync-value { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
     <main>
         <div class="dashboard-header">
             <div style="display:flex; gap:0.5rem;">
-                <div class="status-pill">
-                    <div class="signal-indicator" id="signal-bars">
-                        <div class="signal-bar active"></div><div class="signal-bar active"></div><div class="signal-bar active"></div>
-                    </div>
-                    <span id="sync-status">STABILIZING</span>
-                </div>
+                <div class="status-pill"><div class="signal-indicator" id="signal-bars"><div class="signal-bar active"></div><div class="signal-bar active"></div><div class="signal-bar active"></div></div><span id="sync-status">STABILIZING</span></div>
                 <button class="btn-mini" id="lang-btn" onclick="toggleLang()">JPN</button>
             </div>
-            <div style="font-size:0.6rem; font-weight:900; letter-spacing:0.5em; opacity:0.4;">CHRONOSPHERE HYBRID</div>
+            <button class="btn-mini" id="chime-btn" onclick="cycleChimeMode()"><span id="chime-icon">🔔</span> <span id="chime-text">CHIME OFF</span></button>
             <button class="btn-mini" onclick="toggleFullscreen()">FULLSCREEN</button>
         </div>
-
         <div class="glass-box main-display" id="main-sky">
-            <div class="celestial-stage">
-                <div id="sun-main" class="celestial-object sun" style="display:none;"></div>
-                <div id="moon-main" class="celestial-object moon" style="display:none;">
-                    <div id="moon-fixed-main" class="moon-fixed"></div>
-                    <div id="moon-term-main" class="moon-term"></div>
-                </div>
-            </div>
-
-            <div id="digital-time">--:--:--</div>
-            <div id="digital-date">----/--/--</div>
-
+            <div class="celestial-stage"><div id="sun-main" class="celestial-object sun" style="display:none;"></div><div id="moon-main" class="celestial-object moon" style="display:none;"><div id="moon-fixed-main" class="moon-fixed"></div><div id="moon-term-main" class="moon-term"></div></div></div>
+            <div id="digital-time">--:--:--</div><div id="digital-date">----/--/--</div>
             <div class="astro-details">
-                <span id="loc-label">📍 -</span>
-                <span id="age-label">AGE: --.-</span>
-                <span id="sr-label">↑ --:--</span>
-                <span id="ss-label">↓ --:--</span>
+                <div class="astro-item"><span class="astro-label" id="lbl-loc">LOCATION</span><span id="loc-val">📍 -</span></div>
+                <div class="astro-item"><span class="astro-label" id="lbl-age">月齢</span><span id="age-val">--.-</span></div>
+                <div class="astro-item"><span class="astro-label" id="lbl-sun">日の出入り</span><span id="sun-val">--:-- / --:--</span></div>
+                <div class="astro-item"><span class="astro-label" id="lbl-moon">月の出入り</span><span id="moon-val">--:-- / --:--</span></div>
             </div>
-
-            <div class="cityscape-container">
-                <svg class="cityscape-svg" viewBox="0 0 500 90" preserveAspectRatio="none">
-                    <path class="cityscape-path" d="M0,90 L0,60 L10,60 L10,40 L30,40 L30,30 L50,30 L50,55 L70,55 L70,45 L100,45 L100,20 L130,20 L130,50 L160,50 L160,10 L200,10 L200,60 L240,60 L240,35 L280,35 L280,55 L320,55 L320,25 L360,25 L360,50 L400,50 L400,40 L440,40 L440,60 L470,60 L470,50 L500,50 L500,90 Z"></path>
-                    <g id="windows-main"></g>
-                </svg>
-            </div>
-            
+            <div class="city-box"><svg id="city-svg-main" style="width:100%; height:100%;" preserveAspectRatio="none" viewBox="0 0 1000 120"></svg></div>
             <div id="ripple-hook" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
         </div>
-
         <section id="world-stations">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 10px;">
-                <h3 id="world-title" style="margin:0; font-size:0.8rem; opacity:0.5; letter-spacing:0.2em; text-transform:uppercase;">World Stations</h3>
-                <button class="btn-mini" onclick="initSync()">SYNC NOW</button>
-            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0 10px;"><h3 id="world-title" style="margin:0; font-size:0.8rem; opacity:0.5; letter-spacing:0.2em; text-transform:uppercase;">World Stations</h3><button class="btn-mini" onclick="showAddModal()">+ STATION</button></div>
             <div id="world-clocks" class="world-grid"></div>
         </section>
+        <section class="sync-monitor"><span class="sync-label" id="lbl-dev-time">DEVICE TIME</span><span id="val-dev-time" class="sync-value">--:--:--</span><div class="sync-lag-pill" id="val-sync-lag">SYNC LAG: 0.000s</div></section>
     </main>
-
-    <footer>
-        Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.
-    </footer>
-
+    <footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
+    <div id="add-modal" class="modal-overlay"><div class="modal-content"><h3 style="margin-top:0; font-size:1.2rem; color:var(--accent);">ADD OBSERVATORY</h3><input type="text" id="city-search" class="modal-input" placeholder="City name" list="city-list" oninput="onCitySelect()"><datalist id="city-list"></datalist><input type="text" id="custom-label" class="modal-input" placeholder="Display Label"><input type="hidden" id="selected-tz"><input type="hidden" id="selected-lat"><input type="hidden" id="selected-lng"><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn-mini" onclick="addZone()" style="flex:1; padding:12px;">ADD</button><button class="btn-mini" onclick="hideAddModal()" style="flex:1; padding:12px;">CANCEL</button></div></div></div>
     <script>
-        const LEAP_SECONDS = 37;
-        let serverOffset = 0;
-        let currentLang = navigator.language.startsWith('ja') ? 'jp' : 'en';
-        let geoName = "📍 -", geoLat = 35.7, geoLng = 139.7, lastFullMinute = -1;
-
+        const LEAP_SECONDS = 37, D2R = Math.PI/180, R2D = 180/Math.PI;
+        let serverOffset = 0, currentLang = navigator.language.startsWith('ja')?'jp':'en';
+        let geoLat = 35.66, geoLng = 139.73, geoName = "📍 Tokyo", lastFullMinute = -1, chimeMode = 'off', audioCtx = null;
         const L10N = {
-            en: { world: "World Stations", age: "AGE", sr: "RISE", ss: "SET", accurate: "ACCURATE", syncing: "SYNC ACTIVE", off: "OFFLINE", tai: "ATOMIC TIME" },
-            jp: { world: "世界時計 / 観測所", age: "月齢", sr: "日の出", ss: "日の入り", accurate: "同期済み", syncing: "同期中", off: "オフライン", tai: "原子時 (TAI)" }
+            en: { world: "World Stations", dev: "DEVICE TIME", lag: "SYNC LAG", age: "AGE", sun: "SOLAR", moon: "LUNAR", ch_off: "CHIME OFF", ch_hh: "CHIME HOURLY", ch_mm: "CHIME MINUTE", accurate: "ACCURATE" },
+            jp: { world: "世界時計 / 観測所", dev: "端末時刻", lag: "同期遅延", age: "月齢", sun: "日の出入り", moon: "月の出入り", ch_off: "時報 オフ", ch_hh: "時報 毎時", ch_mm: "時報 毎分", accurate: "同期済み" }
         };
-
-        const CITY_DATA = [
-            { id: "TAI", label: "TAI", tz: "UTC", lat: 0, lng: 0, isTAI: true },
-            { id: "UTC", label: "UTC / GMT", tz: "UTC", lat: 0, lng: 0 },
-            { id: "NYC", label: "New York", tz: "America/New_York", lat: 40.7, lng: -74.0 },
-            { id: "LON", label: "London", tz: "Europe/London", lat: 51.5, lng: -0.1 },
-            { id: "SYD", label: "Sydney", tz: "Australia/Sydney", lat: -33.8, lng: 151.2 }
-        ];
-
+        const CITY_DATA = [ {label: "Tokyo", tz: "Asia/Tokyo", lat: 35.66, lng: 139.73}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
+        let zones = JSON.parse(localStorage.getItem('jst-zones-v26.3')) || [ {label: "TAI", tz: "UTC", lat: 0, lng: 0, isTAI: true}, {label: "Honolulu", tz: "Pacific/Honolulu", lat: 21.30, lng: -157.85}, {label: "Washington DC", tz: "America/New_York", lat: 38.90, lng: -77.03} ];
         function t(key) { return L10N[currentLang][key] || key; }
-        function toggleLang() { currentLang = currentLang === 'jp' ? 'en' : 'jp'; document.getElementById('lang-btn').textContent = currentLang === 'jp' ? 'JPN' : 'ENG'; updateUIStrings(); }
-        function updateUIStrings() { document.getElementById('world-title').textContent = t('world'); }
-
-        async function initSync() {
-            try {
-                const start = Date.now();
-                const res = await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo');
-                const data = await res.json();
-                serverOffset = (data.unixtime * 1000 + (Date.now() - start)/2) - Date.now();
-            } catch(e) { console.warn("Sync failed."); }
-        }
-
-        function getAstroData(lat, lng, date) {
+        function toggleLang() { currentLang = currentLang==='jp'?'en':'jp'; document.getElementById('lang-btn').textContent = currentLang==='jp'?'JPN':'ENG'; updateUI(); }
+        function updateUI() { document.getElementById('world-title').textContent = t('world'); document.getElementById('lbl-dev-time').textContent = t('dev'); document.getElementById('lbl-age').textContent = t('age'); document.getElementById('lbl-sun').textContent = t('sun'); document.getElementById('lbl-moon').textContent = t('moon'); const cBtn = document.getElementById('chime-text'); if(cBtn) cBtn.textContent = t('ch_'+chimeMode); }
+        async function initSync() { try { const start=Date.now(); const res=await fetch('https://worldtimeapi.org/api/timezone/Asia/Tokyo'); const data=await res.json(); serverOffset=(data.unixtime*1000 + (Date.now()-start)/2) - Date.now(); document.getElementById('sync-status').textContent=t('accurate'); } catch(e) { document.getElementById('sync-status').textContent='OFFLINE'; } }
+        function getAstro(lat, lng, date) {
             const d = (date.getTime() / 86400000) - 10957.5;
-            const L = (280.460 + 0.9856474 * d) % 360;
-            const g = (357.528 + 0.9856003 * d) % 360;
-            const lambda = L + 1.915 * Math.sin(g * Math.PI / 180);
-            const delta = Math.asin(Math.sin(23.439 * Math.PI / 180) * Math.sin(lambda * Math.PI / 180)) * 180 / Math.PI;
-            const HA = Math.acos(-Math.tan(lat * Math.PI / 180) * Math.tan(delta * Math.PI / 180)) * 180 / Math.PI;
-            const msRef = new Date(Date.UTC(2000,0,7,12,33,0)).getTime();
-            return { sunrise: (720 - 4 * (lng + HA) - 10) / 60, sunset: (720 - 4 * (lng - HA) - 10) / 60, moonAge: ((date.getTime() - msRef) / 86400000) % 29.53059 };
-        }
+            const L = (280.466+0.9856474*d)%360, g = (357.528+0.9856003*d)%360;
+            const lambda = L + 1.915*Math.sin(g*D2R) + 0.02*Math.sin(2*g*D2R);
+            const eps = 23.439-0.0000004*d;
+            const ra = Math.atan2(Math.sin(lambda*D2R)*Math.cos(eps*D2R), Math.cos(lambda*D2R))*R2D;
+            const dec = Math.asin(Math.sin(eps*D2R)*Math.sin(lambda*D2R))*R2D;
+            const eqt = (L-ra)*4, hor = -0.8333;
+            const cosH = (Math.sin(hor*D2R)-Math.sin(lat*D2R)*Math.sin(dec*D2R))/(Math.cos(lat*D2R)*Math.cos(dec*D2R));
+            const ha = (cosH>1)?0:(cosH<-1)?180:Math.acos(cosH)*R2D;
+            const srUTC = (720-4*(lng+ha)-eqt)/60, ssUTC = (720-4*(lng-ha)-eqt)/60;
 
-        function initWindows(id) {
-            const g = document.getElementById(id); if(!g) return; g.innerHTML = '';
-            const rects = [[35,40,20,20],[95,25,40,50],[175,50,30,25],[255,20,40,60],[335,45,40,35],[425,30,40,40]];
-            rects.forEach(r => { for(let x=2; x<r[2]-2; x+=6) { for(let y=2; y<r[3]-2; y+=8) {
-                if(Math.random()>0.4) {
-                    const w = document.createElementNS("http://www.w3.org/2000/svg","rect");
-                    w.setAttribute("x",r[0]+x); w.setAttribute("y",r[1]+y); w.setAttribute("width",3); w.setAttribute("height",4);
-                    w.setAttribute("class","window-grid"+(Math.random()>0.8?" window-pulse":""));
-                    w.style.setProperty("--d", (Math.random()*3+1)+"s"); g.appendChild(w);
-                }
-            }}});
-        }
+            const msRef = new Date(Date.UTC(2026, 3, 17, 13, 27, 0)).getTime();
+            let age = ((date.getTime()-msRef)/86400000)%29.53058867; if(age<0)age+=29.53058867;
 
-        function controlWindows(id, isDay) { const ws = document.querySelectorAll(`#${id} .window-grid`); ws.forEach(w => w.style.opacity = isDay ? 0 : 0.85); }
-
-        function updateCelestialUI(h, sunId, moonId, termId, fixedId, lat, lng, date, age) {
-            const sun = document.getElementById(sunId), moon = document.getElementById(moonId), term = document.getElementById(termId), fixed = document.getElementById(fixedId);
-            const astro = getAstroData(lat, lng, date);
-            const isDay = ((h - astro.sunrise + 24) % 24 < (astro.sunset - astro.sunrise + 24) % 24);
-            if(sun) { sun.style.display = isDay?'block':'none'; if(isDay) { const p = (h - astro.sunrise + 24)%24 / ((astro.sunset-astro.sunrise+24)%24); sun.style.left=`${10+p*80}%`; sun.style.bottom=`${15+Math.sin(p*Math.PI)*65}%`; }}
-            if(moon) { moon.style.display = isDay?'none':'block'; if(!isDay) { const p = (h - astro.sunset + 24)%24 / (24-((astro.sunset-astro.sunrise+24)%24)); moon.style.left=`${10+p*80}%`; moon.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
-            const mp = (age/29.53)%1; fixed.style.display='block';
-            if(mp<=0.5) { fixed.style.left='50%'; fixed.style.background='#fff'; term.style.background=(mp<=0.25)?'#111':'#fff'; term.style.transform=`scaleX(${(mp<=0.25)?(1-mp*4):(mp*4-1)})`; }
-            else { fixed.style.left='0'; fixed.style.background='#fff'; term.style.background=(mp<=0.75)?'#fff':'#111'; term.style.transform=`scaleX(${(mp<=0.75)?(1-(mp-0.5)*4):((mp-0.5)*4-1)})`; }
-            }}
-            return isDay;
-        }
-
-        function getSkyColor(h, sunrise, sunset) {
-            const relH = (h-sunrise+24)%24, dayDur = (sunset-sunrise+24)%24;
-            if(relH < dayDur) { if(relH < 1) return 'linear-gradient(to bottom, #1e1b4b, #fb923c)'; if(relH > dayDur-1) return 'linear-gradient(to bottom, #f97316, #4c1d95)'; return 'linear-gradient(to bottom, #0ea5e9, #bae6fd)'; }
-            return 'linear-gradient(to bottom, #020617, #0f172a)';
-        }
-
-        function update() {
-            const now = new Date(), sTime = new Date(now.getTime() + serverOffset);
-            const h = sTime.getUTCHours() + sTime.getUTCMinutes()/60 + sTime.getUTCSeconds()/3600;
-            document.getElementById('digital-time').textContent = sTime.toTimeString().split(' ')[0];
-            document.getElementById('digital-date').textContent = sTime.toLocaleDateString(currentLang==='jp'?'ja-JP':'en-US', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-            const astro = getAstroData(geoLat, geoLng, sTime);
-            document.getElementById('age-label').textContent = `${t('age')}: ${astro.moonAge.toFixed(1)}`;
-            document.getElementById('loc-label').textContent = geoName;
-            document.getElementById('sr-label').textContent = `↑ ${pad(astro.sunrise)}:${pad((astro.sunrise%1)*60)}`;
-            document.getElementById('ss-label').textContent = `↓ ${pad(astro.sunset)}:${pad((astro.sunset%1)*60)}`;
-            document.getElementById('main-sky').style.backgroundImage = getSkyColor(h, astro.sunrise, astro.sunset);
-            const isDay = updateCelestialUI(h, 'sun-main', 'moon-main', 'moon-term-main', 'moon-fixed-main', geoLat, geoLng, sTime, astro.moonAge);
-            controlWindows('windows-main', isDay);
-            if(sTime.getMinutes() !== lastFullMinute && lastFullMinute!==-1) { const hook = document.getElementById('ripple-hook'); const r = document.createElement('div'); r.className='ripple'; hook.appendChild(r); setTimeout(()=>r.remove(),2000); }
-            lastFullMinute = sTime.getMinutes();
-            document.getElementById('sync-status').textContent = Math.abs(serverOffset)<100?t('accurate'):t('syncing');
-
-            const worldContainer = document.getElementById('world-clocks');
-            if(worldContainer.children.length === 0) {
-                CITY_DATA.forEach((city, i) => {
-                    const card = document.createElement('div'); card.className = 'glass-box world-card';
-                    card.innerHTML = `
-                        <div class="world-city">${city.isTAI ? t('tai') : city.label}</div>
-                        <div id="wt-${i}" class="world-time">--:--:--</div>
-                        <div id="wd-${i}" class="world-date">----/--/--</div>
-                    `;
-                    worldContainer.appendChild(card);
-                });
+            function getMoonPos(hrs) {
+                const dt = new Date(date.getTime() + hrs*3600000), dd = (dt.getTime()-946728000000)/86400000;
+                // Corrected Lunar Theory (Major Terms)
+                const Lm = (218.316+13.176396*dd)%360, Mm = (134.963+13.064993*dd)%360, F = (93.272+13.229350*dd)%360;
+                const lonM = Lm + 6.289*Math.sin(Mm*D2R), decM = 5.128*Math.sin(F*D2R);
+                const sid = (280.460+360.985647*dd+lng)%360;
+                const raM = Math.atan2(Math.sin(lonM*D2R)*Math.cos(23.439*D2R), Math.cos(lonM*D2R))*R2D;
+                const alt = Math.asin(Math.sin(lat*D2R)*Math.sin(decM*D2R) + Math.cos(lat*D2R)*Math.cos(decM*D2R)*Math.cos((sid-raM)*D2R))*R2D;
+                return { alt, sid, raM };
             }
-            CITY_DATA.forEach((city, i) => {
-                const tzTime = new Date(now.getTime() + serverOffset + (city.isTAI ? LEAP_SECONDS*1000 : 0));
-                const formatter = new Intl.DateTimeFormat('en-US', { timeZone: city.tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                const parts = formatter.formatToParts(tzTime);
-                document.getElementById(`wt-${i}`).textContent = `${parts[0].value}:${parts[2].value}:${parts[4].value}`;
-                document.getElementById(`wd-${i}`).textContent = new Intl.DateTimeFormat(currentLang==='jp'?'ja-JP':'en-US', { timeZone: city.tz, month: 'short', day: 'numeric' }).format(tzTime);
+            let mr=null, ms=null, lastAlt=getMoonPos(-18).alt;
+            for(let i=-17.9; i<=18; i+=0.1) {
+                let curAlt = getMoonPos(i).alt;
+                if(lastAlt<=-0.5667 && curAlt>-0.5667) mr = i; else if(lastAlt>=-0.5667 && curAlt<-0.5667) ms = i;
+                lastAlt = curAlt;
+            }
+            return { sr, ss: ssUTC, sr: srUTC, age, mr, ms };
+        }
+        function createCityscape(id) {
+            const svg = document.getElementById(id); svg.innerHTML = '';
+            for(let i=0; i<15; i++) {
+                const w = 45+Math.random()*60, h = 35+Math.random()*85, x = (i/15)*1000+(Math.random()-0.5)*30;
+                const b = document.createElementNS("http://www.w3.org/2000/svg","rect");
+                b.setAttribute("x",x); b.setAttribute("y",120-h); b.setAttribute("width",w); b.setAttribute("height",h); b.setAttribute("class","building"); svg.appendChild(b);
+                for(let r=0; r<Math.floor(h/11)-1; r++) { for(let c=0; c<Math.floor(w/9)-1; c++) {
+                    if(Math.random()>0.3) {
+                        const win = document.createElementNS("http://www.w3.org/2000/svg","rect");
+                        win.setAttribute("x",x+6+c*9); win.setAttribute("y",120-h+6+r*11); win.setAttribute("width",4); win.setAttribute("height",5);
+                        win.setAttribute("class","window"+(Math.random()>0.8?" pulse":"")); win.style.setProperty("--d",(2+Math.random()*3)+"s"); svg.appendChild(win);
+                    }
+                }}
+            }
+        }
+        function cycleChimeMode() { chimeMode=(chimeMode==='off')?'hh':(chimeMode==='hh'?'mm':'off'); document.getElementById('chime-icon').textContent=(chimeMode==='off'?'🔕':'🔔'); document.getElementById('chime-text').textContent=t('ch_'+chimeMode); if(chimeMode!=='off'&&!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
+        function playB(f, d) { if(!audioCtx)return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0,audioCtx.currentTime); g.gain.linearRampToValueAtTime(0.3,audioCtx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); }
+        function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
+        function fmtAbs(baseDate, relHrs) { if(relHrs===null)return "--:--"; const d = new Date(baseDate.getTime() + relHrs*3600000); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+        function fmtUTC(h) { if(h===null)return "--:--"; return `${pad((h+48)%24)}:${pad(((h+48)%1)*60)}`; }
+        function getSkyGrad(h, sr, ss) { const rel = (h-sr+24)%24, dur = (ss-sr+24)%24; if(rel<dur){ if(rel<1) return 'linear-gradient(to bottom, #1e1b4b, #fb923c)'; if(rel>dur-1) return 'linear-gradient(to bottom, #f97316, #4c1d95)'; return 'linear-gradient(to bottom, #0ea5e9, #bae6fd)'; } return 'linear-gradient(to bottom, #020617, #0f172a)'; }
+        function update() {
+            const now=new Date(), sTime=new Date(now.getTime()+serverOffset), hUTC = sTime.getUTCHours()+sTime.getUTCMinutes()/60+sTime.getUTCSeconds()/3600;
+            document.getElementById('digital-time').textContent=sTime.toTimeString().split(' ')[0];
+            document.getElementById('digital-date').textContent=sTime.toLocaleDateString(currentLang==='jp'?'ja-JP':'en-US',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'});
+            document.getElementById('val-dev-time').textContent = now.toTimeString().split(' ')[0];
+            document.getElementById('val-sync-lag').textContent = `${t('lag')}: ${(serverOffset/1000).toFixed(3)}s`;
+            const astro=getAstro(geoLat, geoLng, sTime);
+            document.getElementById('loc-val').textContent=geoName; document.getElementById('age-val').textContent=astro.age.toFixed(1);
+            // Display solar times (sTime is JST, astro.sr is UTC hrs)
+            document.getElementById('sun-val').textContent=`${fmtUTC(astro.sr+9)} / ${fmtUTC(astro.ss+9)}`;
+            // Display lunar times (relHrs, relative to sTime)
+            document.getElementById('moon-val').textContent=`${fmtAbs(sTime, astro.mr)} / ${fmtAbs(sTime, astro.ms)}`;
+            const sunE=document.getElementById('sun-main'), moonE=document.getElementById('moon-main'), termE=document.getElementById('moon-term-main'), fixedE=document.getElementById('moon-fixed-main');
+            const isDay = ((hUTC-astro.sr+24)%24 < (astro.ss-astro.sr+24)%24); sunE.style.display=isDay?'block':'none';
+            if(isDay){ const p=(hUTC-astro.sr+24)%24/((astro.ss-astro.sr+24)%24); sunE.style.left=`${10+p*80}%`; sunE.style.bottom=`${15+Math.sin(p*Math.PI)*65}%`; }
+            moonE.style.display=isDay?'none':'block';
+            if(!isDay){ const p=(hUTC-astro.ss+24)%24/(24-((astro.ss-astro.sr+24)%24)); moonE.style.left=`${10+p*80}%`; moonE.style.bottom=`${25+Math.sin(p*Math.PI)*55}%`;
+                const mp=(astro.age/29.53)%1; fixedE.style.display='block'; if(mp<=0.5){ fixedE.style.left='50%'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.25)?'#111':'#fff'; termE.style.transform=`scaleX(${(mp<=0.25)?(1-mp*4):(mp*4-1)})`; }
+                else { fixedE.style.left='0'; fixedE.style.background='#fff'; termE.style.background=(mp<=0.75)?'#fff':'#111'; termE.style.transform=`scaleX(${(mp<=0.75)?(1-(mp-0.5)*4):((mp-0.5)*4-1)})`; }
+            }
+            document.getElementById('main-sky').style.backgroundImage = getSkyGrad(hUTC, astro.sr, astro.ss);
+            const relSS = (hUTC-astro.ss+24)%24; const winOp = (!isDay || relSS<0.3)?0.85:0;
+            document.querySelectorAll('#city-svg-main .window').forEach(w => w.style.opacity = winOp);
+            const s=sTime.getSeconds(); if(chimeMode!=='off'){ if(((chimeMode==='hh'&&sTime.getMinutes()===59)||(chimeMode==='mm'))&&(s>=57&&s<=59)){ if(s!==lastFullMinute){playB(440,0.15);lastFullMinute=s;}}
+            else if(((chimeMode==='hh'&&sTime.getMinutes()===0)||(chimeMode==='mm'&&s===0))&&s===0){ if(s!==lastFullMinute){playB(880,0.8); const r=document.createElement('div');r.className='ripple';document.getElementById('ripple-hook').appendChild(r);setTimeout(()=>r.remove(),2000);lastFullMinute=s;}}}
+            const world=document.getElementById('world-clocks'); if(world.children.length!==zones.length){ world.innerHTML=''; zones.forEach((z,i)=>{ const c=document.createElement('div'); c.className='glass-box world-card'; c.innerHTML=`<button class="delete-btn" onclick="removeZone(${i})">×</button><div class="world-city">${z.label}</div><div id="wt-${i}" class="world-time">--:--:--</div><div id="wd-${i}" class="world-date">--/--</div><div class="world-astro-row" id="wa-${i}">SR:--:-- SS:--:--</div>`; world.appendChild(c); }); }
+            zones.forEach((z,i)=>{
+                const zTime=new Date(now.getTime()+serverOffset+(z.isTAI?LEAP_SECONDS*1000:0));
+                const fmtZ=new Intl.DateTimeFormat('en-US',{timeZone:z.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+                const pts=fmtZ.formatToParts(zTime); document.getElementById(`wt-${i}`).textContent=`${pts[0].value}:${pts[2].value}:${pts[4].value}`;
+                document.getElementById(`wd-${i}`).textContent=new Intl.DateTimeFormat(currentLang==='jp'?'ja-JP':'en-US',{timeZone:z.tz,month:'short',day:'numeric'}).format(zTime);
+                const za=getAstro(z.lat, z.lng, zTime);
+                const ofsS = (new Date().toLocaleString("en-US", {timeZone: z.tz, timeZoneName: "short"}).split("GMT")[1] || "").replace(":",".").replace("+","");
+                const ofsN = ofsS ? parseFloat(ofsS) : 0;
+                document.getElementById(`wa-${i}`).textContent = `↑ ${fmtUTC(za.sr+ofsN)} ↓ ${fmtUTC(za.ss+ofsN)}`;
+                document.getElementById(`wt-${i}`).parentElement.style.backgroundImage = getSkyGrad(zTime.getUTCHours()+zTime.getUTCMinutes()/60, za.sr, za.ss);
             });
         }
-
-        async function initGeo() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    geoLat = pos.coords.latitude; geoLng = pos.coords.longitude;
-                    try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10`);
-                        const data = await res.json();
-                        if (data && data.address) {
-                            const addr = data.address; geoName = `📍 ${addr.province || addr.state || addr.city || "現在地"}`;
-                        }
-                    } catch(e) { geoName = "📍 現在地"; }
-                });
-            }
-        }
-
-        function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
-        function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-
-        window.onload = () => {
-            document.getElementById('year').textContent = new Date().getFullYear();
-            initSync(); initGeo(); updateUIStrings(); initWindows('windows-main');
-            setInterval(update, 1000); update();
-        };
+        async function initGeo() { if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(async (p)=>{ geoLat=p.coords.latitude; geoLng=p.coords.longitude; try{ const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${geoLat}&lon=${geoLng}&zoom=10&accept-language=${currentLang==='jp'?'ja':'en'}`); const d = await r.json(); if(d&&d.address){ geoName=`📍 ${d.address.province||""} ${d.address.city||d.address.town||""}`; }}catch(e){} }); } }
+        function showAddModal(){ document.getElementById('city-list').innerHTML=CITY_DATA.map(c=>`<option value="${c.label}">${c.tz}</option>`).join(''); document.getElementById('add-modal').style.display='flex'; }
+        function hideAddModal(){ document.getElementById('add-modal').style.display='none'; }
+        function onCitySelect(){ const v=document.getElementById('city-search').value, c=CITY_DATA.find(x=>x.label===v); if(c){ document.getElementById('custom-label').value=c.label; document.getElementById('selected-tz').value=c.tz; document.getElementById('selected-lat').value=c.lat; document.getElementById('selected-lng').value=c.lng; } }
+        function addZone(){ const l=document.getElementById('custom-label').value, tz=document.getElementById('selected-tz').value; if(l&&tz){ zones.push({label:l,tz,lat:parseFloat(document.getElementById('selected-lat').value),lng:parseFloat(document.getElementById('selected-lng').value)}); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); update(); hideAddModal(); } }
+        function removeZone(i){ zones.splice(i,1); localStorage.setItem('jst-zones-v26.3',JSON.stringify(zones)); update(); }
+        function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+        window.onload = () => { document.getElementById('year').textContent = new Date().getFullYear(); initSync(); initGeo(); updateUI(); createCityscape('city-svg-main'); setInterval(update, 1000); update(); };
     </script>
 </body>
 </html>
