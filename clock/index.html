@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v54.0 | Network vs Device</title>
+    <title>Celestial Clock v54.1 | True Network Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -96,7 +96,7 @@
     <main>
         <div class="dashboard-header">
             <div class="control-group">
-                <button class="btn-mini" id="lang-btn" onclick="toggleLang()">JPN</button>
+                <button class="btn-mini" id="lang-btn" onclick="toggleLang()">日本語</button>
                 <button class="btn-mini" id="fs-btn" onclick="toggleFullscreen()">全画面</button>
                 <button class="btn-mini" id="sync-now-btn" onclick="syncWithNICT()">NICT同期</button>
             </div>
@@ -121,13 +121,11 @@
             </div>
 
             <div class="world-monitor">
-                <!-- Device Local Time Card (Always Raw Device Time) -->
                 <div class="world-card" id="card-local" onclick="setBaseToLocal(this)">
-                    <span class="world-label" id="lbl-card-local">LOCAL (DEVICE)</span>
+                    <span class="world-label" id="lbl-card-local">デバイスの時計</span>
                     <div id="time-local" class="world-time">--:--:--</div>
                 </div>
-                <!-- Network Based Cities (Synced with NICT) -->
-                <div class="world-card" onclick="setBaseCity(9, 'TOKYO (JST)', this)">
+                <div class="world-card selected" onclick="setBaseCity(9, 'TOKYO (JST)', this)">
                     <span class="world-label">TOKYO (JST)</span>
                     <div id="time-tokyo" class="world-time">--:--:--</div>
                 </div>
@@ -142,7 +140,7 @@
             </div>
             
             <div class="astro-details">
-                <div class="astro-item"><span class="astro-label" id="lbl-loc">現在地</span><span id="loc-val">スキャン中...</span></div>
+                <div class="astro-item"><span class="astro-label" id="lbl-loc">現在地</span><span id="loc-val">位置情報取得中...</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-age">月齢</span><span id="age-val">--.-</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-offset">同期方式</span><span id="sync-method">Initializing...</span></div>
                 <div class="astro-item"><span class="astro-label" id="lbl-sun">日の出 / 日入り</span><span id="sun-val">--:-- / --:--</span></div>
@@ -155,27 +153,29 @@
     <script>
         const D2R = Math.PI/180, R2D = 180/Math.PI;
         
-        let baseTimeOffset = 0; // Difference between Local Device and Server (NICT)
+        let baseTimeOffset = 0; // ServerTime - LocalDeviceTime
         let lastSyncTime = 0;
         let currentLang = 'jp';
         let userLat = 35.6895, userLng = 139.6917;
         let chimeMode = 'off';
         let lastChimeTrigger = -1; 
-        let currentBaseOffset = 9; // Default to Tokyo
+        let currentBaseOffset = 9; // Default Tokyo (JST)
         let isLocalMode = false;
 
         const L10N = {
             en: { 
+                langLabel: "ENGLISH",
                 age: "MOON AGE", sun: "SUNRISE / SUNSET", 
                 status_waiting: "NICT READY", status_syncing: "SYNCING...", status_synced: "NICT SYNCED",
                 status_error: "SYNC FAILED",
                 chimePat: "CHIME:", offset: "SYNC SOURCE",
                 chimeOff: "OFF", chimeH: "1H", chimeM: "1M", fs: "FULL", sync: "NICT SYNC", loc: "LOCATION",
-                localLabel: "LOCAL (DEVICE)",
+                localLabel: "DEVICE LOCAL",
                 days: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
                 months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             },
             jp: { 
+                langLabel: "日本語",
                 age: "月齢", sun: "日の出 / 日入り", 
                 status_waiting: "NICT待機中", status_syncing: "同期中...", status_synced: "NICT同期完了",
                 status_error: "同期失敗",
@@ -201,6 +201,7 @@
             dot.className = 'dot syncing';
             label.textContent = L10N[currentLang].status_syncing;
             
+            // NICT JSON API
             const nictUrl = "https://ntp-a1.nict.go.jp/cgi-bin/json";
             
             for (let i = 0; i < retries; i++) {
@@ -213,9 +214,11 @@
                     const endFetch = performance.now();
                     
                     const rtt = (endFetch - startFetch) / 1000;
+                    // serverTime (at completion) = st + (rtt / 2)
                     const serverTimeMs = (data.st + rtt / 2) * 1000;
                     const localNow = Date.now();
-                    baseTimeOffset = serverTimeMs - localNow; // Offset to get real time from local
+                    
+                    baseTimeOffset = serverTimeMs - localNow;
                     
                     dot.className = 'dot synced';
                     label.textContent = L10N[currentLang].status_synced;
@@ -231,6 +234,23 @@
                         await new Promise(res => setTimeout(res, 1000));
                     }
                 }
+            }
+        }
+
+        async function getReverseGeocode(lat, lng) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`, {
+                    headers: { 'Accept-Language': 'ja' }
+                });
+                const data = await res.json();
+                if (data.address) {
+                    const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.province || "不明な場所";
+                    const state = data.address.state || "";
+                    return `📍 ${state}${city}`;
+                }
+                return `📍 ${lat.toFixed(2)}, ${lng.toFixed(2)}`;
+            } catch (err) {
+                return `📍 ${lat.toFixed(2)}, ${lng.toFixed(2)}`;
             }
         }
 
@@ -286,59 +306,69 @@
             if (el) el.classList.add('selected');
         }
 
-        function getFmtTime(date) {
-            return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}:${String(date.getUTCSeconds()).padStart(2, '0')}`;
-        }
-
-        function getFmtTimeLocal(date) {
-            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        function getFmtTime(date, useUTC = true) {
+            const h = useUTC ? date.getUTCHours() : date.getHours();
+            const m = useUTC ? date.getUTCMinutes() : date.getMinutes();
+            const s = useUTC ? date.getUTCSeconds() : date.getSeconds();
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
         function update() {
             const localNow = Date.now();
-            const currentTrueUTC = localNow + baseTimeOffset; // Sync with Server
-            const deviceDate = new Date(); // Local Device Raw Time
+            const currentTrueUTC = localNow + baseTimeOffset; // Actual Network-Synced UTC Time
             
-            // Determine what time to show on the Main Clock
-            const baseDate = isLocalMode ? new Date() : new Date(currentTrueUTC + (currentBaseOffset * 3600000));
+            // Raw Device Time (for comparison)
+            const deviceDate = new Date(); 
             
-            // Main Digital Clock
-            document.getElementById('digital-time').textContent = isLocalMode ? getFmtTimeLocal(baseDate) : getFmtTime(baseDate);
+            // Main Clock Logic
+            let displayDate;
+            if (isLocalMode) {
+                // Show raw device time
+                displayDate = new Date();
+            } else {
+                // Show server-synced time with selected offset
+                displayDate = new Date(currentTrueUTC + (currentBaseOffset * 3600000));
+            }
             
-            const dayIdx = isLocalMode ? baseDate.getDay() : baseDate.getUTCDay();
+            // Update Digital Display (Always treat synced dates as UTC for calculation)
+            document.getElementById('digital-time').textContent = getFmtTime(displayDate, !isLocalMode);
+            
+            const dayIdx = !isLocalMode ? displayDate.getUTCDay() : displayDate.getDay();
+            const year = !isLocalMode ? displayDate.getUTCFullYear() : displayDate.getFullYear();
+            const monthIdx = !isLocalMode ? displayDate.getUTCMonth() : displayDate.getMonth();
+            const dateVal = !isLocalMode ? displayDate.getUTCDate() : displayDate.getDate();
+            
             const dayStr = L10N[currentLang].days[dayIdx];
-            const year = isLocalMode ? baseDate.getFullYear() : baseDate.getUTCFullYear();
-            const monthIdx = isLocalMode ? baseDate.getMonth() : baseDate.getUTCMonth();
-            const date = isLocalMode ? baseDate.getDate() : baseDate.getUTCDate();
-            
             let dateString = (currentLang === 'jp') 
-                ? `${year}/${String(monthIdx + 1).padStart(2, '0')}/${String(date).padStart(2, '0')}`
-                : `${L10N.en.months[monthIdx]} ${date}, ${year}`;
+                ? `${year}/${String(monthIdx + 1).padStart(2, '0')}/${String(dateVal).padStart(2, '0')}`
+                : `${L10N.en.months[monthIdx]} ${dateVal}, ${year}`;
             
             document.getElementById('digital-date').innerHTML = `${dateString} <span class="day-badge">${dayStr}</span>`;
 
-            // World Cards Update
-            document.getElementById('time-local').textContent = getFmtTimeLocal(deviceDate);
-            document.getElementById('time-tokyo').textContent = getFmtTime(new Date(currentTrueUTC + 32400000));
-            document.getElementById('time-london').textContent = getFmtTime(new Date(currentTrueUTC));
-            document.getElementById('time-ny').textContent = getFmtTime(new Date(currentTrueUTC - 18000000));
+            // World Monitor Cards (Always synced except 'Local')
+            document.getElementById('time-local').textContent = getFmtTime(deviceDate, false);
+            document.getElementById('time-tokyo').textContent = getFmtTime(new Date(currentTrueUTC + 32400000), true);
+            document.getElementById('time-london').textContent = getFmtTime(new Date(currentTrueUTC), true);
+            document.getElementById('time-ny').textContent = getFmtTime(new Date(currentTrueUTC - 18000000), true);
 
-            // Chime Timing
-            const currentTS = Math.floor(currentTrueUTC / 1000);
-            if (lastChimeTrigger !== currentTS) {
-                const curM = isLocalMode ? baseDate.getMinutes() : baseDate.getUTCMinutes();
-                const curS = isLocalMode ? baseDate.getSeconds() : baseDate.getUTCSeconds();
+            // Chime Logic (Base on synced time unless in local mode)
+            const chimeDate = isLocalMode ? deviceDate : new Date(currentTrueUTC + (currentBaseOffset * 3600000));
+            const curTS = Math.floor(chimeDate.getTime() / 1000);
+            
+            if (lastChimeTrigger !== curTS) {
+                const curM = !isLocalMode ? chimeDate.getUTCMinutes() : chimeDate.getMinutes();
+                const curS = !isLocalMode ? chimeDate.getUTCSeconds() : chimeDate.getSeconds();
                 if ((chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 59)) && curS >= 57 && curS <= 59) playChime('countdown');
                 if (curS === 0 && (chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 0))) playChime('announcement');
-                lastChimeTrigger = currentTS;
+                lastChimeTrigger = curTS;
             }
 
-            // Astronomy Background & Data
+            // Astronomy Background
             const moon = getMoonData(currentTrueUTC);
             document.getElementById('age-val').textContent = moon.age.toFixed(1);
             
-            const hNum = isLocalMode ? (baseDate.getHours() + baseDate.getMinutes()/60) : (baseDate.getUTCHours() + baseDate.getUTCMinutes()/60);
-            const activeOffset = isLocalMode ? -(baseDate.getTimezoneOffset() / 60) : currentBaseOffset;
+            const hNum = !isLocalMode ? (chimeDate.getUTCHours() + chimeDate.getUTCMinutes()/60) : (chimeDate.getHours() + chimeDate.getMinutes()/60);
+            const activeOffset = isLocalMode ? -(deviceDate.getTimezoneOffset() / 60) : currentBaseOffset;
             const localAstro = getSunTimesPrecise(userLat, userLng, currentTrueUTC, activeOffset);
             
             const fmtSun = (val) => val === null ? "--:--" : `${String(Math.floor(val)).padStart(2,'0')}:${String(Math.floor((val%1)*60)).padStart(2,'0')}`;
@@ -384,8 +414,8 @@
 
         function toggleLang() { 
             currentLang = currentLang === 'jp' ? 'en' : 'jp'; 
-            document.getElementById('lang-btn').textContent = currentLang === 'jp' ? 'JPN' : 'ENG'; 
             const d = L10N[currentLang];
+            document.getElementById('lang-btn').textContent = d.langLabel; 
             document.getElementById('lbl-age').textContent = d.age; document.getElementById('lbl-sun').textContent = d.sun; 
             document.getElementById('lbl-offset').textContent = d.offset; document.getElementById('sync-now-btn').textContent = d.sync;
             document.getElementById('lbl-chime-pat').textContent = d.chimePat; document.getElementById('chime-off').textContent = d.chimeOff;
@@ -411,10 +441,11 @@
             syncWithNICT();
             update();
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(p => {
+                navigator.geolocation.getCurrentPosition(async p => {
                     userLat = p.coords.latitude; userLng = p.coords.longitude;
-                    document.getElementById('loc-val').textContent = `📍 ${userLat.toFixed(2)}, ${userLng.toFixed(2)}`;
-                }, () => { document.getElementById('loc-val').textContent = "📍 Tokyo (Def)"; });
+                    const locationName = await getReverseGeocode(userLat, userLng);
+                    document.getElementById('loc-val').textContent = locationName;
+                }, () => { document.getElementById('loc-val').textContent = "📍 東京都新宿区 (既定)"; });
             }
         };
     </script>
