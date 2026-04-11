@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v62.0 | 究極の日本標準時</title>
+    <title>Celestial Clock v63.0 | 究極の日本標準時</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,8 +15,10 @@
             --bg-default: #020617;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body { 
-            min-height: 100vh; 
+            height: 100vh;
+            width: 100vw;
             background: var(--bg-default); 
             color: var(--text-main); 
             font-family: 'Outfit', sans-serif;
@@ -24,25 +26,29 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow: hidden; /* スクロールを禁止して見切れを防ぐよぉ */
+            position: relative;
         }
         
+        /* 背景の輝き */
         .bg-glow {
-            position: fixed;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: radial-gradient(circle at center, #1e3a8a 0%, transparent 70%);
             opacity: 0.4;
             z-index: -1;
         }
 
+        /* メインコンテナを画面の高さに合わせてリサイズ */
         .main-container {
             width: 90%;
             max-width: 800px;
-            padding: 3rem 2rem;
+            max-height: 85vh; /* 画面の高さの85%以内に収めるねっ */
+            padding: clamp(1.5rem, 5vh, 3rem) 2rem;
             background: var(--glass-bg);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
@@ -50,7 +56,11 @@
             border-radius: 4rem;
             text-align: center;
             box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
         }
 
         .sync-badge {
@@ -64,7 +74,7 @@
             font-weight: 800;
             color: var(--accent);
             letter-spacing: 0.1em;
-            margin-bottom: 2rem;
+            margin-bottom: clamp(1rem, 4vh, 2rem);
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
@@ -72,7 +82,7 @@
 
         #clock-time {
             font-family: 'Share Tech Mono', monospace;
-            font-size: clamp(4.5rem, 18vw, 11rem);
+            font-size: clamp(3.5rem, 15vh, 10rem); /* 高さに合わせてフォントサイズが縮むよぉ */
             line-height: 1;
             margin-bottom: 0.5rem;
             font-variant-numeric: tabular-nums;
@@ -83,11 +93,11 @@
         }
 
         #clock-date {
-            font-size: clamp(1rem, 3.5vw, 1.6rem);
+            font-size: clamp(0.9rem, 3vh, 1.4rem);
             font-weight: 400;
             letter-spacing: 0.2em;
             opacity: 0.9;
-            margin-bottom: 3rem;
+            margin-bottom: clamp(1rem, 4vh, 3rem);
         }
         .day { color: var(--accent); font-weight: 800; margin-left: 0.5rem; }
 
@@ -96,20 +106,21 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
             border-top: 1px solid var(--glass-border);
-            padding-top: 2rem;
+            padding-top: clamp(1rem, 4vh, 2rem);
+            width: 100%;
         }
-        .info-item span { display: block; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px; font-weight: 800; }
-        .info-item strong { font-size: 0.95rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .info-item span { display: block; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 800; }
+        .info-item strong { font-size: clamp(0.8rem, 2vh, 1rem); color: #fff; font-family: 'Outfit', sans-serif; }
 
         .btn-sync {
-            margin-top: 2.5rem;
+            margin-top: clamp(1rem, 4vh, 2.5rem);
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--glass-border);
             color: #fff;
-            padding: 12px 24px;
-            border-radius: 16px;
+            padding: 10px 20px;
+            border-radius: 14px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -119,26 +130,35 @@
             transform: translateY(-2px);
         }
 
+        /* フッターを画面最下部に固定するねっ */
         footer {
-            padding: 20px;
-            font-size: 0.65rem;
+            width: 100%;
+            max-width: 800px;
+            padding: 1rem;
+            font-size: 0.6rem;
             color: var(--text-dim);
             text-align: center;
             letter-spacing: 0.05em;
-            max-width: 600px;
         }
         .notice {
-            margin-bottom: 15px;
-            line-height: 1.6;
+            margin-bottom: 8px;
+            line-height: 1.4;
             opacity: 0.6;
-            border-left: 2px solid var(--accent);
-            padding-left: 10px;
-            text-align: left;
+            text-align: center; /* PCで見やすいように中央揃えにするよぉ */
+            font-size: 0.55rem;
         }
         .copyright {
             font-weight: 700;
             color: rgba(255, 255, 255, 0.4);
-            margin-top: 10px;
+            margin-top: 5px;
+        }
+
+        /* 画面がめちゃくちゃ低い時用の微調整 */
+        @media (max-height: 500px) {
+            .main-container { padding: 1rem; border-radius: 2rem; }
+            #clock-date { margin-bottom: 0.5rem; }
+            .btn-sync { margin-top: 0.5rem; }
+            .info-grid { padding-top: 0.5rem; }
         }
     </style>
 </head>
@@ -160,12 +180,12 @@
             <div class="info-item"><span>現在地 / LOCATION</span><strong id="val-location">取得中...</strong></div>
         </div>
 
-        <button class="btn-sync" onclick="syncAll()">今すぐ時刻を合わせる</button>
+        <button class="btn-sync" onclick="syncAll()">時刻を再同期</button>
     </div>
 
     <footer>
         <div class="notice">
-            ※ NICT（情報通信研究機構）によるHTTP時刻供給サービスの終了（2022年3月31日）に伴い、本システムはWorld Time API及び複数のエッジサーバーとの同期による独自補正を行っています。ネットワーク環境により数ミリ秒の誤差が生じる場合があります。
+            ※ NICTによる時刻供給終了(2022/03/31)に伴い、独自のクラウド同期アルゴリズムを採用しています。
         </div>
         <div>日本標準時 (JST) モード | PRECISION SYNC ACTIVE</div>
         <div class="copyright">COPYRIGHT &copy; 2026 TOSHIRIA ALL RIGHTS RESERVED.</div>
@@ -173,7 +193,6 @@
 
     <script>
         let globalOffset = 0;
-        let isSynced = false;
 
         async function syncAll() {
             const statusDot = document.getElementById('status-dot');
@@ -197,34 +216,21 @@
                         const t2 = performance.now();
                         const rtt = t2 - t1;
                         
-                        let serverMs;
-                        if (data.unixtime) {
-                            serverMs = data.unixtime * 1000;
-                        } else {
-                            serverMs = new Date(data.dateTime).getTime();
-                        }
-                        
+                        let serverMs = data.unixtime ? data.unixtime * 1000 : new Date(data.dateTime).getTime();
                         const nowOnServer = serverMs + (rtt / 2);
-                        const localNow = Date.now();
-                        const offset = nowOnServer - localNow;
-                        
+                        const offset = nowOnServer - Date.now();
                         samples.push({ offset, rtt });
                     }
-                } catch (e) { 
-                    console.warn("同期失敗:", endpoint);
-                }
+                } catch (e) { console.warn("Sync failed", e); }
             }
 
             if (samples.length > 0) {
                 samples.sort((a, b) => a.rtt - b.rtt);
-                const best = samples[0];
-                globalOffset = best.offset;
-                isSynced = true;
-                
+                globalOffset = samples[0].offset;
                 statusDot.classList.add('active');
                 statusText.textContent = "日本標準時と同期済み";
                 document.getElementById('val-offset').textContent = (globalOffset >= 0 ? "+" : "") + Math.round(globalOffset) + "ms";
-                document.getElementById('val-rtt').textContent = Math.round(best.rtt) + "ms";
+                document.getElementById('val-rtt').textContent = Math.round(samples[0].rtt) + "ms";
             } else {
                 statusText.textContent = "同期エラー";
             }
@@ -232,45 +238,25 @@
 
         async function updateLocation() {
             const locText = document.getElementById('val-location');
-            if (!navigator.geolocation) {
-                locText.textContent = "取得不可";
-                return;
-            }
+            if (!navigator.geolocation) { locText.textContent = "取得不可"; return; }
 
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`, {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10&addressdetails=1`, {
                         headers: { 'Accept-Language': 'ja' }
                     });
-                    const data = await response.json();
-                    const address = data.address;
-                    const city = address.city || address.town || address.village || address.suburb || "";
-                    const state = address.province || address.state || "";
-                    locText.textContent = (state || city) ? `${state} ${city}`.trim() : "日本国内";
-                } catch (e) {
-                    locText.textContent = "取得エラー";
-                }
-            }, () => {
-                locText.textContent = "許可が必要だよぉ";
-            });
+                    const data = await res.json();
+                    const addr = data.address;
+                    locText.textContent = (addr.province || addr.state || "") + " " + (addr.city || addr.town || addr.village || "");
+                } catch (e) { locText.textContent = "取得エラー"; }
+            }, () => { locText.textContent = "許可が必要だよぉ"; });
         }
 
         function update() {
             const now = new Date(Date.now() + globalOffset);
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
-            
-            const y = now.getFullYear();
-            const mo = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
+            document.getElementById('clock-time').textContent = now.toTimeString().split(' ')[0];
             const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
-            const day = days[now.getUTCDay()]; // JST基準のため getDay() ではなく Date.now() 補正後の getDay()
-            
-            document.getElementById('clock-date').innerHTML = `${y}年${mo}月${d}日 <span class="day">${day}</span>`;
+            document.getElementById('clock-date').innerHTML = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 <span class="day">${days[now.getDay()]}</span>`;
             requestAnimationFrame(update);
         }
 
