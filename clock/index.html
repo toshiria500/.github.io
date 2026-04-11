@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v49.0 | NICT Precision Sync</title>
+    <title>Celestial Clock v54.0 | Network vs Device</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -52,7 +52,8 @@
 
         .label-main { font-size: 0.7rem; font-weight: 800; opacity: 0.6; letter-spacing: 0.2em; margin-bottom: 0.5rem; color: var(--accent); }
         #digital-time { font-size: clamp(3.5rem, 15vw, 9rem); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.05em; }
-        #digital-date { font-size: clamp(0.8rem, 2vw, 1.1rem); font-weight: 300; letter-spacing: 0.3em; margin-top: 1rem; opacity: 0.8; }
+        #digital-date { font-size: clamp(0.8rem, 2vw, 1.1rem); font-weight: 300; letter-spacing: 0.1em; margin-top: 1rem; opacity: 0.8; }
+        .day-badge { color: var(--accent); font-weight: 800; margin-left: 0.5rem; }
 
         .world-monitor {
             margin-top: 2rem;
@@ -80,6 +81,7 @@
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #64748b; transition: background 0.3s; }
         .dot.synced { background: #10b981; box-shadow: 0 0 10px #10b981; }
         .dot.syncing { background: #fbbf24; animation: pulse-blink 1s infinite; }
+        .dot.error { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
         
         @keyframes pulse-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
@@ -115,11 +117,17 @@
             <div class="clock-container" id="clock-core">
                 <div class="label-main" id="lbl-title">TOKYO (JST)</div>
                 <div id="digital-time">--:--:--</div>
-                <div id="digital-date">----/--/--</div>
+                <div id="digital-date">----/--/-- <span class="day-badge">---</span></div>
             </div>
 
             <div class="world-monitor">
-                <div class="world-card selected" onclick="setBaseCity(9, 'TOKYO (JST)', this)">
+                <!-- Device Local Time Card (Always Raw Device Time) -->
+                <div class="world-card" id="card-local" onclick="setBaseToLocal(this)">
+                    <span class="world-label" id="lbl-card-local">LOCAL (DEVICE)</span>
+                    <div id="time-local" class="world-time">--:--:--</div>
+                </div>
+                <!-- Network Based Cities (Synced with NICT) -->
+                <div class="world-card" onclick="setBaseCity(9, 'TOKYO (JST)', this)">
                     <span class="world-label">TOKYO (JST)</span>
                     <div id="time-tokyo" class="world-time">--:--:--</div>
                 </div>
@@ -130,10 +138,6 @@
                 <div class="world-card" onclick="setBaseCity(-5, 'NEW YORK (EST)', this)">
                     <span class="world-label">NEW YORK (EST)</span>
                     <div id="time-ny" class="world-time">--:--:--</div>
-                </div>
-                <div class="world-card" onclick="setBaseCity(0, 'UTC (UNIVERSAL)', this)">
-                    <span class="world-label">UTC (世界標準時)</span>
-                    <div id="time-tai" class="world-time">--:--:--</div>
                 </div>
             </div>
             
@@ -151,29 +155,35 @@
     <script>
         const D2R = Math.PI/180, R2D = 180/Math.PI;
         
-        // --- Accurate Time State ---
-        // baseOffset: (サーバー時刻 - ローカル時刻) を保持して誤差を補正する
-        let baseTimeOffset = 0; 
+        let baseTimeOffset = 0; // Difference between Local Device and Server (NICT)
         let lastSyncTime = 0;
-        
         let currentLang = 'jp';
         let userLat = 35.6895, userLng = 139.6917;
         let chimeMode = 'off';
         let lastChimeTrigger = -1; 
-        let currentBaseOffset = 9; 
+        let currentBaseOffset = 9; // Default to Tokyo
+        let isLocalMode = false;
 
         const L10N = {
             en: { 
                 age: "MOON AGE", sun: "SUNRISE / SUNSET", 
                 status_waiting: "NICT READY", status_syncing: "SYNCING...", status_synced: "NICT SYNCED",
+                status_error: "SYNC FAILED",
                 chimePat: "CHIME:", offset: "SYNC SOURCE",
-                chimeOff: "OFF", chimeH: "1H", chimeM: "1M", fs: "FULL", sync: "NICT SYNC", loc: "LOCATION"
+                chimeOff: "OFF", chimeH: "1H", chimeM: "1M", fs: "FULL", sync: "NICT SYNC", loc: "LOCATION",
+                localLabel: "LOCAL (DEVICE)",
+                days: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+                months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             },
             jp: { 
                 age: "月齢", sun: "日の出 / 日入り", 
                 status_waiting: "NICT待機中", status_syncing: "同期中...", status_synced: "NICT同期完了",
+                status_error: "同期失敗",
                 chimePat: "時報設定:", offset: "同期元",
-                chimeOff: "オフ", chimeH: "毎時", chimeM: "毎分", fs: "全画面", sync: "NICT同期", loc: "現在地"
+                chimeOff: "オフ", chimeH: "毎時", chimeM: "毎分", fs: "全画面", sync: "NICT同期", loc: "現在地",
+                localLabel: "デバイスの時計",
+                days: ["日", "月", "火", "水", "木", "金", "土"],
+                months: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
             }
         };
 
@@ -184,48 +194,43 @@
         window.addEventListener('mousedown', initAudio, { once: true });
         window.addEventListener('touchstart', initAudio, { once: true });
 
-        /**
-         * NICTのHTTP時刻供給サービスを使用して時刻同期を行う
-         * https://jjy.nict.go.jp/tsp/PubNtp/index.html
-         */
-        async function syncWithNICT() {
+        async function syncWithNICT(retries = 3) {
             const dot = document.getElementById('sync-dot');
             const label = document.getElementById('sync-label');
             const method = document.getElementById('sync-method');
-            
             dot.className = 'dot syncing';
             label.textContent = L10N[currentLang].status_syncing;
             
             const nictUrl = "https://ntp-a1.nict.go.jp/cgi-bin/json";
-            const startFetch = performance.now();
             
-            try {
-                // NICT JSON API Fetch
-                const response = await fetch(nictUrl);
-                if (!response.ok) throw new Error('Network Error');
-                
-                const data = await response.json();
-                const endFetch = performance.now();
-                
-                // 通信遅延（往復時間 / 2）を計算して補正
-                const rtt = (endFetch - startFetch) / 1000;
-                const serverTimeSec = data.st; // NICTから返る秒単位の時刻
-                const serverTimeMs = (serverTimeSec + rtt) * 1000;
-                
-                const localNow = Date.now();
-                baseTimeOffset = serverTimeMs - localNow;
-                
-                dot.className = 'dot synced';
-                label.textContent = L10N[currentLang].status_synced;
-                method.textContent = "NICT (Japan Standard Time)";
-                lastSyncTime = localNow;
-                
-                console.log(`NICT Sync Success. Offset: ${baseTimeOffset.toFixed(2)}ms, RTT: ${(rtt*1000).toFixed(2)}ms`);
-            } catch (err) {
-                console.warn("NICT Sync Failed, falling back to Local Clock:", err);
-                dot.className = 'dot';
-                label.textContent = "Sync Failed";
-                method.textContent = "Local Clock (Precision Mode)";
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const startFetch = performance.now();
+                    const response = await fetch(nictUrl, { cache: "no-store" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    const endFetch = performance.now();
+                    
+                    const rtt = (endFetch - startFetch) / 1000;
+                    const serverTimeMs = (data.st + rtt / 2) * 1000;
+                    const localNow = Date.now();
+                    baseTimeOffset = serverTimeMs - localNow; // Offset to get real time from local
+                    
+                    dot.className = 'dot synced';
+                    label.textContent = L10N[currentLang].status_synced;
+                    method.textContent = "NICT Server (Synced)";
+                    lastSyncTime = localNow;
+                    return;
+                } catch (err) {
+                    if (i === retries - 1) {
+                        dot.className = 'dot error';
+                        label.textContent = L10N[currentLang].status_error;
+                        method.textContent = "Local Clock (Raw)";
+                    } else {
+                        await new Promise(res => setTimeout(res, 1000));
+                    }
+                }
             }
         }
 
@@ -267,57 +272,81 @@
         }
 
         function setBaseCity(offset, label, el) {
+            isLocalMode = false;
             currentBaseOffset = offset;
             document.getElementById('lbl-title').textContent = label;
             document.querySelectorAll('.world-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
+            if (el) el.classList.add('selected');
+        }
+
+        function setBaseToLocal(el) {
+            isLocalMode = true;
+            document.getElementById('lbl-title').textContent = L10N[currentLang].localLabel;
+            document.querySelectorAll('.world-card').forEach(c => c.classList.remove('selected'));
+            if (el) el.classList.add('selected');
         }
 
         function getFmtTime(date) {
             return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}:${String(date.getUTCSeconds()).padStart(2, '0')}`;
         }
 
-        function update() {
-            // NICTのオフセットを加味した「本当の」現在時刻(UTC)
-            const currentTrueUTC = Date.now() + baseTimeOffset;
-            
-            // タイムゾーン調整
-            const baseDate = new Date(currentTrueUTC + (currentBaseOffset * 3600000));
-            
-            // メイン表示
-            document.getElementById('digital-time').textContent = getFmtTime(baseDate);
-            document.getElementById('digital-date').textContent = `${baseDate.getUTCFullYear()}/${String(baseDate.getUTCMonth() + 1).padStart(2, '0')}/${String(baseDate.getUTCDate()).padStart(2, '0')}`;
+        function getFmtTimeLocal(date) {
+            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        }
 
-            // 世界時計 (すべてオフセットを適用)
+        function update() {
+            const localNow = Date.now();
+            const currentTrueUTC = localNow + baseTimeOffset; // Sync with Server
+            const deviceDate = new Date(); // Local Device Raw Time
+            
+            // Determine what time to show on the Main Clock
+            const baseDate = isLocalMode ? new Date() : new Date(currentTrueUTC + (currentBaseOffset * 3600000));
+            
+            // Main Digital Clock
+            document.getElementById('digital-time').textContent = isLocalMode ? getFmtTimeLocal(baseDate) : getFmtTime(baseDate);
+            
+            const dayIdx = isLocalMode ? baseDate.getDay() : baseDate.getUTCDay();
+            const dayStr = L10N[currentLang].days[dayIdx];
+            const year = isLocalMode ? baseDate.getFullYear() : baseDate.getUTCFullYear();
+            const monthIdx = isLocalMode ? baseDate.getMonth() : baseDate.getUTCMonth();
+            const date = isLocalMode ? baseDate.getDate() : baseDate.getUTCDate();
+            
+            let dateString = (currentLang === 'jp') 
+                ? `${year}/${String(monthIdx + 1).padStart(2, '0')}/${String(date).padStart(2, '0')}`
+                : `${L10N.en.months[monthIdx]} ${date}, ${year}`;
+            
+            document.getElementById('digital-date').innerHTML = `${dateString} <span class="day-badge">${dayStr}</span>`;
+
+            // World Cards Update
+            document.getElementById('time-local').textContent = getFmtTimeLocal(deviceDate);
             document.getElementById('time-tokyo').textContent = getFmtTime(new Date(currentTrueUTC + 32400000));
             document.getElementById('time-london').textContent = getFmtTime(new Date(currentTrueUTC));
             document.getElementById('time-ny').textContent = getFmtTime(new Date(currentTrueUTC - 18000000));
-            document.getElementById('time-tai').textContent = getFmtTime(new Date(currentTrueUTC));
 
-            // 時報ロジック
+            // Chime Timing
             const currentTS = Math.floor(currentTrueUTC / 1000);
             if (lastChimeTrigger !== currentTS) {
-                const curM = baseDate.getUTCMinutes();
-                const curS = baseDate.getUTCSeconds();
+                const curM = isLocalMode ? baseDate.getMinutes() : baseDate.getUTCMinutes();
+                const curS = isLocalMode ? baseDate.getSeconds() : baseDate.getUTCSeconds();
                 if ((chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 59)) && curS >= 57 && curS <= 59) playChime('countdown');
                 if (curS === 0 && (chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 0))) playChime('announcement');
                 lastChimeTrigger = currentTS;
             }
 
-            // 天文・背景
+            // Astronomy Background & Data
             const moon = getMoonData(currentTrueUTC);
             document.getElementById('age-val').textContent = moon.age.toFixed(1);
-            const hNum = baseDate.getUTCHours() + baseDate.getUTCMinutes()/60 + baseDate.getUTCSeconds()/3600;
-            const localAstro = getSunTimesPrecise(userLat, userLng, currentTrueUTC, currentBaseOffset);
+            
+            const hNum = isLocalMode ? (baseDate.getHours() + baseDate.getMinutes()/60) : (baseDate.getUTCHours() + baseDate.getUTCMinutes()/60);
+            const activeOffset = isLocalMode ? -(baseDate.getTimezoneOffset() / 60) : currentBaseOffset;
+            const localAstro = getSunTimesPrecise(userLat, userLng, currentTrueUTC, activeOffset);
+            
             const fmtSun = (val) => val === null ? "--:--" : `${String(Math.floor(val)).padStart(2,'0')}:${String(Math.floor((val%1)*60)).padStart(2,'0')}`;
             document.getElementById('sun-val').textContent = `${fmtSun(localAstro.sr)} / ${fmtSun(localAstro.ss)}`;
             document.getElementById('main-sky').style.backgroundImage = getSkyColor(hNum, localAstro.sr, localAstro.ss);
 
-            // 10分おきに自動再同期（バックグラウンド）
-            if (Date.now() - lastSyncTime > 600000) {
-                syncWithNICT();
-            }
-
+            // Re-sync with NICT every 10 minutes
+            if (localNow - lastSyncTime > 600000) syncWithNICT();
             requestAnimationFrame(update);
         }
 
@@ -362,12 +391,19 @@
             document.getElementById('lbl-chime-pat').textContent = d.chimePat; document.getElementById('chime-off').textContent = d.chimeOff;
             document.getElementById('chime-hourly').textContent = d.chimeH; document.getElementById('chime-minutely').textContent = d.chimeM;
             document.getElementById('fs-btn').textContent = d.fs; document.getElementById('lbl-loc').textContent = d.loc;
-            document.getElementById('sync-label').textContent = d.status_waiting;
+            document.getElementById('lbl-card-local').textContent = d.localLabel;
+            
+            if (isLocalMode) document.getElementById('lbl-title').textContent = d.localLabel;
+            
+            const dot = document.getElementById('sync-dot');
+            if (dot.classList.contains('synced')) document.getElementById('sync-label').textContent = d.status_synced;
+            else if (dot.classList.contains('error')) document.getElementById('sync-label').textContent = d.status_error;
+            else document.getElementById('sync-label').textContent = d.status_waiting;
         }
 
         function toggleFullscreen() { 
-            if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
+            if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+            else document.exitFullscreen().catch(() => {});
         }
 
         window.onload = () => {
