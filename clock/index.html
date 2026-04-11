@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v66.0 | 秒単位判定＆自動年更新</title>
+    <title>Celestial Clock v67.0 | 即時同期＆署名更新</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -158,7 +158,7 @@
     <div class="main-container">
         <div class="sync-badge">
             <div id="status-dot" class="dot"></div>
-            <span id="status-text">SYNCING...</span>
+            <span id="status-text">INITIALIZING...</span>
         </div>
 
         <!-- 日本標準時（メイン） -->
@@ -211,13 +211,14 @@
         <div class="notice">
             ※NICTのHTTP供給終了に伴い、独自多点同期を採用。正確範囲: ±0.050秒以内。TAIは現在の閏秒(37秒)加算値。
         </div>
-        <div id="copyright-text" class="copyright">COPYRIGHT &copy; 2025 - 2026 TOSHIRIA ALL RIGHTS RESERVED.</div>
+        <div id="copyright-text" class="copyright">COPYRIGHT &copy; TOSHIRIA 2025 - 2026 ALL RIGHTS RESERVED.</div>
     </footer>
 
     <script>
         let globalOffset = 0; 
         const LEAP_SECONDS = 37; 
 
+        // 即時実行される同期関数だよっ！
         async function syncAll() {
             const statusDot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
@@ -230,6 +231,7 @@
                 "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Tokyo"
             ];
 
+            // ページを開いた瞬間に全てのサーバーにアクセスするねっ
             for (let endpoint of syncEndpoints) {
                 try {
                     const t1 = performance.now();
@@ -251,7 +253,6 @@
                 statusDot.classList.add('active');
                 statusText.textContent = "原子時計同期完了";
                 
-                // オフセットも秒単位で表示するねっ
                 const offsetSec = (globalOffset / 1000).toFixed(3);
                 document.getElementById('val-offset').textContent = (offsetSec >= 0 ? "+" : "") + offsetSec + "s";
             }
@@ -285,54 +286,48 @@
             const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
             document.getElementById('clock-date').innerHTML = `${syncedDate.getFullYear()}年${syncedDate.getMonth()+1}月${syncedDate.getDate()}日 <span class="day">${days[syncedDate.getDay()]}</span>`;
 
-            // デバイス比較判定ロジック
+            // デバイス比較判定
             document.getElementById('device-time').textContent = formatTime(deviceDate);
             
             const diffMs = globalOffset;
             const diffSec = (Math.abs(diffMs) / 1000).toFixed(3);
             const statusEl = document.getElementById('device-diff-status');
             
-            // 判定基準: ±0.050秒
             if (Math.abs(diffMs) <= 50) {
                 statusEl.textContent = `正確範囲 (±0.050s)`;
                 statusEl.className = "status-exact";
             } else if (diffMs > 50) {
-                // サーバーの方が進んでいる = デバイスが遅れている
                 statusEl.textContent = `${diffSec}秒 遅れてる`;
                 statusEl.className = "status-slow";
             } else {
-                // サーバーの方が遅れている = デバイスが進んでいる
                 statusEl.textContent = `${diffSec}秒 進んでる`;
                 statusEl.className = "status-fast";
             }
 
             // 世界時計
             const utc = new Date(syncedDate.getTime() + (syncedDate.getTimezoneOffset() * 60000));
-            
             const honolulu = new Date(utc.getTime() - (10 * 3600000));
             document.getElementById('world-honolulu').textContent = formatTime(honolulu, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
             const dc = new Date(utc.getTime() - (4 * 3600000)); 
             document.getElementById('world-washington').textContent = formatTime(dc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
             document.getElementById('world-utc').textContent = formatTime(utc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
             const tai = new Date(utc.getTime() + (LEAP_SECONDS * 1000));
             document.getElementById('world-tai').textContent = formatTime(tai, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             requestAnimationFrame(update);
         }
 
-        window.onload = () => {
-            syncAll();
-            updateLocation();
-            update();
-            setInterval(syncAll, 600000);
+        // ページが読み込まれた瞬間に実行！
+        syncAll();
+        updateLocation();
+        update();
+        
+        // あとは定期的に（10分おき）同期するね
+        setInterval(syncAll, 600000);
 
-            // コピーライトの年を自動更新するねっ
-            const currentYear = new Date().getFullYear();
-            document.getElementById('copyright-text').innerHTML = `COPYRIGHT &copy; 2025 - ${currentYear} TOSHIRIA ALL RIGHTS RESERVED.`;
-        };
+        // コピーライトの更新
+        const currentYear = new Date().getFullYear();
+        document.getElementById('copyright-text').innerHTML = `COPYRIGHT &copy; TOSHIRIA 2025 - ${currentYear} ALL RIGHTS RESERVED.`;
     </script>
 </body>
 </html>
