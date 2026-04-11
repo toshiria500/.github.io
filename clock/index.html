@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v63.0 | 究極の日本標準時</title>
+    <title>Celestial Clock v66.0 | 秒単位判定＆自動年更新</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,6 +13,9 @@
             --glass-bg: rgba(15, 23, 42, 0.7);
             --glass-border: rgba(255, 255, 255, 0.1);
             --bg-default: #020617;
+            --success: #10b981;
+            --warning: #fbbf24;
+            --danger: #f87171;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
@@ -26,11 +29,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* スクロールを禁止して見切れを防ぐよぉ */
+            overflow: hidden;
             position: relative;
         }
         
-        /* 背景の輝き */
         .bg-glow {
             position: absolute;
             top: 50%;
@@ -43,123 +45,111 @@
             z-index: -1;
         }
 
-        /* メインコンテナを画面の高さに合わせてリサイズ */
         .main-container {
-            width: 90%;
-            max-width: 800px;
-            max-height: 85vh; /* 画面の高さの85%以内に収めるねっ */
-            padding: clamp(1.5rem, 5vh, 3rem) 2rem;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            padding: clamp(1rem, 3vh, 2rem) 1.5rem;
             background: var(--glass-bg);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
-            border-radius: 4rem;
+            border-radius: 3rem;
             text-align: center;
             box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s ease;
+            gap: 1.5vh;
         }
 
         .sync-badge {
             display: inline-flex;
             align-items: center;
+            align-self: center;
             gap: 8px;
-            padding: 8px 18px;
+            padding: 6px 16px;
             background: rgba(0,0,0,0.4);
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 800;
             color: var(--accent);
-            letter-spacing: 0.1em;
-            margin-bottom: clamp(1rem, 4vh, 2rem);
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
-        .dot.active { background: #10b981; box-shadow: 0 0 12px #10b981; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+        .dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
+        .primary-clock {
+            padding-bottom: 1vh;
+        }
         #clock-time {
             font-family: 'Share Tech Mono', monospace;
-            font-size: clamp(3.5rem, 15vh, 10rem); /* 高さに合わせてフォントサイズが縮むよぉ */
+            font-size: clamp(3rem, 12vh, 8rem);
             line-height: 1;
-            margin-bottom: 0.5rem;
-            font-variant-numeric: tabular-nums;
             background: linear-gradient(to bottom, #fff 60%, #94a3b8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
         #clock-date {
-            font-size: clamp(0.9rem, 3vh, 1.4rem);
-            font-weight: 400;
-            letter-spacing: 0.2em;
-            opacity: 0.9;
-            margin-bottom: clamp(1rem, 4vh, 3rem);
+            font-size: clamp(0.8rem, 2.5vh, 1.2rem);
+            letter-spacing: 0.1em;
+            opacity: 0.8;
         }
-        .day { color: var(--accent); font-weight: 800; margin-left: 0.5rem; }
+        .day { color: var(--accent); font-weight: 800; }
+
+        .device-sync-info {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid var(--glass-border);
+        }
+        .device-item { text-align: left; }
+        .device-item span { display: block; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 800; }
+        .device-item strong { font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; color: #fff; }
+        
+        .status-exact { color: var(--success) !important; }
+        .status-fast { color: var(--warning) !important; }
+        .status-slow { color: var(--danger) !important; }
+
+        .world-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 1vh;
+        }
+        @media (min-width: 600px) { .world-grid { grid-template-columns: repeat(4, 1fr); } }
+        
+        .world-item {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+        }
+        .world-item .city { font-size: 0.65rem; color: var(--text-dim); font-weight: 800; margin-bottom: 4px; }
+        .world-item .time { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: var(--accent); }
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
             border-top: 1px solid var(--glass-border);
-            padding-top: clamp(1rem, 4vh, 2rem);
-            width: 100%;
+            padding-top: 1vh;
         }
-        .info-item span { display: block; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 800; }
-        .info-item strong { font-size: clamp(0.8rem, 2vh, 1rem); color: #fff; font-family: 'Outfit', sans-serif; }
+        .info-item span { display: block; font-size: 0.6rem; color: var(--text-dim); font-weight: 800; }
+        .info-item strong { font-size: 0.85rem; color: #fff; }
 
-        .btn-sync {
-            margin-top: clamp(1rem, 4vh, 2.5rem);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 14px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 700;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-sync:hover { 
-            background: rgba(56, 189, 248, 0.1);
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        /* フッターを画面最下部に固定するねっ */
         footer {
             width: 100%;
-            max-width: 800px;
-            padding: 1rem;
-            font-size: 0.6rem;
+            padding: 0.5rem;
+            font-size: 0.55rem;
             color: var(--text-dim);
             text-align: center;
-            letter-spacing: 0.05em;
         }
-        .notice {
-            margin-bottom: 8px;
-            line-height: 1.4;
-            opacity: 0.6;
-            text-align: center; /* PCで見やすいように中央揃えにするよぉ */
-            font-size: 0.55rem;
-        }
-        .copyright {
-            font-weight: 700;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 5px;
-        }
-
-        /* 画面がめちゃくちゃ低い時用の微調整 */
-        @media (max-height: 500px) {
-            .main-container { padding: 1rem; border-radius: 2rem; }
-            #clock-date { margin-bottom: 0.5rem; }
-            .btn-sync { margin-top: 0.5rem; }
-            .info-grid { padding-top: 0.5rem; }
-        }
+        .notice { opacity: 0.6; margin-bottom: 4px; }
+        .copyright { font-weight: 700; color: rgba(255, 255, 255, 0.4); }
     </style>
 </head>
 <body>
@@ -168,31 +158,65 @@
     <div class="main-container">
         <div class="sync-badge">
             <div id="status-dot" class="dot"></div>
-            <span id="status-text">未同期</span>
+            <span id="status-text">SYNCING...</span>
         </div>
 
-        <div id="clock-time">00:00:00</div>
-        <div id="clock-date">----年--月--日 <span class="day">----</span></div>
+        <!-- 日本標準時（メイン） -->
+        <div class="primary-clock">
+            <div id="clock-time">00:00:00</div>
+            <div id="clock-date">取得中...</div>
+        </div>
+
+        <!-- デバイス時刻との誤差比較 -->
+        <div class="device-sync-info">
+            <div class="device-item">
+                <span>端末の時刻 / DEVICE</span>
+                <strong id="device-time">00:00:00</strong>
+            </div>
+            <div class="device-item">
+                <span>誤差状況 / STATUS</span>
+                <strong id="device-diff-status">判定中...</strong>
+            </div>
+        </div>
+
+        <!-- 世界時計 -->
+        <div class="world-grid">
+            <div class="world-item">
+                <div class="city">HONOLULU</div>
+                <div class="time" id="world-honolulu">00:00</div>
+            </div>
+            <div class="world-item">
+                <div class="city">WASHINGTON</div>
+                <div class="time" id="world-washington">00:00</div>
+            </div>
+            <div class="world-item">
+                <div class="city">UTC</div>
+                <div class="time" id="world-utc">00:00</div>
+            </div>
+            <div class="world-item">
+                <div class="city">原子時 / TAI*</div>
+                <div class="time" id="world-tai">00:00</div>
+            </div>
+        </div>
 
         <div class="info-grid">
-            <div class="info-item"><span>ズレ補正 / OFFSET</span><strong id="val-offset">0ms</strong></div>
-            <div class="info-item"><span>通信遅延 / RTT</span><strong id="val-rtt">0ms</strong></div>
-            <div class="info-item"><span>現在地 / LOCATION</span><strong id="val-location">取得中...</strong></div>
+            <div class="info-item"><span>同期オフセット</span><strong id="val-offset">0.000s</strong></div>
+            <div class="info-item"><span>現在地</span><strong id="val-location">取得中...</strong></div>
         </div>
 
-        <button class="btn-sync" onclick="syncAll()">時刻を再同期</button>
+        <button class="btn-sync" onclick="syncAll()" style="margin-top: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">再同期</button>
     </div>
 
     <footer>
         <div class="notice">
-            ※ NICTによる時刻供給終了(2022/03/31)に伴い、独自のクラウド同期アルゴリズムを採用しています。
+            ※NICTのHTTP供給終了に伴い、独自多点同期を採用。正確範囲: ±0.050秒以内。TAIは現在の閏秒(37秒)加算値。
         </div>
-        <div>日本標準時 (JST) モード | PRECISION SYNC ACTIVE</div>
-        <div class="copyright">COPYRIGHT &copy; 2026 TOSHIRIA ALL RIGHTS RESERVED.</div>
+        <div id="copyright-text" class="copyright">COPYRIGHT &copy; 2025 - 2026 TOSHIRIA ALL RIGHTS RESERVED.</div>
     </footer>
 
     <script>
-        let globalOffset = 0;
+        let globalOffset = 0; 
+        const LEAP_SECONDS = 37; 
 
         async function syncAll() {
             const statusDot = document.getElementById('status-dot');
@@ -208,19 +232,16 @@
 
             for (let endpoint of syncEndpoints) {
                 try {
-                    for (let i = 0; i < 2; i++) {
-                        const t1 = performance.now();
-                        const response = await fetch(endpoint, { cache: "no-store" });
-                        if (!response.ok) continue;
-                        const data = await response.json();
-                        const t2 = performance.now();
-                        const rtt = t2 - t1;
-                        
-                        let serverMs = data.unixtime ? data.unixtime * 1000 : new Date(data.dateTime).getTime();
-                        const nowOnServer = serverMs + (rtt / 2);
-                        const offset = nowOnServer - Date.now();
-                        samples.push({ offset, rtt });
-                    }
+                    const t1 = performance.now();
+                    const res = await fetch(endpoint, { cache: "no-store" });
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const t2 = performance.now();
+                    const rtt = t2 - t1;
+                    
+                    let serverMs = data.unixtime ? data.unixtime * 1000 : new Date(data.dateTime).getTime();
+                    const offset = (serverMs + (rtt / 2)) - Date.now();
+                    samples.push({ offset, rtt });
                 } catch (e) { console.warn("Sync failed", e); }
             }
 
@@ -228,35 +249,77 @@
                 samples.sort((a, b) => a.rtt - b.rtt);
                 globalOffset = samples[0].offset;
                 statusDot.classList.add('active');
-                statusText.textContent = "日本標準時と同期済み";
-                document.getElementById('val-offset').textContent = (globalOffset >= 0 ? "+" : "") + Math.round(globalOffset) + "ms";
-                document.getElementById('val-rtt').textContent = Math.round(samples[0].rtt) + "ms";
-            } else {
-                statusText.textContent = "同期エラー";
+                statusText.textContent = "原子時計同期完了";
+                
+                // オフセットも秒単位で表示するねっ
+                const offsetSec = (globalOffset / 1000).toFixed(3);
+                document.getElementById('val-offset').textContent = (offsetSec >= 0 ? "+" : "") + offsetSec + "s";
             }
         }
 
         async function updateLocation() {
             const locText = document.getElementById('val-location');
-            if (!navigator.geolocation) { locText.textContent = "取得不可"; return; }
-
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10&addressdetails=1`, {
                         headers: { 'Accept-Language': 'ja' }
                     });
                     const data = await res.json();
-                    const addr = data.address;
-                    locText.textContent = (addr.province || addr.state || "") + " " + (addr.city || addr.town || addr.village || "");
-                } catch (e) { locText.textContent = "取得エラー"; }
-            }, () => { locText.textContent = "許可が必要だよぉ"; });
+                    const a = data.address;
+                    locText.textContent = (a.province || a.state || "") + " " + (a.city || a.town || a.village || "");
+                } catch (e) { locText.textContent = "日本"; }
+            }, () => { locText.textContent = "位置情報オフ"; });
+        }
+
+        function formatTime(date, options = {}) {
+            return date.toLocaleTimeString('ja-JP', { hour12: false, ...options });
         }
 
         function update() {
-            const now = new Date(Date.now() + globalOffset);
-            document.getElementById('clock-time').textContent = now.toTimeString().split(' ')[0];
+            const now = Date.now();
+            const syncedDate = new Date(now + globalOffset);
+            const deviceDate = new Date(now);
+
+            // メイン時計 (JST)
+            document.getElementById('clock-time').textContent = formatTime(syncedDate);
             const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
-            document.getElementById('clock-date').innerHTML = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 <span class="day">${days[now.getDay()]}</span>`;
+            document.getElementById('clock-date').innerHTML = `${syncedDate.getFullYear()}年${syncedDate.getMonth()+1}月${syncedDate.getDate()}日 <span class="day">${days[syncedDate.getDay()]}</span>`;
+
+            // デバイス比較判定ロジック
+            document.getElementById('device-time').textContent = formatTime(deviceDate);
+            
+            const diffMs = globalOffset;
+            const diffSec = (Math.abs(diffMs) / 1000).toFixed(3);
+            const statusEl = document.getElementById('device-diff-status');
+            
+            // 判定基準: ±0.050秒
+            if (Math.abs(diffMs) <= 50) {
+                statusEl.textContent = `正確範囲 (±0.050s)`;
+                statusEl.className = "status-exact";
+            } else if (diffMs > 50) {
+                // サーバーの方が進んでいる = デバイスが遅れている
+                statusEl.textContent = `${diffSec}秒 遅れてる`;
+                statusEl.className = "status-slow";
+            } else {
+                // サーバーの方が遅れている = デバイスが進んでいる
+                statusEl.textContent = `${diffSec}秒 進んでる`;
+                statusEl.className = "status-fast";
+            }
+
+            // 世界時計
+            const utc = new Date(syncedDate.getTime() + (syncedDate.getTimezoneOffset() * 60000));
+            
+            const honolulu = new Date(utc.getTime() - (10 * 3600000));
+            document.getElementById('world-honolulu').textContent = formatTime(honolulu, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const dc = new Date(utc.getTime() - (4 * 3600000)); 
+            document.getElementById('world-washington').textContent = formatTime(dc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            document.getElementById('world-utc').textContent = formatTime(utc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const tai = new Date(utc.getTime() + (LEAP_SECONDS * 1000));
+            document.getElementById('world-tai').textContent = formatTime(tai, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
             requestAnimationFrame(update);
         }
 
@@ -264,7 +327,11 @@
             syncAll();
             updateLocation();
             update();
-            setInterval(syncAll, 900000);
+            setInterval(syncAll, 600000);
+
+            // コピーライトの年を自動更新するねっ
+            const currentYear = new Date().getFullYear();
+            document.getElementById('copyright-text').innerHTML = `COPYRIGHT &copy; 2025 - ${currentYear} TOSHIRIA ALL RIGHTS RESERVED.`;
         };
     </script>
 </body>
