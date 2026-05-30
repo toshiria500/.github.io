@@ -3,96 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFC Multi Collector</title>
+    <title>NFC Multi Collector Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Share+Tech+Mono&display=swap');
         .font-pixel { font-family: 'DotGothic16', sans-serif; }
-        .active-mode { transform: translateY(-5px); border-color: #4f46e5; background: #f5f3ff; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1); }
+        .font-mono-tech { font-family: 'Share Tech Mono', monospace; }
+        .active-mode { transform: translateY(-4px); border-color: #6366f1; background: #f8fafc; box-shadow: 0 10px 20px -3px rgba(99, 102, 241, 0.2); }
         .mode-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes scan-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(79, 70, 229, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-        }
-        .scan-pulse { animation: scan-pulse 1.5s infinite; border-color: #4f46e5; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 pb-24 font-sans text-slate-800">
+<body class="bg-slate-900 min-h-screen p-4 pb-24 font-sans text-slate-100 selection:bg-indigo-500">
 
     <div class="max-w-md mx-auto">
+        <!-- ヘッダー -->
         <header class="mb-6 text-center pt-4">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tighter italic uppercase">NFC Collector</h1>
+            <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase flex items-center justify-center gap-2">
+                <span>🛰️</span> NFC COLLECTOR <span class="text-indigo-400">PRO</span>
+            </h1>
             <div id="badge-container" class="flex flex-wrap justify-center gap-2 mt-3"></div>
         </header>
 
-        <div class="grid grid-cols-3 gap-3 mb-6">
-            <button onclick="setMode('card')" id="btn-card" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm active-mode">
+        <!-- モード切替タブ -->
+        <div class="grid grid-cols-3 gap-2.5 mb-6">
+            <button onclick="setMode('card')" id="btn-card" class="mode-card bg-slate-800 border-2 border-slate-700/50 p-3 rounded-2xl flex flex-col items-center shadow-md active-mode">
                 <span class="text-2xl mb-1">💳</span>
-                <span class="text-[10px] font-bold">CARD</span>
+                <span class="text-[10px] font-bold tracking-widest text-slate-300">CARD</span>
             </button>
-            <button onclick="setMode('amiibo')" id="btn-amiibo" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm">
+            <button onclick="setMode('amiibo')" id="btn-amiibo" class="mode-card bg-slate-800 border-2 border-slate-700/50 p-3 rounded-2xl flex flex-col items-center shadow-md">
                 <span class="text-2xl mb-1">🧸</span>
-                <span class="text-[10px] font-bold">amiibo</span>
+                <span class="text-[10px] font-bold tracking-widest text-slate-300">AMIIBO</span>
             </button>
-            <button onclick="setMode('dream')" id="btn-dream" class="mode-card bg-white border-2 border-transparent p-3 rounded-2xl flex flex-col items-center shadow-sm">
+            <button onclick="setMode('dream')" id="btn-dream" class="mode-card bg-slate-800 border-2 border-slate-700/50 p-3 rounded-2xl flex flex-col items-center shadow-md">
                 <span class="text-2xl mb-1">🌀</span>
-                <span class="text-[10px] font-bold text-center leading-tight">妖怪メダル</span>
+                <span class="text-[10px] font-bold tracking-widest text-slate-300 text-center leading-none">MEDAL</span>
             </button>
         </div>
 
-        <div id="main-card" class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden mb-6 border border-slate-200">
-            <div id="header-bar" class="bg-slate-800 p-3 text-white text-center text-[10px] font-black tracking-widest uppercase transition-colors duration-500">
-                CARD MODE
+        <!-- インタラクティブ・キャンバス (メインスキャナー＆デバイスガイド) -->
+        <div id="main-card" class="bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden mb-6 border border-slate-700/80">
+            <div id="header-bar" class="bg-indigo-600 p-3 text-white text-center text-[10px] font-black tracking-widest uppercase transition-colors duration-500">
+                CARD MODE - SCANNER
             </div>
-            <div class="p-8 flex flex-col items-center">
-                <div id="icon-circle" class="w-28 h-28 rounded-full bg-slate-50 flex items-center justify-center mb-6 border-4 border-white shadow-inner transition-all duration-500">
-                    <span id="main-emoji" class="text-5xl">💳</span>
+            
+            <div class="p-6 flex flex-col items-center">
+                <!-- Canvasスキャナーエリア -->
+                <div class="relative w-full max-w-[280px] aspect-square mb-4 bg-slate-950/80 rounded-3xl border border-slate-700/50 overflow-hidden shadow-inner">
+                    <canvas id="scannerCanvas" class="w-full h-full cursor-pointer"></canvas>
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-slate-900/90 text-[9px] px-3 py-1 rounded-full text-slate-400 pointer-events-none border border-slate-700">
+                        非対応端末はCanvasをタップで模擬スキャン
+                    </div>
                 </div>
-                <h2 id="status-text" class="text-lg font-black mb-1">スキャン待機中</h2>
-                <div id="status-sub" class="text-xs text-slate-400 text-center mb-8 leading-relaxed">
-                    選択したアイテムをスマホの背面に<br>近づけてください
+
+                <h2 id="status-text" class="text-lg font-black mb-1 text-white">スキャン待機中</h2>
+                <div id="status-sub" class="text-xs text-slate-400 text-center mb-6 leading-relaxed">
+                    スマホの最上部（裏面カメラ横）に<br>カードやメダルをかざしてください
                 </div>
-                <button id="scan-btn" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg opacity-50 cursor-not-allowed transition-all" disabled>
-                    SCAN START
+
+                <button id="scan-btn" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg transition-all">
+                    スキャンを開始する
                 </button>
             </div>
         </div>
 
-        <div id="guide-box" class="hidden rounded-2xl p-5 mb-6 text-sm">
-            <h3 id="guide-title" class="font-bold mb-1 flex items-center gap-2"></h3>
-            <p id="guide-text" class="text-[11px] leading-relaxed"></p>
+        <!-- リアルタイム・デジタルICカード Canvas描画ボード -->
+        <div id="balance-dashboard" class="hidden bg-slate-800 border border-slate-700 rounded-3xl p-5 mb-6 shadow-2xl overflow-hidden">
+            <h4 class="text-xs font-black text-indigo-400 tracking-wider mb-3 flex items-center gap-1.5">
+                <span>⚡</span> PHYSICAL CARD VISUALIZER
+            </h4>
+            
+            <!-- ICカード描画用のCanvas -->
+            <div class="w-full max-w-[320px] mx-auto aspect-[1.58/1] bg-slate-950 rounded-2xl overflow-hidden border border-slate-700 shadow-md mb-4">
+                <canvas id="cardCanvas" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- 明細情報 -->
+            <div class="grid grid-cols-2 gap-3 mb-4 text-xs font-mono-tech">
+                <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <span class="text-[9px] text-slate-400 block mb-0.5">ポイント残高</span>
+                    <span id="points-amount" class="font-bold text-amber-400 text-sm">0 P</span>
+                </div>
+                <div class="bg-slate-900/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <span class="text-[9px] text-slate-400 block mb-0.5">カード規格</span>
+                    <span class="font-bold text-slate-300 text-sm">FeliCa (Type-F)</span>
+                </div>
+            </div>
+
+            <!-- 利用履歴 -->
+            <div class="border-t border-slate-700/50 pt-3">
+                <span class="text-[10px] text-slate-400 block mb-2 font-black tracking-wider uppercase">💳 直近の利用履歴 (HISTORY)</span>
+                <div id="history-list" class="space-y-1.5 text-xs font-mono-tech">
+                    <!-- JSで挿入 -->
+                </div>
+            </div>
         </div>
 
-        <div class="px-2">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-black text-slate-400 tracking-widest uppercase">My Collection</h3>
-                <button onclick="clearCollection()" class="text-[10px] font-bold text-red-400">CLEAR</button>
+        <!-- ガイドボックス (端末固有の説明) -->
+        <div id="guide-box" class="rounded-2xl p-4 mb-6 text-xs bg-slate-800/80 border border-slate-700">
+            <h3 id="guide-title" class="font-bold text-slate-200 mb-1.5 flex items-center gap-1.5"></h3>
+            <p id="guide-text" class="text-slate-400 leading-relaxed"></p>
+        </div>
+
+        <!-- コレクション履歴 -->
+        <div class="px-1">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xs font-black text-slate-400 tracking-widest uppercase">My Collection Log</h3>
+                <button onclick="clearCollection()" class="text-[10px] font-bold text-red-400 hover:text-red-300">CLEAR ALL</button>
             </div>
-            <div id="log-list" class="space-y-3"></div>
+            <div id="log-list" class="space-y-2.5"></div>
         </div>
     </div>
 
-    <!-- 登録用ポップアップ -->
-    <div id="reg-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8">
-            <h3 class="text-2xl font-black mb-2">NEW DISCOVERY!</h3>
-            <p id="scanned-id" class="text-[10px] font-mono text-slate-400 mb-6 uppercase tracking-widest"></p>
-            <input type="text" id="name-input" placeholder="名前を入力してください" class="w-full bg-slate-100 p-4 rounded-xl mb-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+    <!-- 登録用モーダルポップアップ -->
+    <div id="reg-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xl font-black text-white">NEW DISCOVERY!</h3>
+                <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-md font-mono-tech" id="scanned-id-type">CARD</span>
+            </div>
+            <p id="scanned-id" class="text-[10px] font-mono-tech text-slate-400 mb-4 uppercase tracking-widest bg-slate-900/80 p-2 rounded-lg"></p>
+            
+            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">名前を付ける</label>
+            <input type="text" id="name-input" placeholder="例: おサイフケータイ / マイメダ" class="w-full bg-slate-950 text-white border border-slate-700 p-3.5 rounded-xl mb-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+            
             <div class="flex gap-2">
-                <button onclick="closeReg()" class="flex-1 py-4 text-slate-400 font-bold text-sm">やめる</button>
-                <button id="save-btn" class="flex-[2] py-4 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg">登録する</button>
+                <button onclick="closeReg()" class="flex-1 py-3 text-slate-400 font-bold text-xs hover:text-white">キャンセル</button>
+                <button id="save-btn" class="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg">登録する</button>
             </div>
         </div>
     </div>
 
-    <!-- メッセージボックス -->
-    <div id="msg-box" class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-4 rounded-2xl z-[100] shadow-2xl w-11/12 max-w-sm text-center">
-        <p id="msg-content" class="text-sm font-bold leading-relaxed"></p>
-        <button onclick="closeMsg()" class="mt-3 px-4 py-2 bg-white text-slate-800 rounded-lg text-xs font-black uppercase">OK</button>
+    <!-- メッセージポップアップ -->
+    <div id="msg-box" class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-white px-5 py-4 rounded-2xl z-[100] shadow-2xl w-11/12 max-w-sm text-center">
+        <p id="msg-content" class="text-xs font-bold leading-relaxed"></p>
+        <button onclick="closeMsg()" class="mt-3 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[10px] font-black uppercase">OK</button>
     </div>
 
     <script>
+        // DOM要素
         const scanBtn = document.getElementById('scan-btn');
         const badgeContainer = document.getElementById('badge-container');
         const guideBox = document.getElementById('guide-box');
@@ -101,17 +149,53 @@
         const statusSub = document.getElementById('status-sub');
         const msgBox = document.getElementById('msg-box');
         const msgContent = document.getElementById('msg-content');
+        
+        // 追加取得要素
+        const balanceDashboard = document.getElementById('balance-dashboard');
+        const pointsAmount = document.getElementById('points-amount');
+        const historyList = document.getElementById('history-list');
+
+        // Canvas要素
+        const sCanvas = document.getElementById('scannerCanvas');
+        const sCtx = sCanvas.getContext('2d');
+        const cardCanvas = document.getElementById('cardCanvas');
+        const cCtx = cardCanvas.getContext('2d');
+
+        // キャンバスサイズ初期設定
+        sCanvas.width = 300;
+        sCanvas.height = 300;
+        cardCanvas.width = 316;
+        cardCanvas.height = 200;
 
         let currentMode = 'card';
         let currentScannedId = '';
         let ndef = null;
         let abortController = null;
+        let isScanning = false;
+        let scanPulseRadius = 0;
+        let systemType = 'other'; // 'android', 'ios', 'pc'
 
         const modes = {
-            card: { label: 'CARD MODE', emoji: '💳', color: '#1e293b' },
+            card: { label: 'CARD MODE', emoji: '💳', color: '#6366f1' },
             amiibo: { label: 'amiibo MODE', emoji: '🧸', color: '#ef4444' },
-            dream: { label: '妖怪メダル MODE', emoji: '🌀', color: '#4f46e5' }
+            dream: { label: '妖怪メダル MODE', emoji: '🌀', color: '#10b981' }
         };
+
+        const dummyCards = [
+            { type: "Suica", color: "#22c55e", subColor: "#15803d", txtColor: "#ffffff", brand: "交通系ICカード (East)" },
+            { type: "PASMO", color: "#ec4899", subColor: "#be185d", txtColor: "#ffffff", brand: "交通系ICカード (Metro)" },
+            { type: "WAON", color: "#22d3ee", subColor: "#0891b2", txtColor: "#0f172a", brand: "電子マネー (WAON)" },
+            { type: "nanaco", color: "#f59e0b", subColor: "#ea580c", txtColor: "#ffffff", brand: "電子マネー (nanaco)" },
+            { type: "Edy", color: "#3b82f6", subColor: "#1d4ed8", txtColor: "#ffffff", brand: "Cyber Edy (Type-F)" }
+        ];
+
+        const dummyHistoryActions = [
+            { desc: "自動改札機 (入場)", diff: "---" },
+            { desc: "自動改札機 (出場)", diff: "-¥180" },
+            { desc: "コンビニ決済 (お買い物)", diff: "-¥640" },
+            { desc: "飲料自販機 (決済)", diff: "-¥160" },
+            { desc: "窓口チャージ (現金)", diff: "+¥2,000" }
+        ];
 
         function showMsg(text) {
             msgContent.innerText = text;
@@ -129,6 +213,7 @@
             badgeContainer.appendChild(b);
         }
 
+        // モード変更
         function setMode(mode) {
             currentMode = mode;
             document.querySelectorAll('.mode-card').forEach(b => b.classList.remove('active-mode'));
@@ -136,90 +221,446 @@
             const m = modes[mode];
             document.getElementById('header-bar').innerText = m.label;
             document.getElementById('header-bar').style.backgroundColor = m.color;
-            document.getElementById('main-emoji').innerText = m.emoji;
-            document.getElementById('icon-circle').classList.remove('scan-pulse');
-            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
+            
+            if (isScanning) {
+                stopScan();
+            } else {
+                document.getElementById('status-text').innerText = "スキャン待機中";
+                updateStatusSub();
+            }
+            
+            if (currentMode !== 'card') {
+                balanceDashboard.classList.add('hidden');
+            }
         }
 
+        function updateStatusSub() {
+            if (systemType === 'ios') {
+                statusSub.innerHTML = 'iPhoneのカメラ付近（最上部/MagSafe上部）を<br>カードやタグにぴったり密着させてください';
+            } else if (systemType === 'pc') {
+                statusSub.innerHTML = 'USB NFCリーダー（PaPaRiなど）の上に<br>カードを水平に乗せてください';
+            } else {
+                statusSub.innerHTML = 'スマートフォン背面のNFCアンテナ位置に<br>近づけてください';
+            }
+        }
+
+        // 初期化環境判定
         function init() {
             const hasNFC = 'NDEFReader' in window;
             const ua = navigator.userAgent;
             const isAndroid = /Android/i.test(ua);
-            const isChrome = /Chrome/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-            addBadge(isAndroid ? "Android OK" : "Desktop/Other", isAndroid ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-600");
-            addBadge(hasNFC ? "NFC Support: YES" : "NFC Support: NO", hasNFC ? "bg-indigo-600 text-white" : "bg-red-500 text-white");
-
-            guideBox.classList.remove('hidden');
-            if (hasNFC) {
-                scanBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                scanBtn.disabled = false;
-                guideBox.className = "bg-green-50 border border-green-100 text-green-700 p-5 rounded-2xl mb-6";
-                document.getElementById('guide-title').innerText = "✅ 準備完了";
-                document.getElementById('guide-text').innerText = "AndroidのChromeで開いていますね。ボタンを押してスキャンを開始してください。";
+            if (isAndroid) {
+                systemType = 'android';
+                addBadge("Android Active", "bg-green-500/20 text-green-400 border border-green-500/30");
+            } else if (isIOS) {
+                systemType = 'ios';
+                addBadge("iPhone Detected", "bg-blue-500/20 text-blue-400 border border-blue-500/30");
             } else {
-                guideBox.className = "bg-red-50 border border-red-100 text-red-700 p-5 rounded-2xl mb-6";
-                document.getElementById('guide-title').innerText = "❌ 非対応のブラウザです";
-                document.getElementById('guide-text').innerText = "Web NFCは現在Android版Google Chromeのみ対応しています。環境を確認してください。";
+                systemType = 'pc';
+                addBadge("PC Terminal", "bg-amber-500/20 text-amber-400 border border-amber-500/30");
             }
+
+            addBadge(hasNFC ? "NFC API Ready" : "NFC Simulator", hasNFC ? "bg-indigo-500 text-white" : "bg-slate-700 text-slate-300");
+
+            // ガイドボックスの表示
+            if (systemType === 'ios') {
+                document.getElementById('guide-title').innerText = "📱 iPhoneのNFC読み取りについて";
+                document.getElementById('guide-text').innerText = "iOSのSafariでは標準で直接Web NFC APIが解放されていないため、スキャン時には下の「Canvas画面」をタップしてシミュレーターをお試しください。本体上端(MagSafeのすぐ上)にアンテナが存在します。";
+            } else if (systemType === 'pc') {
+                document.getElementById('guide-title').innerText = "🔌 USB NFCリーダーが必要な環境です";
+                document.getElementById('guide-text').innerText = "デスクトップPCでお使いの場合、NFC通信を行うには外付けUSB NFCリーダー(PaPaRiやSony Pasoriなど)を接続する必要があります。画面タップでシミュレーターをいつでも体験可能です。";
+            } else if (hasNFC) {
+                document.getElementById('guide-title').innerText = "⚡ Web NFC API 接続成功";
+                document.getElementById('guide-text').innerText = "Android Chrome環境です。下部のボタンをタップして端末背面のNFC受信エリアに近づけることで実際の各種ICカードを読み取ることができます。";
+            } else {
+                document.getElementById('guide-title').innerText = "💡 スキャンシミュレータ搭載";
+                document.getElementById('guide-text').innerText = "この端末では直接のNFCポートが確認できません。中央のCanvas領域をタップすることで模擬スキャン動作と残高表示をお楽しみいただけます！";
+            }
+
+            if (hasNFC) {
+                scanBtn.disabled = false;
+                scanBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                scanBtn.innerText = "シミュレータースタート";
+            }
+
             loadCollection();
+            requestAnimationFrame(drawScannerLoop);
         }
 
+        // ==========================================
+        // CANVAS 1: メインスキャナー＆デバイスガイド描画
+        // ==========================================
+        let usbAngle = 0;
+        function drawScannerLoop() {
+            sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+            
+            // 背景グラデーション
+            const bgGrad = sCtx.createRadialGradient(150, 150, 20, 150, 150, 180);
+            bgGrad.addColorStop(0, '#0f172a');
+            bgGrad.addColorStop(1, '#020617');
+            sCtx.fillStyle = bgGrad;
+            sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+
+            // スキャン中パルス
+            if (isScanning) {
+                scanPulseRadius += 2;
+                if (scanPulseRadius > 140) scanPulseRadius = 0;
+
+                sCtx.beginPath();
+                sCtx.arc(150, 150, scanPulseRadius, 0, Math.PI * 2);
+                sCtx.strokeStyle = `rgba(99, 102, 241, ${1 - scanPulseRadius / 140})`;
+                sCtx.lineWidth = 4;
+                sCtx.stroke();
+
+                sCtx.beginPath();
+                sCtx.arc(150, 150, Math.max(0, scanPulseRadius - 40), 0, Math.PI * 2);
+                sCtx.strokeStyle = `rgba(16, 185, 129, ${0.8 - scanPulseRadius / 140})`;
+                sCtx.lineWidth = 2;
+                sCtx.stroke();
+            }
+
+            // モードに対応するネオンフレームを描画
+            const currentThemeColor = modes[currentMode].color;
+            sCtx.strokeStyle = currentThemeColor;
+            sCtx.lineWidth = 3;
+            sCtx.strokeRect(10, 10, 280, 280);
+            sCtx.strokeRect(6, 6, 288, 288);
+
+            // ガイドグラフィックの描画
+            if (systemType === 'ios') {
+                // iPhoneのビジュアルガイド
+                drawIPhoneGuide(sCtx, currentThemeColor);
+            } else if (systemType === 'pc') {
+                // PC & USB NFCリーダー接続アニメーション
+                drawPCGuide(sCtx, currentThemeColor);
+            } else {
+                // 通常スマホ (Androidなど)
+                drawAndroidGuide(sCtx, currentThemeColor);
+            }
+
+            requestAnimationFrame(drawScannerLoop);
+        }
+
+        // iPhoneNFC位置ガイドのCanvas描写
+        function drawIPhoneGuide(ctx, themeColor) {
+            // iPhoneボディ
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 5;
+            ctx.fillStyle = "#1e293b";
+            roundRect(ctx, 90, 40, 120, 220, 18, true, true);
+
+            // カメラバンプ
+            ctx.fillStyle = "#334155";
+            roundRect(ctx, 100, 50, 45, 45, 10, true, false);
+
+            // カメラレンズ
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.arc(112, 62, 8, 0, Math.PI*2);
+            ctx.arc(133, 83, 8, 0, Math.PI*2);
+            ctx.fill();
+
+            // MagSafeのアウトラインを破線で表現
+            ctx.strokeStyle = "rgba(100, 116, 139, 0.4)";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(150, 150, 32, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // NFC放射電磁波スポット（カメラの右隣・iPhone上端部）
+            const pulse = (Date.now() % 1500) / 1500;
+            ctx.strokeStyle = "rgba(239, 68, 68, " + (1 - pulse) + ")";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(150, 50, 20 + pulse * 25, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath();
+            ctx.arc(150, 50, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 指標ラベル
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 9px 'DotGothic16', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("NFC SENSOR AREA", 150, 30);
+            ctx.font = "8px sans-serif";
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText("カメラの真横（本体上端部）", 150, 215);
+        }
+
+        // USB NFCリーダー接続案内のCanvas描写
+        function drawPCGuide(ctx, themeColor) {
+            // デスクトップモニター/本体枠
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 4;
+            ctx.fillStyle = "#1e293b";
+            roundRect(ctx, 60, 40, 180, 110, 10, true, true);
+            
+            // PCスタンド
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(135, 150, 30, 25);
+            ctx.fillRect(110, 175, 80, 8);
+
+            // USBポート表示
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(215, 110, 12, 6);
+
+            // USBリーダー（PaPaRi型）とケーブル
+            usbAngle += 0.03;
+            const floatOffset = Math.sin(usbAngle) * 6;
+
+            // NFCリーダー
+            ctx.fillStyle = "#0f172a";
+            ctx.strokeStyle = themeColor;
+            ctx.lineWidth = 2;
+            roundRect(ctx, 100, 190 + floatOffset, 100, 60, 8, true, true);
+            
+            // リーダーアンテナロゴマーク
+            ctx.strokeStyle = "rgba(99, 102, 241, 0.4)";
+            ctx.beginPath();
+            ctx.arc(150, 220 + floatOffset, 14, 0, Math.PI*2);
+            ctx.stroke();
+
+            // USBケーブルの接続アニメーション
+            ctx.strokeStyle = "#64748b";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(200, 220 + floatOffset);
+            // 曲線でUSBポートに向かう
+            ctx.bezierCurveTo(240, 220 + floatOffset, 240, 113, 227, 113);
+            ctx.stroke();
+
+            // スキャン波（リーダーから）
+            if (isScanning) {
+                const wave = (Date.now() % 1200) / 1200;
+                ctx.strokeStyle = `rgba(16, 185, 129, ${1 - wave})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.ellipse(150, 220 + floatOffset, 20 + wave * 30, 10 + wave * 15, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // ガイドテキスト
+            ctx.fillStyle = "#fbbf24";
+            ctx.font = "bold 9px 'DotGothic16', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("USB READER REQUIRED", 150, 80);
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText("外付けリーダーをポートに挿入", 150, 100);
+        }
+
+        // 通常スマホ案内ガイドの描画
+        function drawAndroidGuide(ctx, themeColor) {
+            // Androidスマートフォン
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 5;
+            ctx.fillStyle = "#1e293b";
+            roundRect(ctx, 95, 40, 110, 220, 15, true, true);
+
+            // インカメラ
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.arc(150, 52, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // NFCアンテナ（スマホ裏面中央）
+            ctx.strokeStyle = "rgba(99, 102, 241, 0.6)";
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.ellipse(150, 150, 30, 45, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 電磁波マーク
+            ctx.fillStyle = themeColor;
+            ctx.font = "20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(modes[currentMode].emoji, 150, 156);
+
+            // ラベル
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 9px 'DotGothic16', sans-serif";
+            ctx.fillText("NFC COIL DETECTION", 150, 215);
+            ctx.font = "8px sans-serif";
+            ctx.fillStyle = "#94a3b8";
+            ctx.fillText("端末の背面中央にかざします", 150, 230);
+        }
+
+        // 角丸四角形ヘルパー
+        function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            if (fill) ctx.fill();
+            if (stroke) ctx.stroke();
+        }
+
+
+        // ==========================================
+        // CANVAS 2: ICカード券面リアルタイム生成・描画
+        // ==========================================
+        function drawDigitalCard(id) {
+            cCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
+
+            // IDから一意なハッシュインデックスを取得
+            let seed = 0;
+            for (let i = 0; i < id.length; i++) seed += id.charCodeAt(i);
+            const cardDesign = dummyCards[seed % dummyCards.length];
+
+            // 1. カード背景ベース
+            const gradient = cCtx.createLinearGradient(0, 0, cardCanvas.width, cardCanvas.height);
+            gradient.addColorStop(0, cardDesign.color);
+            gradient.addColorStop(1, cardDesign.subColor);
+            cCtx.fillStyle = gradient;
+            roundRect(cCtx, 0, 0, cardCanvas.width, cardCanvas.height, 14, true, false);
+
+            // 2. 装飾用グリッド（未来的な電子パターングラフィック）
+            cCtx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            cCtx.lineWidth = 1;
+            for (let i = 0; i < cardCanvas.width; i += 20) {
+                cCtx.beginPath();
+                cCtx.moveTo(i, 0);
+                cCtx.lineTo(i, cardCanvas.height);
+                cCtx.stroke();
+            }
+            // 流線ラインの追加
+            cCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
+            cCtx.beginPath();
+            cCtx.moveTo(0, 100);
+            cCtx.bezierCurveTo(100, 50, 200, 160, cardCanvas.width, 110);
+            cCtx.lineTo(cardCanvas.width, cardCanvas.height);
+            cCtx.lineTo(0, cardCanvas.height);
+            cCtx.fill();
+
+            // 3. リアルなICチップ描画 (物理金属加工をイメージ)
+            cCtx.fillStyle = "#fbbf24"; // ゴールドベース
+            roundRect(cCtx, 30, 60, 42, 32, 6, true, false);
+            // チップ細部スリット
+            cCtx.strokeStyle = "#b45309";
+            cCtx.lineWidth = 1.5;
+            cCtx.strokeRect(30, 60, 42, 32);
+            cCtx.beginPath();
+            cCtx.moveTo(44, 60); cCtx.lineTo(44, 92);
+            cCtx.moveTo(58, 60); cCtx.lineTo(58, 92);
+            cCtx.moveTo(30, 76); cCtx.lineTo(72, 76);
+            cCtx.stroke();
+
+            // 4. 残高表示
+            const balance = (seed * 13) % 18500 + 120;
+            cCtx.fillStyle = cardDesign.txtColor;
+            cCtx.font = "bold 10px 'DotGothic16', sans-serif";
+            cCtx.textAlign = "left";
+            cCtx.fillText("CURRENT BALANCE", 30, 125);
+            cCtx.font = "900 24px 'Share Tech Mono', monospace";
+            cCtx.fillText("¥ " + balance.toLocaleString(), 28, 150);
+
+            // 5. カードブランド名・ID
+            cCtx.font = "bold 16px 'DotGothic16', sans-serif";
+            cCtx.fillText(cardDesign.type, 30, 40);
+
+            cCtx.font = "8px 'Share Tech Mono', monospace";
+            cCtx.fillStyle = "rgba(255, 255, 255, 0.6)";
+            cCtx.fillText(cardDesign.brand, 30, 175);
+            
+            // シリアル番号
+            cCtx.textAlign = "right";
+            cCtx.font = "bold 9px 'Share Tech Mono', monospace";
+            cCtx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            cCtx.fillText("ID: " + id.toUpperCase(), cardCanvas.width - 20, 34);
+
+            // 6. 電波ホログラム
+            cCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            cCtx.lineWidth = 2;
+            cCtx.beginPath();
+            cCtx.arc(cardCanvas.width - 35, 140, 6, -Math.PI/4, Math.PI/4);
+            cCtx.stroke();
+            cCtx.beginPath();
+            cCtx.arc(cardCanvas.width - 35, 140, 12, -Math.PI/4, Math.PI/4);
+            cCtx.stroke();
+            cCtx.beginPath();
+            cCtx.arc(cardCanvas.width - 35, 140, 18, -Math.PI/4, Math.PI/4);
+            cCtx.stroke();
+
+            // ポイント表示更新
+            const points = (seed * 7) % 1200;
+            pointsAmount.innerText = `${points.toLocaleString()} P`;
+
+            // 7. 履歴更新
+            historyList.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const actIndex = (seed + i) % dummyHistoryActions.length;
+                const action = dummyHistoryActions[actIndex];
+                
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-700/40";
+                item.innerHTML = `
+                    <span class="text-slate-300">#0${i+1} ${action.desc}</span>
+                    <span class="${action.diff.startsWith('+') ? 'text-green-400 font-bold' : action.diff.startsWith('-') ? 'text-red-400' : 'text-slate-400'}">${action.diff}</span>
+                `;
+                historyList.appendChild(item);
+            }
+
+            balanceDashboard.classList.remove('hidden');
+        }
+
+
+        // ==========================================
+        // NFC 通信ロジック (Web NFC / NDEFReader)
+        // ==========================================
         async function startScan() {
             if (!('NDEFReader' in window)) {
-                showMsg("このブラウザはNFCに対応していません。Android Chromeをお使いください。");
+                // 非対応時用のダミー模擬スキャン（自動的にランダムID生成）
+                triggerSimulatorScan();
                 return;
             }
 
             try {
-                // スキャン開始前に以前の状態をクリア
                 if (abortController) abortController.abort();
                 abortController = new AbortController();
 
                 ndef = new NDEFReader();
-                // ここでブラウザの許可ポップアップが出るはずです
                 await ndef.scan({ signal: abortController.signal });
 
-                document.getElementById('icon-circle').classList.add('scan-pulse');
+                isScanning = true;
                 document.getElementById('status-text').innerText = "スキャン中...";
-                scanBtn.innerText = "スキャンを停止";
+                statusSub.innerHTML = "<b class='text-green-400 animate-pulse'>NFCリーダーにアイテムを近づけたままにしてください</b>";
+                scanBtn.innerText = "スキャンを一時停止";
+                scanBtn.className = "w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg transition-all";
                 scanBtn.onclick = stopScan;
 
                 ndef.onreadingerror = () => {
-                    showMsg("読み取りエラーです。タグを近づけたままにしてください。");
+                    showMsg("通信に失敗しました。アイテムがズレている可能性があります。接触面を広く保ってください。");
                 };
 
                 ndef.onreading = (event) => {
                     const id = event.serialNumber;
-                    const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
-
-                    if (data[id]) {
-                        document.getElementById('status-text').innerText = "認識成功！";
-                        statusSub.innerHTML = `<span class="text-indigo-600 font-bold text-lg">${data[id].name}</span><br>(${data[id].type})`;
-                        // 連続スキャンを考慮して一定時間後に戻す
-                        setTimeout(() => {
-                            if (ndef) {
-                                document.getElementById('status-text').innerText = "スキャン中...";
-                                statusSub.innerHTML = "次のアイテムをスキャンできます";
-                            }
-                        }, 2000);
-                    } else {
-                        currentScannedId = id;
-                        document.getElementById('scanned-id').innerText = `ID: ${id}`;
-                        regModal.classList.remove('hidden');
-                        document.getElementById('name-input').focus();
-                    }
+                    handleScannedItem(id);
                 };
 
             } catch (error) {
-                console.log(error);
+                console.warn(error);
                 if (error.name === "NotAllowedError") {
-                    showMsg("NFCへのアクセスが拒否されました。設定から許可してください。");
-                } else if (error.name === "NotSupportedError") {
-                    showMsg("NFCがサポートされていないか、無効になっています。");
+                    showMsg("NFC利用権限が拒否されています。設定でNFC権限を確認してください。");
                 } else {
-                    showMsg("エラーが発生しました: " + error.message);
+                    showMsg("デバイスに問題があるか、NFCスイッチがオフになっています: " + error.message);
                 }
+                stopScan();
             }
         }
 
@@ -228,13 +669,57 @@
                 abortController.abort();
                 abortController = null;
             }
-            document.getElementById('icon-circle').classList.remove('scan-pulse');
+            isScanning = false;
             document.getElementById('status-text').innerText = "準備完了";
-            scanBtn.innerText = "SCAN START";
+            scanBtn.innerText = "スキャンを開始する";
+            scanBtn.className = "w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg transition-all";
             scanBtn.onclick = startScan;
-            statusSub.innerHTML = '選択したアイテムをスマホの背面に<br>近づけてください';
+            updateStatusSub();
         }
 
+        // シミュレーター（タップ時に起動する擬似スキャン）
+        function triggerSimulatorScan() {
+            isScanning = true;
+            document.getElementById('status-text').innerText = "スキャン通信中...";
+            
+            setTimeout(() => {
+                const randomHex = Array.from({length: 7}, () => Math.floor(Math.random()*256).toString(16).padStart(2, '0')).join(':');
+                handleScannedItem(randomHex);
+                isScanning = false;
+                document.getElementById('status-text').innerText = "準備完了";
+            }, 800);
+        }
+
+        // スキャン成功時の共通ハンドラ
+        function handleScannedItem(id) {
+            if (currentMode === 'card') {
+                drawDigitalCard(id);
+            }
+
+            const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
+            if (data[id]) {
+                document.getElementById('status-text').innerText = "スキャン成功！";
+                statusSub.innerHTML = `<span class="text-indigo-400 font-bold text-lg">${data[id].name}</span><br><span class="text-[10px] text-slate-500">(${data[id].type.toUpperCase()}確認完了)</span>`;
+                
+                setTimeout(() => {
+                    if (isScanning) {
+                        document.getElementById('status-text').innerText = "スキャン中...";
+                        statusSub.innerHTML = "次のアイテムをかざしてください";
+                    } else {
+                        document.getElementById('status-text').innerText = "準備完了";
+                        updateStatusSub();
+                    }
+                }, 3000);
+            } else {
+                currentScannedId = id;
+                document.getElementById('scanned-id-type').innerText = currentMode.toUpperCase() + " TAG";
+                document.getElementById('scanned-id').innerText = `物理固有シリアル: ${id}`;
+                regModal.classList.remove('hidden');
+                document.getElementById('name-input').focus();
+            }
+        }
+
+        // コレクション保存と処理
         function saveEntry() {
             const name = document.getElementById('name-input').value.trim();
             if (!name) return;
@@ -243,6 +728,11 @@
             localStorage.setItem('nfc_data', JSON.stringify(data));
             closeReg();
             loadCollection();
+            
+            if (isScanning) {
+                document.getElementById('status-text').innerText = "スキャン中...";
+                statusSub.innerHTML = "引き続き、次のアイテムをスキャンできます";
+            }
         }
 
         function closeReg() {
@@ -255,22 +745,25 @@
             logList.innerHTML = '';
             const ids = Object.keys(data).reverse();
             if (ids.length === 0) {
-                logList.innerHTML = '<p class="text-center py-10 text-slate-300 text-xs font-bold uppercase">No Collection</p>';
+                logList.innerHTML = '<p class="text-center py-10 text-slate-500 text-xs font-bold uppercase tracking-widest border border-dashed border-slate-800 rounded-2xl">No items in collection</p>';
                 return;
             }
             ids.forEach(id => {
                 const item = data[id];
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm";
+                div.className = "bg-slate-800 p-4 rounded-2xl flex items-center justify-between border border-slate-700/50 shadow-sm hover:border-indigo-500/50 transition-all";
                 div.innerHTML = `
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
                         <div class="text-2xl">${modes[item.type]?.emoji || '❓'}</div>
                         <div>
-                            <div class="font-black text-slate-800">${item.name}</div>
-                            <div class="text-[9px] font-mono text-slate-400 uppercase tracking-widest">${item.type} | ${id}</div>
+                            <div class="font-bold text-slate-100 text-sm">${item.name}</div>
+                            <div class="text-[9px] font-mono-tech text-slate-500 uppercase tracking-widest">${item.type} | ${id}</div>
                         </div>
                     </div>
-                    <button onclick="deleteItem('${id}')" class="text-slate-300 hover:text-red-400 p-2">✕</button>
+                    <div class="flex items-center gap-2">
+                        ${item.type === 'card' ? `<button onclick="drawDigitalCard('${id}')" class="text-[9px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-1 rounded-md border border-indigo-500/30 hover:bg-indigo-500/30 transition-all">券面表示</button>` : ''}
+                        <button onclick="deleteItem('${id}')" class="text-slate-500 hover:text-red-400 p-1.5 text-sm">✕</button>
+                    </div>
                 `;
                 logList.appendChild(div);
             });
@@ -281,18 +774,25 @@
             delete data[id];
             localStorage.setItem('nfc_data', JSON.stringify(data));
             loadCollection();
+            balanceDashboard.classList.add('hidden');
         }
 
         function clearCollection() {
             localStorage.removeItem('nfc_data');
             loadCollection();
-            showMsg("コレクションを削除しました");
+            balanceDashboard.classList.add('hidden');
+            showMsg("コレクションデータを初期化しました");
         }
 
+        // イベント登録
         scanBtn.onclick = startScan;
         document.getElementById('save-btn').onclick = saveEntry;
+        
+        // Canvas自体のタップで模擬シミュレート
+        sCanvas.onclick = triggerSimulatorScan;
+
+        // アプリ起動
         init();
     </script>
 </body>
 </html>
-
