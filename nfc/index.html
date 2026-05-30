@@ -11,6 +11,18 @@
         .font-mono-tech { font-family: 'Share Tech Mono', monospace; }
         .active-mode { transform: translateY(-4px); border-color: #6366f1; background: #f8fafc; box-shadow: 0 10px 20px -3px rgba(99, 102, 241, 0.2); }
         .mode-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 999px;
+        }
     </style>
 </head>
 <body class="bg-slate-900 min-h-screen p-4 pb-24 font-sans text-slate-100 selection:bg-indigo-500">
@@ -51,7 +63,7 @@
                 <div class="relative w-full max-w-[280px] aspect-square mb-4 bg-slate-950/80 rounded-3xl border border-slate-700/50 overflow-hidden shadow-inner">
                     <canvas id="scannerCanvas" class="w-full h-full cursor-pointer"></canvas>
                     <div class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-slate-900/90 text-[9px] px-3 py-1 rounded-full text-slate-400 pointer-events-none border border-slate-700">
-                        非対応端末はCanvasをタップで模擬スキャン
+                        タップで模擬スキャン
                     </div>
                 </div>
 
@@ -68,9 +80,15 @@
 
         <!-- リアルタイム・デジタルICカード Canvas描画ボード -->
         <div id="balance-dashboard" class="hidden bg-slate-800 border border-slate-700 rounded-3xl p-5 mb-6 shadow-2xl overflow-hidden">
-            <h4 class="text-xs font-black text-indigo-400 tracking-wider mb-3 flex items-center gap-1.5">
-                <span>⚡</span> PHYSICAL CARD VISUALIZER
-            </h4>
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-xs font-black text-indigo-400 tracking-wider flex items-center gap-1.5">
+                    <span>⚡</span> PHYSICAL CARD VISUALIZER
+                </h4>
+                <!-- クイック編集ボタン -->
+                <button onclick="openQuickEdit()" class="text-[10px] bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white px-2.5 py-1 rounded-lg border border-indigo-500/30 transition-all font-bold">
+                    ✏️ 残高を修正
+                </button>
+            </div>
             
             <!-- ICカード描画用のCanvas -->
             <div class="w-full max-w-[320px] mx-auto aspect-[1.58/1] bg-slate-950 rounded-2xl overflow-hidden border border-slate-700 shadow-md mb-4">
@@ -114,21 +132,68 @@
         </div>
     </div>
 
-    <!-- 登録用モーダルポップアップ -->
+    <!-- 登録用モーダルポップアップ (残高設定を追加) -->
     <div id="reg-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center mb-3">
                 <h3 class="text-xl font-black text-white">NEW DISCOVERY!</h3>
                 <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-md font-mono-tech" id="scanned-id-type">CARD</span>
             </div>
             <p id="scanned-id" class="text-[10px] font-mono-tech text-slate-400 mb-4 uppercase tracking-widest bg-slate-900/80 p-2 rounded-lg"></p>
             
-            <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">名前を付ける</label>
-            <input type="text" id="name-input" placeholder="例: おサイフケータイ / マイメダ" class="w-full bg-slate-950 text-white border border-slate-700 p-3.5 rounded-xl mb-4 font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+            <!-- 共通: 名前 -->
+            <div class="mb-4">
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">登録名 (ニックネーム)</label>
+                <input type="text" id="name-input" placeholder="例: マイSuica / メダル1号" class="w-full bg-slate-950 text-white border border-slate-700 p-3.5 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- CARDモード専用追加フィールド -->
+            <div id="card-meta-fields" class="space-y-4 border-t border-slate-700/50 pt-4 mb-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">カードデザイン規格</label>
+                    <div class="grid grid-cols-3 gap-1.5" id="brand-selector">
+                        <!-- 動的にブランドボタンを生成 -->
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">初期残高 (円)</label>
+                        <input type="number" id="balance-input" value="1000" min="0" max="100000" class="w-full bg-slate-950 text-white border border-slate-700 p-3 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 font-mono-tech">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">初期ポイント</label>
+                        <input type="number" id="points-input" value="0" min="0" max="100000" class="w-full bg-slate-950 text-white border border-slate-700 p-3 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 font-mono-tech">
+                    </div>
+                </div>
+            </div>
             
             <div class="flex gap-2">
                 <button onclick="closeReg()" class="flex-1 py-3 text-slate-400 font-bold text-xs hover:text-white">キャンセル</button>
                 <button id="save-btn" class="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg">登録する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 簡易編集用モーダルポップアップ -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl">
+            <h3 class="text-xl font-black text-white mb-2">💰 残高・ポイント修正</h3>
+            <p id="edit-card-title" class="text-xs text-indigo-400 font-bold mb-4"></p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">現在の残高 (円)</label>
+                    <input type="number" id="edit-balance-input" class="w-full bg-slate-950 text-white border border-slate-700 p-3.5 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 font-mono-tech">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">ポイント</label>
+                    <input type="number" id="edit-points-input" class="w-full bg-slate-950 text-white border border-slate-700 p-3.5 rounded-xl font-bold outline-none focus:ring-2 focus:ring-indigo-500 font-mono-tech">
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="closeEdit()" class="flex-1 py-3 text-slate-400 font-bold text-xs hover:text-white">閉じる</button>
+                <button onclick="saveEdit()" class="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg">更新保存</button>
             </div>
         </div>
     </div>
@@ -146,6 +211,7 @@
         const guideBox = document.getElementById('guide-box');
         const logList = document.getElementById('log-list');
         const regModal = document.getElementById('reg-modal');
+        const editModal = document.getElementById('edit-modal');
         const statusSub = document.getElementById('status-sub');
         const msgBox = document.getElementById('msg-box');
         const msgContent = document.getElementById('msg-content');
@@ -154,6 +220,8 @@
         const balanceDashboard = document.getElementById('balance-dashboard');
         const pointsAmount = document.getElementById('points-amount');
         const historyList = document.getElementById('history-list');
+        const cardMetaFields = document.getElementById('card-meta-fields');
+        const brandSelector = document.getElementById('brand-selector');
 
         // Canvas要素
         const sCanvas = document.getElementById('scannerCanvas');
@@ -174,6 +242,7 @@
         let isScanning = false;
         let scanPulseRadius = 0;
         let systemType = 'other'; // 'android', 'ios', 'pc'
+        let selectedRegisterBrand = 'Suica'; // 新規登録時に選択されたブランド
 
         const modes = {
             card: { label: 'CARD MODE', emoji: '💳', color: '#6366f1' },
@@ -181,13 +250,16 @@
             dream: { label: '妖怪メダル MODE', emoji: '🌀', color: '#10b981' }
         };
 
-        const dummyCards = [
-            { type: "Suica", color: "#22c55e", subColor: "#15803d", txtColor: "#ffffff", brand: "交通系ICカード (East)" },
-            { type: "PASMO", color: "#ec4899", subColor: "#be185d", txtColor: "#ffffff", brand: "交通系ICカード (Metro)" },
-            { type: "WAON", color: "#22d3ee", subColor: "#0891b2", txtColor: "#0f172a", brand: "電子マネー (WAON)" },
-            { type: "nanaco", color: "#f59e0b", subColor: "#ea580c", txtColor: "#ffffff", brand: "電子マネー (nanaco)" },
-            { type: "Edy", color: "#3b82f6", subColor: "#1d4ed8", txtColor: "#ffffff", brand: "Cyber Edy (Type-F)" }
-        ];
+        // 各カードブランドのデザイン構成
+        const cardBrandConfigs = {
+            "Suica": { type: "Suica", color: "#22c55e", subColor: "#15803d", txtColor: "#ffffff", brand: "交通系ICカード (JR東日本)" },
+            "PASMO": { type: "PASMO", color: "#ec4899", subColor: "#be185d", txtColor: "#ffffff", brand: "交通系ICカード (PASMO)" },
+            "ICOCA": { type: "ICOCA", color: "#06b6d4", subColor: "#0891b2", txtColor: "#ffffff", brand: "交通系ICカード (JR西日本)" },
+            "WAON": { type: "WAON", color: "#a5f3fc", subColor: "#0284c7", txtColor: "#0f172a", brand: "電子マネー (WAON)" },
+            "nanaco": { type: "nanaco", color: "#f59e0b", subColor: "#ea580c", txtColor: "#ffffff", brand: "電子マネー (nanaco)" },
+            "楽天Edy": { type: "Edy", color: "#3b82f6", subColor: "#1d4ed8", txtColor: "#ffffff", brand: "電子マネー (楽天Edy)" },
+            "その他": { type: "CUSTOM", color: "#64748b", subColor: "#334155", txtColor: "#ffffff", brand: "FeliCa 汎用 / カスタム" }
+        };
 
         const dummyHistoryActions = [
             { desc: "自動改札機 (入場)", diff: "---" },
@@ -286,8 +358,33 @@
                 scanBtn.innerText = "シミュレータースタート";
             }
 
+            buildBrandSelector();
             loadCollection();
             requestAnimationFrame(drawScannerLoop);
+        }
+
+        // 登録モーダル内にブランド選択ボタンを構築
+        function buildBrandSelector() {
+            brandSelector.innerHTML = '';
+            Object.keys(cardBrandConfigs).forEach(brand => {
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = `brand-btn py-2 text-xs font-bold rounded-lg border transition-all ${brand === selectedRegisterBrand ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'}`;
+                btn.innerText = brand;
+                btn.onclick = () => selectRegisterBrand(brand);
+                brandSelector.appendChild(btn);
+            });
+        }
+
+        function selectRegisterBrand(brand) {
+            selectedRegisterBrand = brand;
+            document.querySelectorAll('.brand-btn').forEach(btn => {
+                if (btn.innerText === brand) {
+                    btn.className = "brand-btn py-2 text-xs font-bold rounded-lg border transition-all bg-indigo-600 border-indigo-500 text-white";
+                } else {
+                    btn.className = "brand-btn py-2 text-xs font-bold rounded-lg border transition-all bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500";
+                }
+            });
         }
 
         // ==========================================
@@ -331,20 +428,16 @@
 
             // ガイドグラフィックの描画
             if (systemType === 'ios') {
-                // iPhoneのビジュアルガイド
                 drawIPhoneGuide(sCtx, currentThemeColor);
             } else if (systemType === 'pc') {
-                // PC & USB NFCリーダー接続アニメーション
                 drawPCGuide(sCtx, currentThemeColor);
             } else {
-                // 通常スマホ (Androidなど)
                 drawAndroidGuide(sCtx, currentThemeColor);
             }
 
             requestAnimationFrame(drawScannerLoop);
         }
 
-        // iPhoneNFC位置ガイドのCanvas描写
         function drawIPhoneGuide(ctx, themeColor) {
             // iPhoneボディ
             ctx.strokeStyle = "#475569";
@@ -395,7 +488,6 @@
             ctx.fillText("カメラの真横（本体上端部）", 150, 215);
         }
 
-        // USB NFCリーダー接続案内のCanvas描写
         function drawPCGuide(ctx, themeColor) {
             // デスクトップモニター/本体枠
             ctx.strokeStyle = "#475569";
@@ -433,7 +525,6 @@
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(200, 220 + floatOffset);
-            // 曲線でUSBポートに向かう
             ctx.bezierCurveTo(240, 220 + floatOffset, 240, 113, 227, 113);
             ctx.stroke();
 
@@ -456,7 +547,6 @@
             ctx.fillText("外付けリーダーをポートに挿入", 150, 100);
         }
 
-        // 通常スマホ案内ガイドの描画
         function drawAndroidGuide(ctx, themeColor) {
             // Androidスマートフォン
             ctx.strokeStyle = "#475569";
@@ -515,13 +605,38 @@
         // ==========================================
         // CANVAS 2: ICカード券面リアルタイム生成・描画
         // ==========================================
+        let lastDisplayedId = ''; // 簡易編集時に使うためのメモリ
+
         function drawDigitalCard(id) {
+            lastDisplayedId = id;
             cCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
 
-            // IDから一意なハッシュインデックスを取得
-            let seed = 0;
-            for (let i = 0; i < id.length; i++) seed += id.charCodeAt(i);
-            const cardDesign = dummyCards[seed % dummyCards.length];
+            const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
+            const registeredCard = data[id];
+
+            let brand = "Suica";
+            let balance = 1000;
+            let points = 0;
+            let customName = "COLLECTOR CARD";
+
+            // 登録された実データがあればそちらを使用
+            if (registeredCard && registeredCard.type === 'card') {
+                brand = registeredCard.cardBrand || "Suica";
+                balance = registeredCard.balance !== undefined ? Number(registeredCard.balance) : 1000;
+                points = registeredCard.points !== undefined ? Number(registeredCard.points) : 0;
+                customName = registeredCard.name || "COLLECTOR CARD";
+            } else {
+                // 未登録の一時スキャン時はシードから擬似生成
+                let seed = 0;
+                for (let i = 0; i < id.length; i++) seed += id.charCodeAt(i);
+                const brands = Object.keys(cardBrandConfigs);
+                brand = brands[seed % brands.length];
+                balance = (seed * 13) % 18500 + 120;
+                points = (seed * 7) % 1200;
+                customName = "UNKNOWN IC CARD";
+            }
+
+            const cardDesign = cardBrandConfigs[brand] || cardBrandConfigs["その他"];
 
             // 1. カード背景ベース
             const gradient = cCtx.createLinearGradient(0, 0, cardCanvas.width, cardCanvas.height);
@@ -530,7 +645,7 @@
             cCtx.fillStyle = gradient;
             roundRect(cCtx, 0, 0, cardCanvas.width, cardCanvas.height, 14, true, false);
 
-            // 2. 装飾用グリッド（未来的な電子パターングラフィック）
+            // 2. 装飾用グリッドライン
             cCtx.strokeStyle = "rgba(255, 255, 255, 0.08)";
             cCtx.lineWidth = 1;
             for (let i = 0; i < cardCanvas.width; i += 20) {
@@ -539,7 +654,6 @@
                 cCtx.lineTo(i, cardCanvas.height);
                 cCtx.stroke();
             }
-            // 流線ラインの追加
             cCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
             cCtx.beginPath();
             cCtx.moveTo(0, 100);
@@ -548,10 +662,9 @@
             cCtx.lineTo(0, cardCanvas.height);
             cCtx.fill();
 
-            // 3. リアルなICチップ描画 (物理金属加工をイメージ)
-            cCtx.fillStyle = "#fbbf24"; // ゴールドベース
+            // 3. 金属ICチップ描画
+            cCtx.fillStyle = "#fbbf24";
             roundRect(cCtx, 30, 60, 42, 32, 6, true, false);
-            // チップ細部スリット
             cCtx.strokeStyle = "#b45309";
             cCtx.lineWidth = 1.5;
             cCtx.strokeRect(30, 60, 42, 32);
@@ -562,21 +675,20 @@
             cCtx.stroke();
 
             // 4. 残高表示
-            const balance = (seed * 13) % 18500 + 120;
             cCtx.fillStyle = cardDesign.txtColor;
-            cCtx.font = "bold 10px 'DotGothic16', sans-serif";
+            cCtx.font = "bold 9px 'DotGothic16', sans-serif";
             cCtx.textAlign = "left";
             cCtx.fillText("CURRENT BALANCE", 30, 125);
             cCtx.font = "900 24px 'Share Tech Mono', monospace";
             cCtx.fillText("¥ " + balance.toLocaleString(), 28, 150);
 
-            // 5. カードブランド名・ID
+            // 5. カードブランド名・登録名
             cCtx.font = "bold 16px 'DotGothic16', sans-serif";
-            cCtx.fillText(cardDesign.type, 30, 40);
+            cCtx.fillText(brand, 30, 40);
 
-            cCtx.font = "8px 'Share Tech Mono', monospace";
-            cCtx.fillStyle = "rgba(255, 255, 255, 0.6)";
-            cCtx.fillText(cardDesign.brand, 30, 175);
+            cCtx.font = "bold 8px 'DotGothic16', sans-serif";
+            cCtx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            cCtx.fillText("名義: " + customName, 30, 175);
             
             // シリアル番号
             cCtx.textAlign = "right";
@@ -598,11 +710,13 @@
             cCtx.stroke();
 
             // ポイント表示更新
-            const points = (seed * 7) % 1200;
             pointsAmount.innerText = `${points.toLocaleString()} P`;
 
-            // 7. 履歴更新
+            // 7. 利用履歴の模擬描画
             historyList.innerHTML = '';
+            // IDをもとにしたダミー履歴
+            let seed = 0;
+            for (let i = 0; i < id.length; i++) seed += id.charCodeAt(i);
             for (let i = 0; i < 3; i++) {
                 const actIndex = (seed + i) % dummyHistoryActions.length;
                 const action = dummyHistoryActions[actIndex];
@@ -625,7 +739,7 @@
         // ==========================================
         async function startScan() {
             if (!('NDEFReader' in window)) {
-                // 非対応時用のダミー模擬スキャン（自動的にランダムID生成）
+                // 非対応時用の模擬スキャン
                 triggerSimulatorScan();
                 return;
             }
@@ -639,13 +753,13 @@
 
                 isScanning = true;
                 document.getElementById('status-text').innerText = "スキャン中...";
-                statusSub.innerHTML = "<b class='text-green-400 animate-pulse'>NFCリーダーにアイテムを近づけたままにしてください</b>";
+                statusSub.innerHTML = "<b class='text-green-400 animate-pulse'>NFCリーダーにICカードを近づけたままにしてください</b>";
                 scanBtn.innerText = "スキャンを一時停止";
                 scanBtn.className = "w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-black text-sm tracking-widest shadow-lg transition-all";
                 scanBtn.onclick = stopScan;
 
                 ndef.onreadingerror = () => {
-                    showMsg("通信に失敗しました。アイテムがズレている可能性があります。接触面を広く保ってください。");
+                    showMsg("通信に失敗しました。接触面を維持した状態で、もう一度タッチしてください。");
                 };
 
                 ndef.onreading = (event) => {
@@ -656,9 +770,9 @@
             } catch (error) {
                 console.warn(error);
                 if (error.name === "NotAllowedError") {
-                    showMsg("NFC利用権限が拒否されています。設定でNFC権限を確認してください。");
+                    showMsg("NFCへのアクセス権限が拒否されています。ブラウザの設定でNFC許可を確認してください。");
                 } else {
-                    showMsg("デバイスに問題があるか、NFCスイッチがオフになっています: " + error.message);
+                    showMsg("NFCがサポートされていないか、無効になっています: " + error.message);
                 }
                 stopScan();
             }
@@ -677,7 +791,6 @@
             updateStatusSub();
         }
 
-        // シミュレーター（タップ時に起動する擬似スキャン）
         function triggerSimulatorScan() {
             isScanning = true;
             document.getElementById('status-text').innerText = "スキャン通信中...";
@@ -690,7 +803,6 @@
             }, 800);
         }
 
-        // スキャン成功時の共通ハンドラ
         function handleScannedItem(id) {
             if (currentMode === 'card') {
                 drawDigitalCard(id);
@@ -699,7 +811,8 @@
             const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
             if (data[id]) {
                 document.getElementById('status-text').innerText = "スキャン成功！";
-                statusSub.innerHTML = `<span class="text-indigo-400 font-bold text-lg">${data[id].name}</span><br><span class="text-[10px] text-slate-500">(${data[id].type.toUpperCase()}確認完了)</span>`;
+                const typeLabel = data[id].type === 'card' ? `${data[id].cardBrand || 'CARD'}` : data[id].type.toUpperCase();
+                statusSub.innerHTML = `<span class="text-indigo-400 font-bold text-lg">${data[id].name}</span><br><span class="text-[10px] text-slate-500">(${typeLabel}確認完了)</span>`;
                 
                 setTimeout(() => {
                     if (isScanning) {
@@ -714,20 +827,45 @@
                 currentScannedId = id;
                 document.getElementById('scanned-id-type').innerText = currentMode.toUpperCase() + " TAG";
                 document.getElementById('scanned-id').innerText = `物理固有シリアル: ${id}`;
+                
+                // モードに応じて登録メタ表示のオンオフ
+                if (currentMode === 'card') {
+                    cardMetaFields.classList.remove('hidden');
+                } else {
+                    cardMetaFields.classList.add('hidden');
+                }
+
                 regModal.classList.remove('hidden');
                 document.getElementById('name-input').focus();
             }
         }
 
-        // コレクション保存と処理
+        // コレクション保存処理
         function saveEntry() {
             const name = document.getElementById('name-input').value.trim();
             if (!name) return;
             const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
-            data[currentScannedId] = { name, type: currentMode };
+            
+            const itemData = {
+                name: name,
+                type: currentMode
+            };
+
+            // CARDモードの場合は詳細情報を追加
+            if (currentMode === 'card') {
+                itemData.cardBrand = selectedRegisterBrand;
+                itemData.balance = Number(document.getElementById('balance-input').value) || 0;
+                itemData.points = Number(document.getElementById('points-input').value) || 0;
+            }
+
+            data[currentScannedId] = itemData;
             localStorage.setItem('nfc_data', JSON.stringify(data));
             closeReg();
             loadCollection();
+
+            if (currentMode === 'card') {
+                drawDigitalCard(currentScannedId);
+            }
             
             if (isScanning) {
                 document.getElementById('status-text').innerText = "スキャン中...";
@@ -738,8 +876,49 @@
         function closeReg() {
             regModal.classList.add('hidden');
             document.getElementById('name-input').value = "";
+            document.getElementById('balance-input').value = "1000";
+            document.getElementById('points-input').value = "0";
         }
 
+        // ==========================================
+        // 残高の簡易修正 (Edit Modal)
+        // ==========================================
+        function openQuickEdit() {
+            if (!lastDisplayedId) return;
+            const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
+            const card = data[lastDisplayedId];
+            if (!card) {
+                showMsg("登録されていないカードは残高変更できません。まずはスキャンして登録してください。");
+                return;
+            }
+
+            document.getElementById('edit-card-title').innerText = `${card.name} (${card.cardBrand})`;
+            document.getElementById('edit-balance-input').value = card.balance !== undefined ? card.balance : 0;
+            document.getElementById('edit-points-input').value = card.points !== undefined ? card.points : 0;
+            editModal.classList.remove('hidden');
+        }
+
+        function closeEdit() {
+            editModal.classList.add('hidden');
+        }
+
+        function saveEdit() {
+            if (!lastDisplayedId) return;
+            const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
+            if (data[lastDisplayedId]) {
+                data[lastDisplayedId].balance = Number(document.getElementById('edit-balance-input').value) || 0;
+                data[lastDisplayedId].points = Number(document.getElementById('edit-points-input').value) || 0;
+                localStorage.setItem('nfc_data', JSON.stringify(data));
+                closeEdit();
+                loadCollection();
+                drawDigitalCard(lastDisplayedId);
+                showMsg("残高とポイントを更新しました！");
+            }
+        }
+
+        // ==========================================
+        // コレクション表示・管理
+        // ==========================================
         function loadCollection() {
             const data = JSON.parse(localStorage.getItem('nfc_data') || '{}');
             logList.innerHTML = '';
@@ -752,12 +931,19 @@
                 const item = data[id];
                 const div = document.createElement('div');
                 div.className = "bg-slate-800 p-4 rounded-2xl flex items-center justify-between border border-slate-700/50 shadow-sm hover:border-indigo-500/50 transition-all";
+                
+                let detailsHtml = `${item.type.toUpperCase()} | ${id}`;
+                if (item.type === 'card') {
+                    const bal = item.balance !== undefined ? item.balance : 0;
+                    detailsHtml = `${item.cardBrand || 'CARD'} (残高: ¥${bal.toLocaleString()}) | ${id}`;
+                }
+
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
                         <div class="text-2xl">${modes[item.type]?.emoji || '❓'}</div>
                         <div>
                             <div class="font-bold text-slate-100 text-sm">${item.name}</div>
-                            <div class="text-[9px] font-mono-tech text-slate-500 uppercase tracking-widest">${item.type} | ${id}</div>
+                            <div class="text-[9px] font-mono-tech text-slate-500 uppercase tracking-widest">${detailsHtml}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -774,21 +960,23 @@
             delete data[id];
             localStorage.setItem('nfc_data', JSON.stringify(data));
             loadCollection();
-            balanceDashboard.classList.add('hidden');
+            if (lastDisplayedId === id) {
+                balanceDashboard.classList.add('hidden');
+                lastDisplayedId = '';
+            }
         }
 
         function clearCollection() {
             localStorage.removeItem('nfc_data');
             loadCollection();
             balanceDashboard.classList.add('hidden');
+            lastDisplayedId = '';
             showMsg("コレクションデータを初期化しました");
         }
 
         // イベント登録
         scanBtn.onclick = startScan;
         document.getElementById('save-btn').onclick = saveEntry;
-        
-        // Canvas自体のタップで模擬シミュレート
         sCanvas.onclick = triggerSimulatorScan;
 
         // アプリ起動
