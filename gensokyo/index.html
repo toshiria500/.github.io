@@ -529,15 +529,6 @@
             margin-left: 4px;
         }
 
-        /* VOICEVOX クレジット表示 */
-        .voicevox-credit {
-            font-size: 0.65rem;
-            color: var(--purple-light);
-            opacity: 0.7;
-            font-family: sans-serif;
-            margin-top: 2px;
-        }
-
         /* --- フッター --- */
         .site-footer {
             background: #050208;
@@ -1047,35 +1038,14 @@
         </div>
     </div>
 
-    <!-- 設定モーダル (修正: type="password") -->
+    <!-- 設定モーダル -->
     <div id="settingModal" class="modal-overlay">
         <div class="modal-content">
             <h2>⚙ 外の世界の設定</h2>
             <div class="form-group">
-                <label>VOICEVOX 接続方法</label>
-                <div style="display: flex; gap: 10px; margin-top: 5px;">
-                    <label
-                        style="flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #333; text-align: center;">
-                        <input type="radio" name="vvMode" value="local" checked style="margin-right: 5px;"> ローカル (PC)
-                    </label>
-                    <label
-                        style="flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #333; text-align: center;">
-                        <input type="radio" name="vvMode" value="web" style="margin-right: 5px;"> Web API (スマホ)
-                    </label>
-                </div>
-            </div>
-            <div class="form-group" id="webKeyGroup" style="display: none;">
-                <label for="webApiKeyInput">Web API キー (任意)</label>
-                <input type="password" id="webApiKeyInput" placeholder="取得したキーを入力">
-                <p class="help-text">tts.questの高速版キーを持っている場合は入力してちょうだい。空でも低速版として動くわ。</p>
-            </div>
-            <div class="form-group">
-                <label for="speakerSelect">VOICEVOX 話者スタイル</label>
-                <select id="speakerSelect"
-                    style="width: 100%; background: rgba(255, 255, 255, 0.07); border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; font-family: var(--font-serif); outline: none;">
-                    <!-- JavaScriptで動的に生成 -->
-                </select>
-                <p class="help-text" id="speakerHelp">話者リストを取得中よ...</p>
+                <label for="apiKeyInput">Gemini API キー</label>
+                <input type="password" id="apiKeyInput" placeholder="ご自身のAPIキーを入力" autocomplete="off">
+                <p class="help-text">キーはこのブラウザーに保存され、Gemini APIへ直接送信されるわ。<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">APIキーを取得</a></p>
             </div>
             <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeSettingModal()">閉じる</button>
@@ -1090,9 +1060,6 @@
         // --- 初期化・定数 ---
         const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V3';
         const STORAGE_KEY_API = 'GEMINI_API_KEY';
-        const STORAGE_KEY_VV_SPEAKER = 'VV_SPEAKER_ID';
-        const STORAGE_KEY_VV_MODE = 'VV_CONN_MODE';
-        const STORAGE_KEY_VV_WEB_KEY = 'VV_WEB_API_KEY';
         const chatContainer = document.getElementById('chat-container');
         const storyForm = document.getElementById('storyForm');
         const fileInput = document.getElementById('fileInput');
@@ -1104,13 +1071,7 @@
         const toast = document.getElementById('toast');
 
         let currentApiKey = "";
-        let currentVvMode = localStorage.getItem(STORAGE_KEY_VV_MODE) || "local";
-        let currentWebApiKey = localStorage.getItem(STORAGE_KEY_VV_WEB_KEY) || "";
-        let speakerMap = {}; // ID -> { name, styleName }
-        let currentSpeakerId = localStorage.getItem(STORAGE_KEY_VV_SPEAKER) || "2";
 
-        let currentUtterance = null;
-        let activeAudio = null;
         let currentTtsBtn = null;
 
         function getNowTime() {
@@ -1191,8 +1152,6 @@
 
             // タブ機能の初期化
             initTabs();
-            // 話者リストの取得
-            fetchSpeakers();
         }
 
         function initTabs() {
@@ -1229,59 +1188,6 @@
             });
         }
 
-        async function fetchSpeakers() {
-            const select = document.getElementById('speakerSelect');
-            const help = document.getElementById('speakerHelp');
-
-            try {
-                let speakers = [];
-                if (currentVvMode === 'local') {
-                    const res = await fetch("http://127.0.0.1:50021/speakers");
-                    if (!res.ok) throw new Error("Local engine not running");
-                    speakers = await res.json();
-                } else {
-                    // Web API用 (tts.quest v3) - 公開されている話者リストを使用
-                    const res = await fetch("https://api.tts.quest/v3/voicevox/speakers");
-                    const data = await res.json();
-                    speakers = data.speakers;
-                }
-
-                // マップの作成とセレクトボックスの更新
-                select.innerHTML = "";
-                speakerMap = {};
-
-                speakers.forEach(s => {
-                    s.styles.forEach(st => {
-                        const option = document.createElement('option');
-                        option.value = st.id;
-                        option.textContent = `${s.name} (${st.name})`;
-                        select.appendChild(option);
-                        speakerMap[st.id] = { name: s.name, styleName: st.name };
-                    });
-                });
-
-                select.value = currentSpeakerId;
-                help.textContent = `現在、${Object.keys(speakerMap).length}種類のスタイルが利用可能よ。`;
-
-            } catch (err) {
-                console.warn("Failed to fetch speakers:", err);
-                if (currentVvMode === 'local') {
-                    help.innerHTML = "<span style='color:var(--red-eye)'>ローカル版が見つからないわ。Web APIに切り替えるか、アプリを起動してちょうだい。</span>";
-                    // 自動フォールバック（初回のみなど検討）
-                } else {
-                    help.textContent = "Web APIからの取得に失敗したわ。時間を置いてみて。";
-                }
-
-                // フォールバック用の最小セット
-                const fallback = { "2": "四国めたん (あまあま)", "3": "ずんだもん (ノーマル)" };
-                Object.entries(fallback).forEach(([id, name]) => {
-                    const option = document.createElement('option');
-                    option.value = id; option.textContent = name;
-                    select.appendChild(option);
-                });
-            }
-        }
-
         async function loadSharedContentById(shareId) {
             try {
                 const response = await fetch(`/api/share/${shareId}`);
@@ -1302,8 +1208,6 @@
             if (savedIcon) {
                 document.querySelectorAll('.botIcon').forEach(i => { i.src = savedIcon; i.style.display = 'block'; });
             }
-            currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
-
             const d = obj.d;
             pushUserMsg(`${d.n}は「${d.a}」を試みたようだわ……。`);
 
@@ -1337,17 +1241,6 @@
         // --- 設定モーダル ---
         function openSettingModal() {
             document.getElementById('apiKeyInput').value = currentApiKey;
-            document.getElementById('speakerSelect').value = currentSpeakerId;
-            document.getElementById('webApiKeyInput').value = currentWebApiKey;
-
-            const radios = document.getElementsByName('vvMode');
-            radios.forEach(r => {
-                r.checked = (r.value === currentVvMode);
-                r.onchange = () => {
-                    document.getElementById('webKeyGroup').style.display = (r.value === 'web' ? 'block' : 'none');
-                };
-            });
-            document.getElementById('webKeyGroup').style.display = (currentVvMode === 'web' ? 'block' : 'none');
 
             settingModal.style.display = 'flex';
         }
@@ -1358,23 +1251,10 @@
 
         function saveSettings() {
             const key = document.getElementById('apiKeyInput').value.trim();
-            const speaker = document.getElementById('speakerSelect').value;
-            const webKey = document.getElementById('webApiKeyInput').value.trim();
-            const mode = document.querySelector('input[name="vvMode"]:checked').value;
-
-            const needRefresh = (currentVvMode !== mode);
 
             currentApiKey = key;
-            currentSpeakerId = speaker;
-            currentVvMode = mode;
-            currentWebApiKey = webKey;
 
             localStorage.setItem(STORAGE_KEY_API, key);
-            localStorage.setItem(STORAGE_KEY_VV_SPEAKER, speaker);
-            localStorage.setItem(STORAGE_KEY_VV_MODE, mode);
-            localStorage.setItem(STORAGE_KEY_VV_WEB_KEY, webKey);
-
-            if (needRefresh) fetchSpeakers();
 
             closeSettingModal();
             showToast('設定を保存したわ。');
@@ -1501,8 +1381,7 @@
         async function generateContentWithRetry(payload, maxRetries = 5) {
             if (!currentApiKey) throw new Error("API_KEY_MISSING");
 
-            // URLパラメータからkeyを外し、より安全なヘッダー送信(x-goog-api-key)に変更します。
-            const modelName = "gemini-2.5-flash"; // 最新の安定モデルに変更
+            const modelName = "gemini-2.5-flash";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -1568,7 +1447,7 @@
             }
 
             if (!currentApiKey) {
-                pushBotMsg("鍵（APIキー）が設定されていないわ。右上の「⚙ 設定」から設定してちょうだい。");
+                pushBotMsg("Gemini APIキーが設定されていないわ。右上の「⚙ 設定」から、ご自身のキーを入力してちょうだい。");
                 openSettingModal();
                 return;
             }
@@ -1652,15 +1531,10 @@
         };
 
         // --- アクションバーUIのロジック ---
-        async function toggleTTS(btn, text) {
+        function toggleTTS(btn, text) {
             const icon = btn.querySelector('i');
             const isPlaying = icon.classList.contains('fa-stop');
 
-            // 既存の再生を停止
-            if (activeAudio) {
-                activeAudio.pause();
-                activeAudio = null;
-            }
             if (window.speechSynthesis && speechSynthesis.speaking) {
                 speechSynthesis.cancel();
             }
@@ -1681,101 +1555,35 @@
             icon.classList.add('fa-stop');
             btn.classList.add('active');
 
-            try {
-                if (currentVvMode === 'local') {
-                    // --- ローカル方式 ---
-                    const vvUrl = "http://127.0.0.1:50021";
-                    const queryRes = await fetch(`${vvUrl}/audio_query?text=${encodeURIComponent(text)}&speaker=${currentSpeakerId}`, {
-                        method: 'POST'
-                    });
-                    if (!queryRes.ok) throw new Error("VOICEVOX_NOT_FOUND");
-                    const queryData = await queryRes.json();
-
-                    const synthRes = await fetch(`${vvUrl}/synthesis?speaker=${currentSpeakerId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(queryData)
-                    });
-                    if (!synthRes.ok) throw new Error("SYNTH_FAILED");
-
-                    const blob = await synthRes.blob();
-                    const url = URL.createObjectURL(blob);
-                    activeAudio = new Audio(url);
-
-                    activeAudio.onended = () => {
-                        icon.classList.remove('fa-stop');
-                        icon.classList.add('fa-volume-up');
-                        btn.classList.remove('active');
-                        currentTtsBtn = null;
-                    };
-                    activeAudio.play();
-
-                } else {
-                    // --- Web API方式 (tts.quest v3) ---
-                    const baseUrl = "https://api.tts.quest/v3/voicevox/synthesis";
-                    const params = new URLSearchParams({
-                        key: currentWebApiKey,
-                        speaker: currentSpeakerId,
-                        text: text
-                    });
-
-                    const res = await fetch(`${baseUrl}?${params.toString()}`);
-                    const data = await res.json();
-
-                    if (!data.success) {
-                        throw new Error(data.errorMessage || "Web API Error");
-                    }
-
-                    // ポーリング開始
-                    const statusUrl = data.audioStatusUrl;
-                    const audioUrl = data.mp3DownloadUrl;
-
-                    const checkStatus = async () => {
-                        // 既に停止ボタンが押されている場合は中断
-                        if (currentTtsBtn !== btn) return;
-
-                        const sRes = await fetch(statusUrl);
-                        const sData = await sRes.json();
-
-                        if (sData.isAudioReady) {
-                            activeAudio = new Audio(audioUrl);
-                            activeAudio.onended = () => {
-                                icon.classList.remove('fa-stop');
-                                icon.classList.add('fa-volume-up');
-                                btn.classList.remove('active');
-                                currentTtsBtn = null;
-                            };
-                            activeAudio.play();
-                        } else {
-                            // まだ準備中なら0.5秒後に再試行
-                            setTimeout(checkStatus, 500);
-                        }
-                    };
-
-                    checkStatus();
-                }
-
-            } catch (err) {
-                console.warn("VOICEVOX failed, fallback to SpeechSynthesis:", err);
-                if (!('speechSynthesis' in window)) {
-                    showToast("読み上げ機能が使えないみたいね。");
-                    btn.classList.remove('active');
-                    icon.classList.remove('fa-stop');
-                    icon.classList.add('fa-volume-up');
-                    return;
-                }
-                const ut = new SpeechSynthesisUtterance(text);
-                ut.lang = 'ja-JP';
-                ut.rate = 0.95;
-                ut.pitch = 1.0;
-                ut.onend = () => {
-                    icon.classList.remove('fa-stop');
-                    icon.classList.add('fa-volume-up');
-                    btn.classList.remove('active');
-                    currentTtsBtn = null;
-                };
-                speechSynthesis.speak(ut);
+            if (!('speechSynthesis' in window)) {
+                showToast("読み上げ機能が使えないみたいね。");
+                btn.classList.remove('active');
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                currentTtsBtn = null;
+                return;
             }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+            utterance.onend = () => {
+                if (currentTtsBtn !== btn) return;
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                btn.classList.remove('active');
+                currentTtsBtn = null;
+            };
+            utterance.onerror = () => {
+                if (currentTtsBtn !== btn) return;
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                btn.classList.remove('active');
+                currentTtsBtn = null;
+                showToast("読み上げに失敗したわ。");
+            };
+            speechSynthesis.speak(utterance);
         }
 
         function toggleFeedback(btn, feedbackType) {
@@ -2141,15 +1949,6 @@
             const div = document.createElement('div');
             div.className = "botContainer"; div.id = id;
 
-            // 話者名を取得 (動的マップがあればそれを使用、なければフォールバック)
-            let speakerName = "四国めたん";
-            if (speakerMap && speakerMap[currentSpeakerId]) {
-                speakerName = speakerMap[currentSpeakerId].name;
-            } else {
-                const fallbackNames = { "2": "四国めたん", "3": "ずんだもん" };
-                speakerName = fallbackNames[currentSpeakerId] || "四国めたん";
-            }
-
             const src = localStorage.getItem(STORAGE_KEY_ICON);
             div.innerHTML = `
       <div class="icon-wrapper" onclick="triggerFileSelect()" title="私の姿を書き換えるというの？ うふふ、いいわよ。">
@@ -2159,7 +1958,6 @@
         <div class="botText">${t}</div>
         <div class="action-bar" id="action-${id}"></div>
         <div class="msg-info">
-            <span class="voicevox-credit">VOICEVOX: ${speakerName}</span>
             <span>${getNowTime()}</span>
         </div>
       </div>
