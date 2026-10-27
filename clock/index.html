@@ -1,338 +1,815 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celestial Clock v66.0 | 秒単位判定＆自動年更新</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Celestial Clock | Network vs Device</title>
     <style>
         :root {
-            --accent: #38bdf8;
+            --accent: #fbbf24;
             --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.6);
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --bg-default: #020617;
-            --success: #10b981;
-            --warning: #fbbf24;
-            --danger: #f87171;
+            --text-dim: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-blur: blur(20px);
+            --bg-default: #0f172a;
+            --app-font: system-ui, sans-serif;
+            --clock-font: ui-monospace, SFMono-Regular, Consolas, monospace;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body { 
-            height: 100vh;
-            width: 100vw;
-            background: var(--bg-default); 
-            color: var(--text-main); 
-            font-family: 'Outfit', sans-serif;
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg-default);
+            font-family: var(--app-font);
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 3s ease;
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .font-controls {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .font-controls label {
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .font-controls input {
+            flex: 1 1 180px;
+            min-width: min(180px, 100%);
+            padding: 7px 10px;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--text-main);
+            font: inherit;
+        }
+
+        .font-controls input::placeholder {
+            color: var(--text-dim);
+        }
+
+        #font-status {
+            flex-basis: 100%;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+        }
+
+        .font-note {
+            flex-basis: 100%;
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            opacity: 0.75;
+        }
+
+        .btn-mini {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-mini:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
+
+        .glass-box {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6);
+        }
+
+        .main-display {
+            position: relative;
+            padding: clamp(2rem, 8vh, 4rem) 1rem;
+            text-align: center;
+            overflow: hidden;
+            transition: background 2s ease;
+        }
+
+        .clock-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            font-family: var(--clock-font);
+            z-index: 10;
             position: relative;
-        }
-        
-        .bg-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #1e3a8a 0%, transparent 70%);
-            opacity: 0.4;
-            z-index: -1;
+            text-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
         }
 
-        .main-container {
-            width: 95%;
-            max-width: 900px;
-            max-height: 90vh;
-            padding: clamp(1rem, 3vh, 2rem) 1.5rem;
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            border-radius: 3rem;
-            text-align: center;
-            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            gap: 1.5vh;
+        .chime-flash {
+            animation: flash-text 1.2s ease-out;
         }
 
-        .sync-badge {
-            display: inline-flex;
-            align-items: center;
-            align-self: center;
-            gap: 8px;
-            padding: 6px 16px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 20px;
+        .countdown-pulse {
+            animation: countdown-pulse-anim 0.4s ease-out;
+        }
+
+        @keyframes flash-text {
+            0% {
+                color: var(--accent);
+                text-shadow: 0 0 60px var(--accent);
+                transform: scale(1.05);
+            }
+
+            100% {
+                color: inherit;
+                text-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes countdown-pulse-anim {
+            0% {
+                transform: scale(1.02);
+                color: var(--accent);
+            }
+
+            100% {
+                transform: scale(1);
+                color: inherit;
+            }
+        }
+
+        .label-main {
             font-size: 0.7rem;
             font-weight: 800;
+            opacity: 0.6;
+            letter-spacing: 0.2em;
+            margin-bottom: 0.5rem;
             color: var(--accent);
-            border: 1px solid rgba(56, 189, 248, 0.2);
         }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
-        .dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-        .primary-clock {
-            padding-bottom: 1vh;
-        }
-        #clock-time {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: clamp(3rem, 12vh, 8rem);
+        #digital-time {
+            font-size: clamp(3.5rem, 15vw, 9rem);
             line-height: 1;
-            background: linear-gradient(to bottom, #fff 60%, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.05em;
         }
-        #clock-date {
-            font-size: clamp(0.8rem, 2.5vh, 1.2rem);
+
+        #digital-date {
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+            font-weight: 300;
             letter-spacing: 0.1em;
+            margin-top: 1rem;
             opacity: 0.8;
         }
-        .day { color: var(--accent); font-weight: 800; }
 
-        .device-sync-info {
-            background: rgba(255, 255, 255, 0.03);
+        .day-badge {
+            color: var(--accent);
+            font-weight: 800;
+            margin-left: 0.5rem;
+        }
+
+        .world-monitor {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            z-index: 10;
+            position: relative;
+        }
+
+        .world-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 18px;
             border-radius: 1.5rem;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
             border: 1px solid var(--glass-border);
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
         }
-        .device-item { text-align: left; }
-        .device-item span { display: block; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 800; }
-        .device-item strong { font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; color: #fff; }
-        
-        .status-exact { color: var(--success) !important; }
-        .status-fast { color: var(--warning) !important; }
-        .status-slow { color: var(--danger) !important; }
 
-        .world-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 1vh;
-        }
-        @media (min-width: 600px) { .world-grid { grid-template-columns: repeat(4, 1fr); } }
-        
-        .world-item {
-            padding: 12px;
+        .world-card:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 1rem;
-            border: 1px solid var(--glass-border);
+            transform: translateY(-5px);
         }
-        .world-item .city { font-size: 0.65rem; color: var(--text-dim); font-weight: 800; margin-bottom: 4px; }
-        .world-item .time { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: var(--accent); }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            border-top: 1px solid var(--glass-border);
-            padding-top: 1vh;
+        .world-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
         }
-        .info-item span { display: block; font-size: 0.6rem; color: var(--text-dim); font-weight: 800; }
-        .info-item strong { font-size: 0.85rem; color: #fff; }
+
+        .world-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            opacity: 0.6;
+            letter-spacing: 0.1em;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .world-time {
+            font-family: var(--clock-font);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .sync-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            opacity: 0.6;
+            z-index: 20;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #64748b;
+            transition: background 0.3s;
+        }
+
+        .dot.synced {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .dot.syncing {
+            background: #fbbf24;
+            animation: pulse-blink 1s infinite;
+        }
+
+        .dot.error {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        @keyframes pulse-blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .astro-details {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .astro-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0 12px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .astro-item:first-child {
+            border-left: none;
+        }
+
+        .location-control {
+            flex-basis: 100%;
+            align-items: center;
+            border-left: none;
+        }
+
+        #location-status {
+            max-width: 600px;
+            font-size: 0.65rem;
+            font-weight: 400;
+            color: var(--text-dim);
+        }
 
         footer {
             width: 100%;
-            padding: 0.5rem;
-            font-size: 0.55rem;
-            color: var(--text-dim);
+            padding: 2rem 0;
             text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .notice { opacity: 0.6; margin-bottom: 4px; }
-        .copyright { font-weight: 700; color: rgba(255, 255, 255, 0.4); }
     </style>
 </head>
+
 <body>
-    <div class="bg-glow"></div>
-    
-    <div class="main-container">
-        <div class="sync-badge">
-            <div id="status-dot" class="dot"></div>
-            <span id="status-text">SYNCING...</span>
-        </div>
-
-        <!-- 日本標準時（メイン） -->
-        <div class="primary-clock">
-            <div id="clock-time">00:00:00</div>
-            <div id="clock-date">取得中...</div>
-        </div>
-
-        <!-- デバイス時刻との誤差比較 -->
-        <div class="device-sync-info">
-            <div class="device-item">
-                <span>端末の時刻 / DEVICE</span>
-                <strong id="device-time">00:00:00</strong>
+    <main>
+        <div class="dashboard-header">
+            <div class="control-group">
+                <button class="btn-mini" id="lang-btn" onclick="toggleLang()">JPN</button>
+                <button class="btn-mini" id="fs-btn" onclick="toggleFullscreen()">全画面</button>
+                <button class="btn-mini" id="sync-now-btn" onclick="syncWithNICT()">NICT同期</button>
             </div>
-            <div class="device-item">
-                <span>誤差状況 / STATUS</span>
-                <strong id="device-diff-status">判定中...</strong>
+            <div class="control-group">
+                <span id="lbl-chime-pat" style="font-size: 0.6rem; font-weight: 800; opacity: 0.5;">時報設定:</span>
+                <button class="btn-mini chime-opt" id="chime-off" onclick="setChimeMode('off')">オフ</button>
+                <button class="btn-mini chime-opt" id="chime-hourly" onclick="setChimeMode('hourly')">毎時</button>
+                <button class="btn-mini chime-opt" id="chime-minutely" onclick="setChimeMode('minutely')">毎分</button>
+            </div>
+            <div class="control-group font-controls">
+                <label id="font-label" for="font-name">端末内フォント:</label>
+                <input id="font-name" type="text" autocomplete="off" placeholder="例: 游ゴシック">
+                <button class="btn-mini" id="font-apply-btn" onclick="applyLocalFont()">確認して適用</button>
+                <span id="font-status" role="status" aria-live="polite">フォント名を入力してください</span>
+                <span id="font-note" class="font-note">確認時に端末フォントへのアクセス許可が必要です（対応ブラウザーのみ）</span>
             </div>
         </div>
 
-        <!-- 世界時計 -->
-        <div class="world-grid">
-            <div class="world-item">
-                <div class="city">HONOLULU</div>
-                <div class="time" id="world-honolulu">00:00</div>
+        <div class="glass-box main-display" id="main-sky">
+            <div id="sync-status" class="sync-indicator">
+                <div id="sync-dot" class="dot"></div>
+                <span id="sync-label">NICT待機中</span>
             </div>
-            <div class="world-item">
-                <div class="city">WASHINGTON</div>
-                <div class="time" id="world-washington">00:00</div>
-            </div>
-            <div class="world-item">
-                <div class="city">UTC</div>
-                <div class="time" id="world-utc">00:00</div>
-            </div>
-            <div class="world-item">
-                <div class="city">原子時 / TAI*</div>
-                <div class="time" id="world-tai">00:00</div>
-            </div>
-        </div>
 
-        <div class="info-grid">
-            <div class="info-item"><span>同期オフセット</span><strong id="val-offset">0.000s</strong></div>
-            <div class="info-item"><span>現在地</span><strong id="val-location">取得中...</strong></div>
-        </div>
+            <div class="clock-container" id="clock-core">
+                <div class="label-main" id="lbl-title">TOKYO (JST)</div>
+                <div id="digital-time">--:--:--</div>
+                <div id="digital-date">----/--/-- <span class="day-badge">---</span></div>
+            </div>
 
-        <button class="btn-sync" onclick="syncAll()" style="margin-top: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: 700;">再同期</button>
-    </div>
+            <div class="world-monitor">
+                <!-- Device Local Time Card (Always Raw Device Time) -->
+                <div class="world-card" id="card-local" onclick="setBaseToLocal(this)">
+                    <span class="world-label" id="lbl-card-local">LOCAL (DEVICE)</span>
+                    <div id="time-local" class="world-time">--:--:--</div>
+                </div>
+                <!-- Network Based Cities (Synced with NICT) -->
+                <div class="world-card" onclick="setBaseCity(9, 'TOKYO (JST)', this)">
+                    <span class="world-label">TOKYO (JST)</span>
+                    <div id="time-tokyo" class="world-time">--:--:--</div>
+                </div>
+                <div class="world-card" onclick="setBaseCity(0, 'LONDON (GMT)', this)">
+                    <span class="world-label">LONDON (GMT)</span>
+                    <div id="time-london" class="world-time">--:--:--</div>
+                </div>
+                <div class="world-card" onclick="setBaseCity(-5, 'NEW YORK (EST)', this)">
+                    <span class="world-label">NEW YORK (EST)</span>
+                    <div id="time-ny" class="world-time">--:--:--</div>
+                </div>
+            </div>
 
-    <footer>
-        <div class="notice">
-            ※NICTのHTTP供給終了に伴い、独自多点同期を採用。正確範囲: ±0.050秒以内。TAIは現在の閏秒(37秒)加算値。
+            <div class="astro-details">
+                    <div class="astro-item"><span class="astro-label" id="lbl-offset">同期方式</span><span
+                        id="sync-method">Initializing...</span></div>
+                    <div class="astro-item">
+                        <span class="astro-label" id="lbl-sun">日の出 / 日入り（推定・端末のローカル時刻）</span>
+                        <span id="sun-val">--:-- / --:--</span>
+                    </div>
+                    <div class="astro-item location-control">
+                        <button class="btn-mini" id="location-btn" onclick="enableLocation()">位置情報を許可して表示</button>
+                        <span id="location-status" role="status" aria-live="polite">位置情報はこのページ内で日の出・日の入りの計算だけに使用します。座標や地名は表示せず、サーバーにも送信しません。</span>
+                    </div>
+                </div>
         </div>
-        <div id="copyright-text" class="copyright">COPYRIGHT &copy; 2025 - 2026 TOSHIRIA ALL RIGHTS RESERVED.</div>
-    </footer>
+    </main>
+
+    <footer>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</footer>
 
     <script>
-        let globalOffset = 0; 
-        const LEAP_SECONDS = 37; 
+        const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+        let baseTimeOffset = 0; // Difference between Local Device and Server (NICT)
+        let lastSyncTime = 0;
+        let currentLang = 'jp';
+        let activeFontName = '';
+        let chimeMode = 'off';
+        let lastChimeTrigger = -1;
+        let currentBaseOffset = 9; // Default to Tokyo
+        let isLocalMode = false;
+        let locationCoordinates = null;
+        let locationStatusKey = 'locationNote';
+        let lastSunUpdateMinute = -1;
 
-        async function syncAll() {
-            const statusDot = document.getElementById('status-dot');
-            const statusText = document.getElementById('status-text');
-            statusDot.classList.remove('active');
-            statusText.textContent = "同期中...";
-
-            const samples = [];
-            const syncEndpoints = [
-                "https://worldtimeapi.org/api/timezone/Asia/Tokyo",
-                "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Tokyo"
-            ];
-
-            for (let endpoint of syncEndpoints) {
-                try {
-                    const t1 = performance.now();
-                    const res = await fetch(endpoint, { cache: "no-store" });
-                    if (!res.ok) continue;
-                    const data = await res.json();
-                    const t2 = performance.now();
-                    const rtt = t2 - t1;
-                    
-                    let serverMs = data.unixtime ? data.unixtime * 1000 : new Date(data.dateTime).getTime();
-                    const offset = (serverMs + (rtt / 2)) - Date.now();
-                    samples.push({ offset, rtt });
-                } catch (e) { console.warn("Sync failed", e); }
+        const L10N = {
+            en: {
+                status_waiting: "NICT READY", status_syncing: "SYNCING...", status_synced: "NICT SYNCED",
+                status_error: "SYNC FAILED",
+                chimePat: "CHIME:", offset: "SYNC SOURCE", sun: "SUNRISE / SUNSET (ESTIMATE, DEVICE LOCAL TIME)",
+                chimeOff: "OFF", chimeH: "1H", chimeM: "1M", fs: "FULL", sync: "NICT SYNC",
+                localLabel: "LOCAL (DEVICE)",
+                locationButton: "ALLOW LOCATION FOR SUN TIMES",
+                locationNote: "Location is used only in this page to calculate sunrise and sunset. Coordinates and place names are not shown or sent to the server.",
+                locationRequest: "Waiting for location permission...",
+                locationUnsupported: "Location is not supported by this browser.",
+                locationDenied: "Location permission was denied. Allow it in browser settings to try again.",
+                locationUnavailable: "Could not determine location. Please try again.",
+                locationTimeout: "Location request timed out. Please try again.",
+                locationReady: "Sunrise and sunset are calculated using your device's local time.",
+                fontLabel: "DEVICE FONT:", fontPlaceholder: "e.g. Arial", fontApply: "CHECK & APPLY",
+                fontNote: "Requires permission to check installed fonts (supported browsers only).",
+                fontPrompt: "Enter an installed font name.", fontUnsupported: "This browser cannot check installed fonts.",
+                fontNotFound: "Font not found on this device.", fontApplied: "Font applied.",
+                fontDenied: "Font access was denied.", fontError: "Could not check installed fonts.",
+                days: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+                months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            },
+            jp: {
+                status_waiting: "NICT待機中", status_syncing: "同期中...", status_synced: "NICT同期完了",
+                status_error: "同期失敗",
+                chimePat: "時報設定:", offset: "同期元", sun: "日の出 / 日入り（推定・端末のローカル時刻）",
+                chimeOff: "オフ", chimeH: "毎時", chimeM: "毎分", fs: "全画面", sync: "NICT同期",
+                localLabel: "デバイスの時計",
+                locationButton: "位置情報を許可して表示",
+                locationNote: "位置情報はこのページ内で日の出・日の入りの計算だけに使用します。座標や地名は表示せず、サーバーにも送信しません。",
+                locationRequest: "位置情報の許可を確認しています...",
+                locationUnsupported: "このブラウザーは位置情報に対応していません。",
+                locationDenied: "位置情報が許可されていません。ブラウザーの設定を確認してください。",
+                locationUnavailable: "現在地を取得できませんでした。もう一度お試しください。",
+                locationTimeout: "位置情報の取得がタイムアウトしました。もう一度お試しください。",
+                locationReady: "日の出・日の入りを端末のローカル時刻で表示しています。",
+                fontLabel: "端末内フォント:", fontPlaceholder: "例: 游ゴシック", fontApply: "確認して適用",
+                fontNote: "確認時に端末フォントへのアクセス許可が必要です（対応ブラウザーのみ）。",
+                fontPrompt: "端末にあるフォント名を入力してください。", fontUnsupported: "このブラウザーは端末フォントの確認に対応していません。",
+                fontNotFound: "この端末ではフォントが見つかりません。", fontApplied: "フォントを適用しました。",
+                fontDenied: "フォントへのアクセスが許可されませんでした。", fontError: "端末フォントを確認できませんでした。",
+                days: ["日", "月", "火", "水", "木", "金", "土"],
+                months: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
             }
+        };
 
-            if (samples.length > 0) {
-                samples.sort((a, b) => a.rtt - b.rtt);
-                globalOffset = samples[0].offset;
-                statusDot.classList.add('active');
-                statusText.textContent = "原子時計同期完了";
-                
-                // オフセットも秒単位で表示するねっ
-                const offsetSec = (globalOffset / 1000).toFixed(3);
-                document.getElementById('val-offset').textContent = (offsetSec >= 0 ? "+" : "") + offsetSec + "s";
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        window.addEventListener('mousedown', initAudio, { once: true });
+        window.addEventListener('touchstart', initAudio, { once: true });
+
+        async function syncWithNICT(retries = 3) {
+            const dot = document.getElementById('sync-dot');
+            const label = document.getElementById('sync-label');
+            const method = document.getElementById('sync-method');
+            dot.className = 'dot syncing';
+            label.textContent = L10N[currentLang].status_syncing;
+
+            const nictUrl = "https://ntp-a1.nict.go.jp/cgi-bin/json";
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const startFetch = performance.now();
+                    const response = await fetch(nictUrl, { cache: "no-store" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    const endFetch = performance.now();
+
+                    const rtt = (endFetch - startFetch) / 1000;
+                    const serverTimeMs = (data.st + rtt / 2) * 1000;
+                    const localNow = Date.now();
+                    baseTimeOffset = serverTimeMs - localNow; // Offset to get real time from local
+
+                    dot.className = 'dot synced';
+                    label.textContent = L10N[currentLang].status_synced;
+                    method.textContent = "NICT Server (Synced)";
+                    lastSyncTime = localNow;
+                    return;
+                } catch (err) {
+                    if (i === retries - 1) {
+                        dot.className = 'dot error';
+                        label.textContent = L10N[currentLang].status_error;
+                        method.textContent = "Local Clock (Raw)";
+                    } else {
+                        await new Promise(res => setTimeout(res, 1000));
+                    }
+                }
             }
         }
 
-        async function updateLocation() {
-            const locText = document.getElementById('val-location');
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=10&addressdetails=1`, {
-                        headers: { 'Accept-Language': 'ja' }
-                    });
-                    const data = await res.json();
-                    const a = data.address;
-                    locText.textContent = (a.province || a.state || "") + " " + (a.city || a.town || a.village || "");
-                } catch (e) { locText.textContent = "日本"; }
-            }, () => { locText.textContent = "位置情報オフ"; });
+        function playChime(type) {
+            if (!audioCtx || chimeMode === 'off') return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const clock = document.getElementById('clock-core');
+            if (type === 'announcement') {
+                [440, 880].forEach(f => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.frequency.setValueAtTime(f, now);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now); osc.stop(now + 1.2);
+                });
+                clock.classList.add('chime-flash');
+                setTimeout(() => clock.classList.remove('chime-flash'), 1200);
+            } else {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.setValueAtTime(440, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.1);
+                clock.classList.add('countdown-pulse');
+                setTimeout(() => clock.classList.remove('countdown-pulse'), 400);
+            }
         }
 
-        function formatTime(date, options = {}) {
-            return date.toLocaleTimeString('ja-JP', { hour12: false, ...options });
+        function setChimeMode(mode) {
+            chimeMode = mode;
+            document.querySelectorAll('.chime-opt').forEach(btn => btn.classList.remove('btn-active'));
+            document.getElementById(`chime-${mode}`).classList.add('btn-active');
+            initAudio();
+        }
+
+        function setBaseCity(offset, label, el) {
+            isLocalMode = false;
+            currentBaseOffset = offset;
+            document.getElementById('lbl-title').textContent = label;
+            document.querySelectorAll('.world-card').forEach(c => c.classList.remove('selected'));
+            if (el) el.classList.add('selected');
+        }
+
+        function setBaseToLocal(el) {
+            isLocalMode = true;
+            document.getElementById('lbl-title').textContent = L10N[currentLang].localLabel;
+            document.querySelectorAll('.world-card').forEach(c => c.classList.remove('selected'));
+            if (el) el.classList.add('selected');
+        }
+
+        function setLocationStatus(key) {
+            locationStatusKey = key;
+            document.getElementById('location-status').textContent = L10N[currentLang][key];
+            document.getElementById('location-btn').disabled = key === 'locationRequest';
+        }
+
+        function enableLocation() {
+            if (!navigator.geolocation) {
+                setLocationStatus('locationUnsupported');
+                return;
+            }
+
+            setLocationStatus('locationRequest');
+            navigator.geolocation.getCurrentPosition(position => {
+                locationCoordinates = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                };
+                lastSunUpdateMinute = -1;
+                setLocationStatus('locationReady');
+            }, error => {
+                locationCoordinates = null;
+                lastSunUpdateMinute = -1;
+                document.getElementById('sun-val').textContent = '--:-- / --:--';
+                document.getElementById('main-sky').style.backgroundImage = getSkyColor(null, null, null);
+                setLocationStatus(error.code === error.PERMISSION_DENIED
+                    ? 'locationDenied'
+                    : error.code === error.TIMEOUT
+                        ? 'locationTimeout'
+                        : 'locationUnavailable');
+            }, { enableHighAccuracy: false, maximumAge: 600000, timeout: 15000 });
+        }
+
+        async function applyLocalFont() {
+            const input = document.getElementById('font-name');
+            const status = document.getElementById('font-status');
+            const button = document.getElementById('font-apply-btn');
+            const family = input.value.trim();
+            const messages = L10N[currentLang];
+
+            if (!family) {
+                status.textContent = messages.fontPrompt;
+                input.focus();
+                return;
+            }
+
+            if (typeof window.queryLocalFonts !== 'function') {
+                status.textContent = messages.fontUnsupported;
+                return;
+            }
+
+            button.disabled = true;
+            try {
+                const fonts = await window.queryLocalFonts();
+                const isInstalled = fonts.some(font => font.family.trim().toLowerCase() === family.toLowerCase());
+                if (!isInstalled) {
+                    status.textContent = messages.fontNotFound;
+                    return;
+                }
+
+                const cssFamily = `${JSON.stringify(family)}, sans-serif`;
+                document.documentElement.style.setProperty('--app-font', cssFamily);
+                document.documentElement.style.setProperty('--clock-font', cssFamily);
+                activeFontName = family;
+                status.textContent = `${family}: ${messages.fontApplied}`;
+            } catch (error) {
+                status.textContent = error && error.name === 'NotAllowedError' ? messages.fontDenied : messages.fontError;
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function getFmtTime(date) {
+            return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}:${String(date.getUTCSeconds()).padStart(2, '0')}`;
+        }
+
+        function getFmtTimeLocal(date) {
+            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
         }
 
         function update() {
-            const now = Date.now();
-            const syncedDate = new Date(now + globalOffset);
-            const deviceDate = new Date(now);
+            const localNow = Date.now();
+            const currentTrueUTC = localNow + baseTimeOffset; // Sync with Server
+            const deviceDate = new Date(); // Local Device Raw Time
 
-            // メイン時計 (JST)
-            document.getElementById('clock-time').textContent = formatTime(syncedDate);
-            const days = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
-            document.getElementById('clock-date').innerHTML = `${syncedDate.getFullYear()}年${syncedDate.getMonth()+1}月${syncedDate.getDate()}日 <span class="day">${days[syncedDate.getDay()]}</span>`;
+            // Determine what time to show on the Main Clock
+            const baseDate = isLocalMode ? new Date() : new Date(currentTrueUTC + (currentBaseOffset * 3600000));
 
-            // デバイス比較判定ロジック
-            document.getElementById('device-time').textContent = formatTime(deviceDate);
-            
-            const diffMs = globalOffset;
-            const diffSec = (Math.abs(diffMs) / 1000).toFixed(3);
-            const statusEl = document.getElementById('device-diff-status');
-            
-            // 判定基準: ±0.050秒
-            if (Math.abs(diffMs) <= 50) {
-                statusEl.textContent = `正確範囲 (±0.050s)`;
-                statusEl.className = "status-exact";
-            } else if (diffMs > 50) {
-                // サーバーの方が進んでいる = デバイスが遅れている
-                statusEl.textContent = `${diffSec}秒 遅れてる`;
-                statusEl.className = "status-slow";
-            } else {
-                // サーバーの方が遅れている = デバイスが進んでいる
-                statusEl.textContent = `${diffSec}秒 進んでる`;
-                statusEl.className = "status-fast";
+            // Main Digital Clock
+            document.getElementById('digital-time').textContent = isLocalMode ? getFmtTimeLocal(baseDate) : getFmtTime(baseDate);
+
+            const dayIdx = isLocalMode ? baseDate.getDay() : baseDate.getUTCDay();
+            const dayStr = L10N[currentLang].days[dayIdx];
+            const year = isLocalMode ? baseDate.getFullYear() : baseDate.getUTCFullYear();
+            const monthIdx = isLocalMode ? baseDate.getMonth() : baseDate.getUTCMonth();
+            const date = isLocalMode ? baseDate.getDate() : baseDate.getUTCDate();
+
+            let dateString = (currentLang === 'jp')
+                ? `${year}/${String(monthIdx + 1).padStart(2, '0')}/${String(date).padStart(2, '0')}`
+                : `${L10N.en.months[monthIdx]} ${date}, ${year}`;
+
+            document.getElementById('digital-date').innerHTML = `${dateString} <span class="day-badge">${dayStr}</span>`;
+
+            // World Cards Update
+            document.getElementById('time-local').textContent = getFmtTimeLocal(deviceDate);
+            document.getElementById('time-tokyo').textContent = getFmtTime(new Date(currentTrueUTC + 32400000));
+            document.getElementById('time-london').textContent = getFmtTime(new Date(currentTrueUTC));
+            document.getElementById('time-ny').textContent = getFmtTime(new Date(currentTrueUTC - 18000000));
+
+            // Chime Timing
+            const currentTS = Math.floor(currentTrueUTC / 1000);
+            if (lastChimeTrigger !== currentTS) {
+                const curM = isLocalMode ? baseDate.getMinutes() : baseDate.getUTCMinutes();
+                const curS = isLocalMode ? baseDate.getSeconds() : baseDate.getUTCSeconds();
+                if ((chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 59)) && curS >= 57 && curS <= 59) playChime('countdown');
+                if (curS === 0 && (chimeMode === 'minutely' || (chimeMode === 'hourly' && curM === 0))) playChime('announcement');
+                lastChimeTrigger = currentTS;
             }
 
-            // 世界時計
-            const utc = new Date(syncedDate.getTime() + (syncedDate.getTimezoneOffset() * 60000));
-            
-            const honolulu = new Date(utc.getTime() - (10 * 3600000));
-            document.getElementById('world-honolulu').textContent = formatTime(honolulu, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const sunUpdateMinute = Math.floor(currentTrueUTC / 60000);
+            if (locationCoordinates && sunUpdateMinute !== lastSunUpdateMinute) {
+                const localDate = new Date(isLocalMode ? deviceDate.getTime() : currentTrueUTC);
+                const sun = getSunTimesPrecise(
+                    locationCoordinates.latitude,
+                    locationCoordinates.longitude,
+                    localDate
+                );
+                const formatSunTime = hours => hours === null ? '--:--' : formatClockHours(hours);
+                document.getElementById('sun-val').textContent =
+                    `${formatSunTime(sun.sunrise)} / ${formatSunTime(sun.sunset)}`;
+                const localHour = localDate.getHours() + localDate.getMinutes() / 60;
+                document.getElementById('main-sky').style.backgroundImage =
+                    getSkyColor(localHour, sun.sunrise, sun.sunset);
+                lastSunUpdateMinute = sunUpdateMinute;
+            }
 
-            const dc = new Date(utc.getTime() - (4 * 3600000)); 
-            document.getElementById('world-washington').textContent = formatTime(dc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            document.getElementById('world-utc').textContent = formatTime(utc, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            const tai = new Date(utc.getTime() + (LEAP_SECONDS * 1000));
-            document.getElementById('world-tai').textContent = formatTime(tai, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
+            // Re-sync with NICT every 10 minutes
+            if (localNow - lastSyncTime > 600000) syncWithNICT();
             requestAnimationFrame(update);
         }
 
-        window.onload = () => {
-            syncAll();
-            updateLocation();
-            update();
-            setInterval(syncAll, 600000);
+        function getSunTimesPrecise(lat, lng, localDate) {
+            const yearStart = Date.UTC(localDate.getFullYear(), 0, 1);
+            const nextYearStart = Date.UTC(localDate.getFullYear() + 1, 0, 1);
+            const localDay = Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
+            const dayOfYear = Math.floor((localDay - yearStart) / 86400000) + 1;
+            const gamma = 2 * Math.PI / ((nextYearStart - yearStart) / 86400000) * (dayOfYear - 1);
+            const equationOfTime = 229.18 * (
+                0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
+                - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma)
+            );
+            const declination = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
+                - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
+                - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+            const latitude = lat * D2R;
+            const cosHourAngle = Math.cos(90.833 * D2R) / (Math.cos(latitude) * Math.cos(declination))
+                - Math.tan(latitude) * Math.tan(declination);
+            if (cosHourAngle < -1 || cosHourAngle > 1) return { sunrise: null, sunset: null };
 
-            // コピーライトの年を自動更新するねっ
-            const currentYear = new Date().getFullYear();
-            document.getElementById('copyright-text').innerHTML = `COPYRIGHT &copy; 2025 - ${currentYear} TOSHIRIA ALL RIGHTS RESERVED.`;
+            const hourAngle = Math.acos(cosHourAngle) * R2D;
+            const localOffsetMinutes = -localDate.getTimezoneOffset();
+            return {
+                sunrise: (720 - 4 * (lng + hourAngle) - equationOfTime + localOffsetMinutes + 1440) % 1440 / 60,
+                sunset: (720 - 4 * (lng - hourAngle) - equationOfTime + localOffsetMinutes + 1440) % 1440 / 60
+            };
+        }
+
+        function formatClockHours(hours) {
+            const minutes = Math.round(hours * 60) % 1440;
+            return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+        }
+
+        function getSkyColor(hour, sunrise, sunset) {
+            if (sunrise === null || sunset === null) return 'linear-gradient(to bottom, #020617, #0f172a)';
+            if (hour < sunrise - 1 || hour > sunset + 1) return 'linear-gradient(to bottom, #020617, #0f172a)';
+            if (hour >= sunrise - 1 && hour < sunrise) return 'linear-gradient(to bottom, #1e1b4b, #fb923c)';
+            if (hour >= sunrise && hour < sunset) return 'linear-gradient(to bottom, #0ea5e9, #bae6fd)';
+            if (hour >= sunset && hour <= sunset + 1) return 'linear-gradient(to bottom, #f97316, #312e81)';
+            return 'linear-gradient(to bottom, #020617, #0f172a)';
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'jp' ? 'en' : 'jp';
+            document.getElementById('lang-btn').textContent = currentLang === 'jp' ? 'JPN' : 'ENG';
+            const d = L10N[currentLang];
+            document.getElementById('lbl-offset').textContent = d.offset; document.getElementById('sync-now-btn').textContent = d.sync;
+            document.getElementById('lbl-sun').textContent = d.sun;
+            document.getElementById('lbl-chime-pat').textContent = d.chimePat; document.getElementById('chime-off').textContent = d.chimeOff;
+            document.getElementById('chime-hourly').textContent = d.chimeH; document.getElementById('chime-minutely').textContent = d.chimeM;
+            document.getElementById('fs-btn').textContent = d.fs;
+            document.getElementById('lbl-card-local').textContent = d.localLabel;
+            document.getElementById('font-label').textContent = d.fontLabel;
+            document.getElementById('font-name').placeholder = d.fontPlaceholder;
+            document.getElementById('font-apply-btn').textContent = d.fontApply;
+            document.getElementById('font-note').textContent = d.fontNote;
+            document.getElementById('location-btn').textContent = d.locationButton;
+            setLocationStatus(locationStatusKey);
+            document.getElementById('font-status').textContent = activeFontName
+                ? `${activeFontName}: ${d.fontApplied}`
+                : d.fontPrompt;
+
+            if (isLocalMode) document.getElementById('lbl-title').textContent = d.localLabel;
+
+            const dot = document.getElementById('sync-dot');
+            if (dot.classList.contains('synced')) document.getElementById('sync-label').textContent = d.status_synced;
+            else if (dot.classList.contains('error')) document.getElementById('sync-label').textContent = d.status_error;
+            else document.getElementById('sync-label').textContent = d.status_waiting;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
+            else document.exitFullscreen().catch(() => { });
+        }
+
+        window.onload = () => {
+            document.getElementById('year').textContent = new Date().getFullYear();
+            syncWithNICT();
+            update();
+            document.getElementById('main-sky').style.backgroundImage = getSkyColor(null, null, null);
+            setLocationStatus('locationNote');
         };
     </script>
 </body>
+
 </html>
