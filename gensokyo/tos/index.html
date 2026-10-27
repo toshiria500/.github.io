@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>利用規約 - 幻想郷ジェネレーター</title>
+
+    <!-- OGP (Open Graph Protocol) -->
+    <meta name="description" content="幻想郷ジェネレーターの利用規約ページです。">
+    <meta property="og:title" content="利用規約 - 幻想郷ジェネレーター">
+    <meta property="og:description" content="幻想郷ジェネレーターの利用規約ページです。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://toshiria500.f5.si/gensokyo/tos">
+    <meta property="og:site_name" content="幻想郷ジェネレーター">
+    <meta property="og:image" content="https://toshiria500.f5.si/images/gensokyo.png">
+    <meta name="twitter:card" content="summary">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0d0616;
+            --text-main: #f8f0fc;
+            --text-accent: #d4af37;
+            --purple-dark: #240b36;
+            --purple-main: #6b2c91;
+            --purple-light: #9d4edd;
+            --red-eye: #ff1a1a;
+            --font-serif: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-serif);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* 背景を固定し、メインページのような奥行きと世界観を出す */
+            background: 
+                radial-gradient(circle at 50% 20%, rgba(107, 44, 145, 0.3) 0%, transparent 70%),
+                linear-gradient(rgba(13, 6, 22, 0.8), rgba(13, 6, 22, 0.9)),
+                url('../../images/gensokyo.png');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* --- ヘッダー --- */
+        header {
+            background: linear-gradient(90deg, #000, var(--purple-main), #000);
+            color: var(--text-accent);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--red-eye);
+            z-index: 100;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.8);
+            position: sticky;
+            top: 0;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* --- メインコンテンツ --- */
+        main {
+            flex: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        .tos-card {
+            background: rgba(30, 15, 45, 0.7);
+            border: 1px solid rgba(157, 78, 221, 0.4);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            line-height: 1.8;
+        }
+
+        .tos-card h2 {
+            color: var(--text-accent);
+            border-bottom: 2px solid var(--purple-main);
+            margin: 30px 0 15px;
+            padding-bottom: 5px;
+            font-size: 1.4rem;
+        }
+
+        .tos-card h2:first-child {
+            margin-top: 0;
+        }
+
+        .tos-card h3 {
+            color: var(--purple-light);
+            margin: 20px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .tos-card p {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: rgba(248, 240, 252, 0.9);
+        }
+
+        .tos-card ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .tos-card li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-accent);
+            text-decoration: none;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+            transform: translateX(-5px);
+        }
+
+        /* --- フッター --- */
+        .site-footer {
+            background: #050208;
+            padding: 30px 15px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.75rem;
+            border-top: 1px solid rgba(157, 78, 221, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .tos-card {
+                padding: 20px;
+            }
+            header h1 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>⛩ 幻想郷ジェネレーター 利用規約</h1>
+    </header>
+
+    <main>
+        <a href="../" class="back-link"><i class="fas fa-arrow-left"></i> ジェネレーターへ戻る</a>
+
+        <article class="tos-card">
+            <h2>1. はじめに</h2>
+            <p>
+                本サービス「幻想郷ジェネレーター」（以下「本サービス」）は、上海アリス幻樂団様による「東方Project」の二次創作ツールです。
+                開発者は、本サービスを通じてユーザーに娯楽を提供することを目的としています。
+            </p>
+
+            <h2>2. 生成コンテンツについて</h2>
+            <p>
+                本サービスは Google Gemini API を使用して対話および物語を生成しています。以下の点にご注意ください。
+            </p>
+            <ul>
+                <li>生成される内容はAIによる推論であり、東方Projectの公式設定や開発者の意図を必ずしも反映するものではありません。</li>
+                <li>AIの性質上、事実と異なる内容や、不正確・不適切な表現が含まれる可能性があります。</li>
+                <li>出力結果により生じた一切のトラブルについて、本サービス側は責任を負いかねます。</li>
+            </ul>
+
+            <h2>3. 免責事項</h2>
+            <p>
+                本サービスは現状有姿で提供されるものであり、いかなる保証も行いません。
+                システムの不具合、データ消失、生成内容による不快感、または本サービスの利用不能によって生じた損害について、開発者は一切の責任を負いません。
+            </p>
+
+            <h2>4. 禁止事項</h2>
+            <p>
+                本サービスの利用にあたり、以下の行為を禁止します。
+            </p>
+            <ul>
+                <li>生成された結果を用いて他者を誹謗中傷、差別、攻撃する行為。</li>
+                <li>東方Projectの二次創作ガイドライン、および公序良俗に反する行為。</li>
+                <li>サーバーに過度な負荷をかける等の妨害行為。</li>
+                <li>その他、開発者が不適切と判断する行為。</li>
+            </ul>
+
+            <h2>5. データの取扱い</h2>
+            <p>
+                本サービスへの入力データは、物語生成のために Google Gemini API に送信されます。
+                「共有」機能を利用した場合、入力内容および生成結果はサーバー上に保存され、固有のURL（ID）を知る第三者が閲覧可能になります。
+            </p>
+
+            <h2>6. 著作権について</h2>
+            <p>
+                「東方Project」および作中キャラクター、世界観の著作権は、上海アリス幻樂団（ZUN様）に帰属します。
+                本サービス独自のスクリプトおよびUIデザインの著作権は開発者に帰属しますが、生成された物語の著作権についてはAIおよび各権利者のガイドラインに準じます。
+            </p>
+
+            <p style="margin-top: 40px; text-align: right; opacity: 0.6; font-size: 0.8rem;">
+                制定：2026年3月29日
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div style="margin-bottom: 10px; display: flex; justify-content: center; gap: 15px;">
+            <a href="../tos" style="color: var(--purple-light); text-decoration: none; opacity: 0.8;">利用規約</a>
+            <a href="../privacy_policy" style="color: var(--purple-light); text-decoration: none; opacity: 0.8;">プライバシーポリシー</a>
+        </div>
+        <div>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
+    </footer>
+
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+</body>
+
+</html>
