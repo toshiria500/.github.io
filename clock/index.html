@@ -86,6 +86,10 @@
             color: var(--text-dim);
         }
 
+        .font-controls input[type="file"] {
+            display: none;
+        }
+
         #font-status {
             flex-basis: 100%;
             font-size: 0.65rem;
@@ -371,10 +375,15 @@
             </div>
             <div class="control-group font-controls">
                 <label id="font-label" for="font-name">端末内フォント:</label>
-                <input id="font-name" type="text" autocomplete="off" placeholder="例: 游ゴシック">
+                <input id="font-name" type="text" list="installed-fonts" autocomplete="off" placeholder="例: 游ゴシック"
+                    onkeydown="if (event.key === 'Enter') { event.preventDefault(); applyLocalFont(); }">
+                <datalist id="installed-fonts"></datalist>
                 <button class="btn-mini" id="font-apply-btn" onclick="applyLocalFont()">確認して適用</button>
+                <input id="font-file" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2"
+                    onchange="applyFontFile(this.files[0])">
+                <button class="btn-mini" id="font-file-btn" onclick="document.getElementById('font-file').click()">端末に保存したフォントを選択</button>
                 <span id="font-status" role="status" aria-live="polite">フォント名を入力してください</span>
-                <span id="font-note" class="font-note">確認時に端末フォントへのアクセス許可が必要です（対応ブラウザーのみ）</span>
+                <span id="font-note" class="font-note">スマホでは「ファイル」アプリやダウンロードから .ttf / .otf / .woff / .woff2 を選べます。選択したファイルはこのページ内だけで使用し、送信しません。再読み込み後は再選択してください。</span>
             </div>
         </div>
 
@@ -458,9 +467,13 @@
                 locationTimeout: "Location request timed out. Please try again.",
                 locationReady: "Sunrise and sunset are calculated using your device's local time.",
                 fontLabel: "DEVICE FONT:", fontPlaceholder: "e.g. Arial", fontApply: "CHECK & APPLY",
-                fontNote: "Requires permission to check installed fonts (supported browsers only).",
+                fontFileButton: "CHOOSE SAVED FONT",
+                fontNote: "On phones, choose a .ttf / .otf / .woff / .woff2 file from Files or Downloads. The file is used only in this page and is not uploaded. Select it again after reloading.",
                 fontPrompt: "Enter an installed font name.", fontUnsupported: "This browser cannot check installed fonts.",
-                fontNotFound: "Font not found on this device.", fontApplied: "Font applied.",
+                fontNotFound: "No exact match. Choose the installed font name from the input suggestions; no file extension is needed.", fontApplied: "Font applied.",
+                fontFilePrompt: "Choose a saved font file to use it on this page.",
+                fontFileApplied: "Font file loaded and applied.",
+                fontFileError: "Could not load this font file. Choose a valid TTF, OTF, WOFF, or WOFF2 font.",
                 fontDenied: "Font access was denied.", fontError: "Could not check installed fonts.",
                 days: ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
                 months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -480,9 +493,13 @@
                 locationTimeout: "位置情報の取得がタイムアウトしました。もう一度お試しください。",
                 locationReady: "日の出・日の入りを端末のローカル時刻で表示しています。",
                 fontLabel: "端末内フォント:", fontPlaceholder: "例: 游ゴシック", fontApply: "確認して適用",
-                fontNote: "確認時に端末フォントへのアクセス許可が必要です（対応ブラウザーのみ）。",
+                fontFileButton: "端末に保存したフォントを選択",
+                fontNote: "スマホでは「ファイル」アプリやダウンロードから .ttf / .otf / .woff / .woff2 を選べます。選択したファイルはこのページ内だけで使用し、送信しません。再読み込み後は再選択してください。",
                 fontPrompt: "端末にあるフォント名を入力してください。", fontUnsupported: "このブラウザーは端末フォントの確認に対応していません。",
-                fontNotFound: "この端末ではフォントが見つかりません。", fontApplied: "フォントを適用しました。",
+                fontNotFound: "入力名と一致するフォントがありません。入力欄の候補から端末のフォント名を選んでください（拡張子は不要です）。", fontApplied: "フォントを適用しました。",
+                fontFilePrompt: "保存済みのフォントファイルを選択すると、このページで使用できます。",
+                fontFileApplied: "フォントファイルを読み込んで適用しました。",
+                fontFileError: "フォントファイルを読み込めませんでした。有効な TTF / OTF / WOFF / WOFF2 ファイルを選択してください。",
                 fontDenied: "フォントへのアクセスが許可されませんでした。", fontError: "端末フォントを確認できませんでした。",
                 days: ["日", "月", "火", "水", "木", "金", "土"],
                 months: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
@@ -594,6 +611,29 @@
             document.getElementById('location-btn').disabled = key === 'locationRequest';
         }
 
+        function normalizeFontName(name) {
+            return name
+                .normalize('NFKC')
+                .trim()
+                .replace(/\.(ttf|otf|ttc|otc|woff2?)$/i, '')
+                .replace(/[\s._-]+/g, '')
+                .toLowerCase();
+        }
+
+        function readFontFile(file) {
+            if (typeof file.arrayBuffer === 'function') return file.arrayBuffer();
+
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    if (reader.result instanceof ArrayBuffer) resolve(reader.result);
+                    else reject(new Error('Font file did not produce binary data.'));
+                };
+                reader.onerror = () => reject(reader.error || new Error('Could not read font file.'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
         function enableLocation() {
             if (!navigator.geolocation) {
                 setLocationStatus('locationUnsupported');
@@ -642,21 +682,57 @@
             button.disabled = true;
             try {
                 const fonts = await window.queryLocalFonts();
-                const isInstalled = fonts.some(font => font.family.trim().toLowerCase() === family.toLowerCase());
-                if (!isInstalled) {
+                const datalist = document.getElementById('installed-fonts');
+                const familyNames = [...new Set(fonts.map(font => font.family).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+                datalist.replaceChildren(...familyNames.map(name => new Option(name, name)));
+                const normalizedInput = normalizeFontName(family);
+                const matchedFont = fonts.find(font => [
+                    font.family,
+                    font.fullName,
+                    font.postscriptName
+                ].some(name => typeof name === 'string' && normalizeFontName(name) === normalizedInput));
+                if (!matchedFont) {
                     status.textContent = messages.fontNotFound;
                     return;
                 }
 
-                const cssFamily = `${JSON.stringify(family)}, sans-serif`;
+                const cssFamily = `${JSON.stringify(matchedFont.family)}, sans-serif`;
                 document.documentElement.style.setProperty('--app-font', cssFamily);
                 document.documentElement.style.setProperty('--clock-font', cssFamily);
-                activeFontName = family;
-                status.textContent = `${family}: ${messages.fontApplied}`;
+                activeFontName = matchedFont.family;
+                status.textContent = `${matchedFont.family}: ${messages.fontApplied}`;
             } catch (error) {
                 status.textContent = error && error.name === 'NotAllowedError' ? messages.fontDenied : messages.fontError;
             } finally {
                 button.disabled = false;
+            }
+        }
+
+        async function applyFontFile(file) {
+            if (!file) return;
+
+            const status = document.getElementById('font-status');
+            const button = document.getElementById('font-file-btn');
+            const messages = L10N[currentLang];
+            const fontName = file.name.replace(/\.(ttf|otf|woff2?)$/i, '').trim();
+
+            button.disabled = true;
+            try {
+                const family = `SavedFont-${Date.now()}`;
+                const fontFace = new FontFace(family, await readFontFile(file));
+                await fontFace.load();
+                document.fonts.add(fontFace);
+
+                const cssFamily = `${JSON.stringify(family)}, sans-serif`;
+                document.documentElement.style.setProperty('--app-font', cssFamily);
+                document.documentElement.style.setProperty('--clock-font', cssFamily);
+                activeFontName = fontName || file.name;
+                status.textContent = `${activeFontName}: ${messages.fontFileApplied}`;
+            } catch (error) {
+                status.textContent = messages.fontFileError;
+            } finally {
+                button.disabled = false;
+                document.getElementById('font-file').value = '';
             }
         }
 
@@ -782,6 +858,7 @@
             document.getElementById('font-label').textContent = d.fontLabel;
             document.getElementById('font-name').placeholder = d.fontPlaceholder;
             document.getElementById('font-apply-btn').textContent = d.fontApply;
+            document.getElementById('font-file-btn').textContent = d.fontFileButton;
             document.getElementById('font-note').textContent = d.fontNote;
             document.getElementById('location-btn').textContent = d.locationButton;
             setLocationStatus(locationStatusKey);
