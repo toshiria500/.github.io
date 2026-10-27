@@ -7,16 +7,19 @@
     <title>幻想郷ジェネレーター - 境界の語り部</title>
 
     <!-- OGP (Open Graph Protocol) -->
-    <meta name="description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
+    <meta name="description"
+        content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
     <meta property="og:title" content="{{ (ogp.title if ogp else '幻想郷ジェネレーター - 境界の語り部') }}">
-    <meta property="og:description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
+    <meta property="og:description"
+        content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ (ogp.url if ogp else 'https://toshiria500.f5.si/gensokyo') }}">
     <meta property="og:site_name" content="幻想郷ジェネレーター">
     <meta property="og:image" content="https://toshiria500.f5.si/images/gensokyo.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ (ogp.title if ogp else '幻想郷ジェネレーター - 境界の語り部') }}">
-    <meta name="twitter:description" content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
+    <meta name="twitter:description"
+        content="{{ (ogp.description if ogp else 'もし幻想郷に迷い込んだら、あなたの運命はどうなるのか……。境界の語り部・八雲紫が、あなたの行動や持ち物から「生存率」と「結末」を物語るジェネレーター。') }}">
     <meta name="twitter:image" content="https://toshiria500.f5.si/images/gensokyo.png">
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -279,7 +282,7 @@
             left: -50px;
             background-color: var(--bot-msg-bg);
             min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.8);
             border: 1px solid var(--purple-main);
             border-radius: 8px;
             z-index: 100;
@@ -334,73 +337,215 @@
 
         /* --- 入力エリア --- */
         #bottom-area {
-            background: #050208;
+            background: rgba(13, 6, 22, 0.95);
             border-top: 1px solid var(--purple-main);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding: 10px 15px calc(10px + env(safe-area-inset-bottom, 0px));
+            backdrop-filter: blur(15px);
+        }
+
+        #input-container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .ai-disclaimer {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            margin-top: 8px;
+            margin-bottom: 4px;
         }
 
         #storyForm {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            padding: 15px;
-            max-width: 900px;
-            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 24px;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
-        input[type="text"],
-        input[type="password"] {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid #333;
+        #storyForm:focus-within {
+            border-color: var(--purple-light);
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .input-tabs {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 4px;
+        }
+
+        .input-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-item {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 4px 0;
+            position: relative;
+            transition: color 0.3s;
+            font-family: var(--font-serif);
+        }
+
+        .tab-item.active {
+            color: var(--purple-light);
+            font-weight: bold;
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--purple-light);
+            box-shadow: 0 0 8px var(--purple-light);
+        }
+
+        .tab-content {
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-field-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        #storyForm input[type="text"] {
+            background: transparent;
+            border: none;
             color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 8px 0;
+            font-size: 1.05rem;
             outline: none;
             font-family: var(--font-serif);
             width: 100%;
-            transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: var(--purple-light);
+        /* 必須入力チェック用 */
+        #storyForm input.error {
+            border-bottom: 1px solid var(--red-eye) !important;
         }
 
-        .full-width {
-            grid-column: span 2;
+        .form-main {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
         }
 
-        button[type="submit"] {
-            grid-column: span 2;
-            padding: 16px;
-            border-radius: 8px;
+        .submit-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        #submitBtn {
+            background: var(--purple-main);
+            color: white;
             border: none;
-            background: linear-gradient(135deg, var(--purple-main), var(--purple-dark));
-            color: #fff;
-            font-weight: bold;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-family: var(--font-serif);
-            font-size: 1.1rem;
-            transition: filter 0.2s;
+            flex-shrink: 0;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
-        button[type="submit"]:hover:not(:disabled) {
-            filter: brightness(1.2);
+        #submitBtn:hover:not(:disabled) {
+            background: var(--purple-light);
+            transform: scale(1.05);
         }
 
-        button[type="submit"]:disabled {
-            filter: grayscale(1);
+        #submitBtn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        #submitBtn:disabled {
+            background: #444;
             cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #submitBtn i {
+            font-size: 1.1rem;
+            margin-left: -2px;
+            /* 紙飛行機の重心調整 */
+        }
+
+        /* タイムスタンプ表示 */
+        .msg-info {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .userContainer .msg-info {
+            justify-content: flex-end;
+            margin-right: 4px;
+        }
+
+        .botContainer .msg-info {
+            margin-left: 4px;
+        }
+
+        /* VOICEVOX クレジット表示 */
+        .voicevox-credit {
+            font-size: 0.65rem;
+            color: var(--purple-light);
             opacity: 0.7;
+            font-family: sans-serif;
+            margin-top: 2px;
         }
 
         /* --- フッター --- */
         .site-footer {
-            padding: 15px;
+            background: #050208;
+            padding: 10px 15px calc(10px + env(safe-area-inset-bottom, 0px));
             text-align: center;
             color: rgba(255, 255, 255, 0.3);
-            font-size: 0.75rem;
+            font-size: 0.72rem;
+            border-top: 1px solid rgba(157, 78, 221, 0.1);
         }
 
         .site-footer a {
@@ -628,6 +773,41 @@
 
     <div id="bottom-area">
         <datalist id="touhou-chars">
+            <option value="博麗靈夢">
+            <option value="陰陽玉（※東方旧作（靈異伝）に出るもの）">
+            <option value="神玉（SinGyoku）">
+            <option value="魅魔">
+            <option value="菊理">
+            <option value="矜羯羅">
+            <option value="幽幻魔眼">
+            <option value="エリス">
+            <option value="サリエル">
+            <option value="玄爺">
+            <option value="明羅">
+            <option value="霧雨魔理沙（東方旧作）">
+            <option value="エレン">
+            <option value="ソクラテス">
+            <option value="小兎姫">
+            <option value="カナ・アナベラル">
+            <option value="朝倉理香子">
+            <option value="北白河ちゆり">
+            <option value="岡崎夢美">
+            <option value="ミミちゃん">
+            <option value="る～こと">
+            <option value="まるち（※東方キャラの名前）">
+            <option value="オレンジ（※東方キャラの名前）">
+            <option value="くるみ（※東方キャラの名前）">
+            <option value="エリー">
+            <option value="幽香（東方旧作）">
+            <option value="夢月">
+            <option value="幻月">
+            <option value="サラ">
+            <option value="ルイズ">
+            <option value="アリス（東方旧作）">
+            <option value="ユキ">
+            <option value="マイ">
+            <option value="夢子">
+            <option value="神綺">
             <option value="博麗霊夢">
             <option value="霧雨魔理沙">
             <option value="ルーミア">
@@ -637,8 +817,8 @@
             <option value="十六夜咲夜">
             <option value="レミリア・スカーレット">
             <option value="フランドール・スカーレット">
-            <option value="小悪魔">
-            <option value="大妖精">
+            <option value="小悪魔(※名無しのキャラ)">
+            <option value="大妖精(※名無しの妖精)">
             <option value="レティ・ホワイトロック">
             <option value="橙">
             <option value="アリス・マーガトロイド">
@@ -660,7 +840,7 @@
             <option value="藤原妹紅">
             <option value="伊吹萃香">
             <option value="射命丸文">
-            <option value="メディスン・メランコリー">
+            <option value="メィスン・メランコリー">
             <option value="風見幽香">
             <option value="小野塚小町">
             <option value="四季映姫・ヤマザナドゥ">
@@ -757,7 +937,7 @@
             <option value="宇佐見蓮子">
             <option value="マエリベリー・ハーン(メリー)">
             <option value="森近霖之助">
-            <option value="朱鷺子 (本読み妖怪)">
+            <option value="朱鷺子 (名無しの本読み妖怪)">
             <option value="稗田阿求">
             <option value="綿月豊姫">
             <option value="綿月依姫">
@@ -767,31 +947,86 @@
             <option value="奥野田美宵">
         </datalist>
 
-        <form id="storyForm" autocomplete="off">
-            <input type="text" id="name" name="name-field-unique" placeholder="名前 (例: 外来人)" required autocomplete="off"
-                spellcheck="false">
-            <input type="text" id="action" name="action-field-unique" placeholder="行動 (例: 外の世界へ帰る方法を探す)" required
-                autocomplete="off" spellcheck="false">
-            <input type="text" id="item" name="item-field-unique" placeholder="持ち物 (例: スマートフォン)" required
-                autocomplete="off" spellcheck="false">
-            <input type="text" id="companion" name="companion-field-unique" list="touhou-chars"
-                placeholder="お供 (例: 霧雨魔理沙)" required autocomplete="off" spellcheck="false">
-            <input type="text" id="enemy" class="full-width" name="enemy-field-unique" list="touhou-chars"
-                placeholder="遭遇者(任意) (例: ルーミア)" autocomplete="off" spellcheck="false">
-            <button type="submit" id="submitBtn">👁️ 境界を覗く</button>
-        </form>
-        <footer class="site-footer">
-            <div style="margin-bottom:6px;">
-                元ネタ：<a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener"
-                    title="他人の視点から見た、迷い人の末路を覗き見るのね？">もし幻想郷に行った時の生存率診断 <i class="fas fa-external-link-alt"></i></a>
+        <div id="input-container">
+            <form id="storyForm" autocomplete="off">
+                <div class="input-tabs">
+                    <div class="tab-item active" data-tab="name">名前</div>
+                    <div class="tab-item" data-tab="action">行動</div>
+                    <div class="tab-item" data-tab="item">持ち物</div>
+                    <div class="tab-item" data-tab="companion">お供</div>
+                    <div class="tab-item" data-tab="enemy">遭遇者</div>
+                </div>
+
+                <div class="form-main">
+                    <div class="input-field-wrapper">
+                        <div class="tab-content active" id="tab-name">
+                            <input type="text" id="name" name="name-field-unique" placeholder="あなたの名前は？ (例: 外来人)"
+                                required autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="tab-content" id="tab-action">
+                            <input type="text" id="action" name="action-field-unique"
+                                placeholder="何をするつもり？ (例: 帰る方法を探す)" required autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="tab-content" id="tab-item">
+                            <input type="text" id="item" name="item-field-unique" placeholder="持っている物は？ (例: スマホ)"
+                                required autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="tab-content" id="tab-companion">
+                            <input type="text" id="companion" name="companion-field-unique" list="touhou-chars"
+                                placeholder="誰か連れているの？ (例: 博麗霊夢)" required autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="tab-content" id="tab-enemy">
+                            <input type="text" id="enemy" name="enemy-field-unique" list="touhou-chars"
+                                placeholder="誰に遭遇したの？(任意) (例: ルーミア)" autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="submit-wrapper">
+                        <button type="submit" id="submitBtn" title="境界を覗く"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </form>
+            <div class="ai-disclaimer">
+                幻想郷ジェネレーターはAIによる結果を出すため、不正確の可能性があります。
             </div>
-            <div style="margin-bottom:6px;">
-                Powered by <a href="https://gemini.google.com/" target="_blank" rel="noopener" class="gemini-link"
-                    title="この境界の向こう側にある、知恵の器に触れてみるかしら。"><span class="gemini-text">Gemini 2.5 Flash</span></a>
-            </div>
-            <div>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
-        </footer>
+        </div>
     </div>
+
+    <footer class="site-footer">
+        <div style="color: var(--red-eye); margin-bottom: 8px; font-weight: bold; font-size: 0.8rem;">
+            ⚠️ 留意点：『東方錦上京』のボスのネタバレを含む内容が出力されることがあります。
+        </div>
+        <div style="margin-bottom:6px;">
+            元ネタ：<a href="https://shindanmaker.com/1208379?c=1" target="_blank" rel="noopener"
+                title="他人の視点から見た、迷い人の末路を覗き見るのね？">もし幻想郷に行った時の生存率診断 <i class="fas fa-external-link-alt"></i></a>
+        </div>
+        <div style="margin-bottom:6px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span style="opacity: 0.6;">Powered by</span>
+            <a href="https://gemini.google.com/" target="_blank" rel="noopener" class="gemini-link"
+                title="この境界の向こう側にある、知恵の器に触れてみるかしら。">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style="filter: drop-shadow(0 0 3px rgba(78, 137, 255, 0.5));">
+                        <path d="M12 2L14.5 10.5L22 12L14.5 13.5L12 22L9.5 13.5L2 12L9.5 10.5L12 2Z"
+                            fill="url(#gemini-logo-grad)" />
+                        <defs>
+                            <linearGradient id="gemini-logo-grad" x1="2" y1="2" x2="22" y2="22"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#4E89FF" />
+                                <stop offset="1" stop-color="#FF7FDE" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="gemini-text" style="font-size: 0.85rem; letter-spacing: 0.03em;">Gemini 2.5
+                        Flash</span>
+                </div>
+            </a>
+        </div>
+        <div style="margin-top: 10px; margin-bottom: 5px; display: flex; justify-content: center; gap: 15px;">
+            <a href="./tos" style="opacity: 0.8;">利用規約</a>
+            <a href="./privacy_policy" style="opacity: 0.8;">プライバシーポリシー</a>
+        </div>
+        <div>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
+    </footer>
 
     <input type="file" id="fileInput" accept="image/*" style="display:none">
 
@@ -817,13 +1052,30 @@
         <div class="modal-content">
             <h2>⚙ 外の世界の設定</h2>
             <div class="form-group">
-                <label for="apiKeyInput">Gemini API キー</label>
-                <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
-                <p class="help-text">
-                    境界を繋ぐための鍵よ。伏せ字にしておいたわ。<br>
-                    取得は<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI
-                        Studio</a>からできるわ。この鍵はあなたのブラウザ(localStorage)にだけ保存されるから安心してちょうだい。
-                </p>
+                <label>VOICEVOX 接続方法</label>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <label
+                        style="flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #333; text-align: center;">
+                        <input type="radio" name="vvMode" value="local" checked style="margin-right: 5px;"> ローカル (PC)
+                    </label>
+                    <label
+                        style="flex: 1; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid #333; text-align: center;">
+                        <input type="radio" name="vvMode" value="web" style="margin-right: 5px;"> Web API (スマホ)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group" id="webKeyGroup" style="display: none;">
+                <label for="webApiKeyInput">Web API キー (任意)</label>
+                <input type="password" id="webApiKeyInput" placeholder="取得したキーを入力">
+                <p class="help-text">tts.questの高速版キーを持っている場合は入力してちょうだい。空でも低速版として動くわ。</p>
+            </div>
+            <div class="form-group">
+                <label for="speakerSelect">VOICEVOX 話者スタイル</label>
+                <select id="speakerSelect"
+                    style="width: 100%; background: rgba(255, 255, 255, 0.07); border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; font-family: var(--font-serif); outline: none;">
+                    <!-- JavaScriptで動的に生成 -->
+                </select>
+                <p class="help-text" id="speakerHelp">話者リストを取得中よ...</p>
             </div>
             <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeSettingModal()">閉じる</button>
@@ -838,6 +1090,9 @@
         // --- 初期化・定数 ---
         const STORAGE_KEY_ICON = 'GENSOKYO_BOT_ICON_V3';
         const STORAGE_KEY_API = 'GEMINI_API_KEY';
+        const STORAGE_KEY_VV_SPEAKER = 'VV_SPEAKER_ID';
+        const STORAGE_KEY_VV_MODE = 'VV_CONN_MODE';
+        const STORAGE_KEY_VV_WEB_KEY = 'VV_WEB_API_KEY';
         const chatContainer = document.getElementById('chat-container');
         const storyForm = document.getElementById('storyForm');
         const fileInput = document.getElementById('fileInput');
@@ -849,8 +1104,19 @@
         const toast = document.getElementById('toast');
 
         let currentApiKey = "";
+        let currentVvMode = localStorage.getItem(STORAGE_KEY_VV_MODE) || "local";
+        let currentWebApiKey = localStorage.getItem(STORAGE_KEY_VV_WEB_KEY) || "";
+        let speakerMap = {}; // ID -> { name, styleName }
+        let currentSpeakerId = localStorage.getItem(STORAGE_KEY_VV_SPEAKER) || "2";
+
         let currentUtterance = null;
+        let activeAudio = null;
         let currentTtsBtn = null;
+
+        function getNowTime() {
+            const now = new Date();
+            return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        }
 
         const greetings = [
             "あらあら、外の世界から迷い込んできたの？<br>歓迎するわ、幻想郷へ。<br><br>あなたの名や、持っている物を教えてちょうだい。<br>この私が、あなたの「運命の境界」を覗いてあげるから……うふふ。",
@@ -922,6 +1188,98 @@
             }
 
             currentApiKey = (localStorage.getItem(STORAGE_KEY_API) || "").trim();
+
+            // タブ機能の初期化
+            initTabs();
+            // 話者リストの取得
+            fetchSpeakers();
+        }
+
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab-item');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetId = `tab-${tab.dataset.tab}`;
+
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    const targetContent = document.getElementById(targetId);
+                    targetContent.classList.add('active');
+                    targetContent.querySelector('input').focus();
+                });
+            });
+
+            // Enterキーでの自動遷移
+            const inputs = document.querySelectorAll('#storyForm input[type="text"]');
+            inputs.forEach((input, index) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (index < inputs.length - 1) {
+                            tabs[index + 1].click();
+                        } else {
+                            storyForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                        }
+                    }
+                });
+            });
+        }
+
+        async function fetchSpeakers() {
+            const select = document.getElementById('speakerSelect');
+            const help = document.getElementById('speakerHelp');
+
+            try {
+                let speakers = [];
+                if (currentVvMode === 'local') {
+                    const res = await fetch("http://127.0.0.1:50021/speakers");
+                    if (!res.ok) throw new Error("Local engine not running");
+                    speakers = await res.json();
+                } else {
+                    // Web API用 (tts.quest v3) - 公開されている話者リストを使用
+                    const res = await fetch("https://api.tts.quest/v3/voicevox/speakers");
+                    const data = await res.json();
+                    speakers = data.speakers;
+                }
+
+                // マップの作成とセレクトボックスの更新
+                select.innerHTML = "";
+                speakerMap = {};
+
+                speakers.forEach(s => {
+                    s.styles.forEach(st => {
+                        const option = document.createElement('option');
+                        option.value = st.id;
+                        option.textContent = `${s.name} (${st.name})`;
+                        select.appendChild(option);
+                        speakerMap[st.id] = { name: s.name, styleName: st.name };
+                    });
+                });
+
+                select.value = currentSpeakerId;
+                help.textContent = `現在、${Object.keys(speakerMap).length}種類のスタイルが利用可能よ。`;
+
+            } catch (err) {
+                console.warn("Failed to fetch speakers:", err);
+                if (currentVvMode === 'local') {
+                    help.innerHTML = "<span style='color:var(--red-eye)'>ローカル版が見つからないわ。Web APIに切り替えるか、アプリを起動してちょうだい。</span>";
+                    // 自動フォールバック（初回のみなど検討）
+                } else {
+                    help.textContent = "Web APIからの取得に失敗したわ。時間を置いてみて。";
+                }
+
+                // フォールバック用の最小セット
+                const fallback = { "2": "四国めたん (あまあま)", "3": "ずんだもん (ノーマル)" };
+                Object.entries(fallback).forEach(([id, name]) => {
+                    const option = document.createElement('option');
+                    option.value = id; option.textContent = name;
+                    select.appendChild(option);
+                });
+            }
         }
 
         async function loadSharedContentById(shareId) {
@@ -948,10 +1306,10 @@
 
             const d = obj.d;
             pushUserMsg(`${d.n}は「${d.a}」を試みたようだわ……。`);
-            
+
             const botMsgId = pushBotMsg("境界の向こう側で、こんな運命を辿った者がいたわ……。");
             const botTextElem = document.getElementById(botMsgId).querySelector('.botText');
-            
+
             // 入力エリアを非表示にし、「自分も占う」ボタンを表示
             document.getElementById('bottom-area').style.display = 'none';
             const retryDiv = document.createElement('div');
@@ -979,6 +1337,18 @@
         // --- 設定モーダル ---
         function openSettingModal() {
             document.getElementById('apiKeyInput').value = currentApiKey;
+            document.getElementById('speakerSelect').value = currentSpeakerId;
+            document.getElementById('webApiKeyInput').value = currentWebApiKey;
+
+            const radios = document.getElementsByName('vvMode');
+            radios.forEach(r => {
+                r.checked = (r.value === currentVvMode);
+                r.onchange = () => {
+                    document.getElementById('webKeyGroup').style.display = (r.value === 'web' ? 'block' : 'none');
+                };
+            });
+            document.getElementById('webKeyGroup').style.display = (currentVvMode === 'web' ? 'block' : 'none');
+
             settingModal.style.display = 'flex';
         }
 
@@ -988,12 +1358,24 @@
 
         function saveSettings() {
             const key = document.getElementById('apiKeyInput').value.trim();
+            const speaker = document.getElementById('speakerSelect').value;
+            const webKey = document.getElementById('webApiKeyInput').value.trim();
+            const mode = document.querySelector('input[name="vvMode"]:checked').value;
+
+            const needRefresh = (currentVvMode !== mode);
+
             currentApiKey = key;
-            if (key) {
-                localStorage.setItem(STORAGE_KEY_API, key);
-            } else {
-                localStorage.removeItem(STORAGE_KEY_API);
-            }
+            currentSpeakerId = speaker;
+            currentVvMode = mode;
+            currentWebApiKey = webKey;
+
+            localStorage.setItem(STORAGE_KEY_API, key);
+            localStorage.setItem(STORAGE_KEY_VV_SPEAKER, speaker);
+            localStorage.setItem(STORAGE_KEY_VV_MODE, mode);
+            localStorage.setItem(STORAGE_KEY_VV_WEB_KEY, webKey);
+
+            if (needRefresh) fetchSpeakers();
+
             closeSettingModal();
             showToast('設定を保存したわ。');
         }
@@ -1192,12 +1574,29 @@
             }
 
             const data = {
-                n: document.getElementById('name').value,
-                a: document.getElementById('action').value,
-                i: document.getElementById('item').value,
-                c: document.getElementById('companion').value,
-                e: document.getElementById('enemy').value || "なし"
+                n: document.getElementById('name').value.trim(),
+                a: document.getElementById('action').value.trim(),
+                i: document.getElementById('item').value.trim(),
+                c: document.getElementById('companion').value.trim(),
+                e: document.getElementById('enemy').value.trim() || "なし"
             };
+
+            // バリデーション
+            let hasError = false;
+            ['name', 'action', 'item', 'companion'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el.value.trim()) {
+                    el.classList.add('error');
+                    hasError = true;
+                } else {
+                    el.classList.remove('error');
+                }
+            });
+
+            if (hasError) {
+                showToast("空欄の項目があるわ。埋めてちょうだい。");
+                return;
+            }
 
             if (data.c.includes("八雲紫") || data.e.includes("八雲紫")) {
                 pushBotMsg("あら、私をお供や遭遇者にするつもり？<br>……冗談は顔だけにしてちょうだい。私はあくまで、あなたの運命の語り部よ。<br><br><span style='font-size: 0.85em; color: var(--red-eye);'>【エラー：お供・遭遇者に「八雲紫」を指定することはできません】</span>");
@@ -1253,63 +1652,130 @@
         };
 
         // --- アクションバーUIのロジック ---
-        function toggleTTS(btn, text) {
-            if (!('speechSynthesis' in window)) {
-                showToast("お使いのブラウザは読み上げ機能に対応していないみたいね。");
-                return;
-            }
-
+        async function toggleTTS(btn, text) {
             const icon = btn.querySelector('i');
             const isPlaying = icon.classList.contains('fa-stop');
 
-            if (speechSynthesis.speaking) {
+            // 既存の再生を停止
+            if (activeAudio) {
+                activeAudio.pause();
+                activeAudio = null;
+            }
+            if (window.speechSynthesis && speechSynthesis.speaking) {
                 speechSynthesis.cancel();
-                if (currentTtsBtn) {
-                    currentTtsBtn.querySelector('i').classList.remove('fa-stop');
-                    currentTtsBtn.querySelector('i').classList.add('fa-volume-up');
-                    currentTtsBtn.classList.remove('active');
-                }
+            }
+
+            if (currentTtsBtn) {
+                currentTtsBtn.querySelector('i').classList.remove('fa-stop');
+                currentTtsBtn.querySelector('i').classList.add('fa-volume-up');
+                currentTtsBtn.classList.remove('active');
             }
 
             if (isPlaying && currentTtsBtn === btn) {
-                currentUtterance = null;
                 currentTtsBtn = null;
                 return;
             }
 
-            const ut = new SpeechSynthesisUtterance(text);
-            ut.lang = 'ja-JP';
-            ut.rate = 0.95; // 少しゆっくり
-            ut.pitch = 0.8; // 少し低め
-
-            ut.onend = () => {
-                icon.classList.remove('fa-stop');
-                icon.classList.add('fa-volume-up');
-                btn.classList.remove('active');
-                if (currentTtsBtn === btn) {
-                    currentTtsBtn = null;
-                    currentUtterance = null;
-                }
-            };
-
-            ut.onerror = () => {
-                icon.classList.remove('fa-stop');
-                icon.classList.add('fa-volume-up');
-                btn.classList.remove('active');
-                if (currentTtsBtn === btn) {
-                    currentTtsBtn = null;
-                    currentUtterance = null;
-                }
-            };
-
-            currentUtterance = ut;
             currentTtsBtn = btn;
-            
             icon.classList.remove('fa-volume-up');
             icon.classList.add('fa-stop');
             btn.classList.add('active');
 
-            speechSynthesis.speak(ut);
+            try {
+                if (currentVvMode === 'local') {
+                    // --- ローカル方式 ---
+                    const vvUrl = "http://127.0.0.1:50021";
+                    const queryRes = await fetch(`${vvUrl}/audio_query?text=${encodeURIComponent(text)}&speaker=${currentSpeakerId}`, {
+                        method: 'POST'
+                    });
+                    if (!queryRes.ok) throw new Error("VOICEVOX_NOT_FOUND");
+                    const queryData = await queryRes.json();
+
+                    const synthRes = await fetch(`${vvUrl}/synthesis?speaker=${currentSpeakerId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(queryData)
+                    });
+                    if (!synthRes.ok) throw new Error("SYNTH_FAILED");
+
+                    const blob = await synthRes.blob();
+                    const url = URL.createObjectURL(blob);
+                    activeAudio = new Audio(url);
+
+                    activeAudio.onended = () => {
+                        icon.classList.remove('fa-stop');
+                        icon.classList.add('fa-volume-up');
+                        btn.classList.remove('active');
+                        currentTtsBtn = null;
+                    };
+                    activeAudio.play();
+
+                } else {
+                    // --- Web API方式 (tts.quest v3) ---
+                    const baseUrl = "https://api.tts.quest/v3/voicevox/synthesis";
+                    const params = new URLSearchParams({
+                        key: currentWebApiKey,
+                        speaker: currentSpeakerId,
+                        text: text
+                    });
+
+                    const res = await fetch(`${baseUrl}?${params.toString()}`);
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        throw new Error(data.errorMessage || "Web API Error");
+                    }
+
+                    // ポーリング開始
+                    const statusUrl = data.audioStatusUrl;
+                    const audioUrl = data.mp3DownloadUrl;
+
+                    const checkStatus = async () => {
+                        // 既に停止ボタンが押されている場合は中断
+                        if (currentTtsBtn !== btn) return;
+
+                        const sRes = await fetch(statusUrl);
+                        const sData = await sRes.json();
+
+                        if (sData.isAudioReady) {
+                            activeAudio = new Audio(audioUrl);
+                            activeAudio.onended = () => {
+                                icon.classList.remove('fa-stop');
+                                icon.classList.add('fa-volume-up');
+                                btn.classList.remove('active');
+                                currentTtsBtn = null;
+                            };
+                            activeAudio.play();
+                        } else {
+                            // まだ準備中なら0.5秒後に再試行
+                            setTimeout(checkStatus, 500);
+                        }
+                    };
+
+                    checkStatus();
+                }
+
+            } catch (err) {
+                console.warn("VOICEVOX failed, fallback to SpeechSynthesis:", err);
+                if (!('speechSynthesis' in window)) {
+                    showToast("読み上げ機能が使えないみたいね。");
+                    btn.classList.remove('active');
+                    icon.classList.remove('fa-stop');
+                    icon.classList.add('fa-volume-up');
+                    return;
+                }
+                const ut = new SpeechSynthesisUtterance(text);
+                ut.lang = 'ja-JP';
+                ut.rate = 0.95;
+                ut.pitch = 1.0;
+                ut.onend = () => {
+                    icon.classList.remove('fa-stop');
+                    icon.classList.add('fa-volume-up');
+                    btn.classList.remove('active');
+                    currentTtsBtn = null;
+                };
+                speechSynthesis.speak(ut);
+            }
         }
 
         function toggleFeedback(btn, feedbackType) {
@@ -1319,9 +1785,9 @@
             icon.classList.remove('far');
             icon.classList.add('fas');
             btn.classList.add('active');
-            
+
             const parent = btn.parentElement;
-            
+
             if (feedbackType === 'good') {
                 const badBtn = parent.querySelector('.btn-bad');
                 if (badBtn) badBtn.style.display = 'none';
@@ -1331,7 +1797,7 @@
                 if (goodBtn) goodBtn.style.display = 'none';
                 showBadFeedbackMenu(parent, btn);
             }
-            
+
             btn.classList.add('disabled');
             btn.style.cursor = 'default';
         }
@@ -1339,7 +1805,7 @@
         function sendGoogleFeedback(reason) {
             const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdXUnGhplKsDH4nVyvoMMF5xpuqRkuUZzO1DCLGY96a4tREtw/formResponse";
             const formData = new FormData();
-            
+
             if (reason === "その他") {
                 formData.append("entry.1991144860", "__other_option__");
                 formData.append("entry.1991144860.other_option_response", "その他（UIからの自動送信）");
@@ -1359,14 +1825,14 @@
             const feedbackDir = document.createElement('div');
             feedbackDir.className = 'copy-dropdown';
             feedbackDir.style.position = 'relative';
-            
+
             const dropContent = document.createElement('div');
             dropContent.id = uid;
             dropContent.className = 'copy-dropdown-content show';
             dropContent.style.left = '0';
             dropContent.style.bottom = '110%';
             dropContent.style.minWidth = '160px';
-            
+
             const reasons = ["事実と異なる", "物語が不自然", "面白くない", "不適切な表現", "その他"];
             reasons.forEach(reason => {
                 const btn = document.createElement('button');
@@ -1380,7 +1846,7 @@
                 };
                 dropContent.appendChild(btn);
             });
-            
+
             feedbackDir.appendChild(dropContent);
             container.insertBefore(feedbackDir, badBtn.nextSibling);
         }
@@ -1405,7 +1871,7 @@
                 if (!response.ok) throw new Error("API error");
                 const res = await response.json();
                 lastCreatedShareUrl = window.location.origin + "/share/" + res.share_id;
-                
+
                 if (!silent) {
                     if (navigator.clipboard) {
                         await navigator.clipboard.writeText(lastCreatedShareUrl);
@@ -1430,7 +1896,7 @@
                         text: text,
                         url: window.location.href,
                     });
-                } catch(e) {
+                } catch (e) {
                     console.error("Share failed:", e);
                 }
             } else {
@@ -1452,7 +1918,7 @@
                 navigator.clipboard.writeText(text + "\n" + window.location.href).then(() => {
                     showToast("Instagram用にコピーしたわ。アプリで貼り付けてね。");
                     setTimeout(() => {
-                         window.open("https://www.instagram.com/", "_blank");
+                        window.open("https://www.instagram.com/", "_blank");
                     }, 800);
                 }).catch((err) => {
                     console.error("Clipboard API failed: ", err);
@@ -1473,7 +1939,7 @@
             textArea.select();
 
             try {
-                if(document.execCommand('copy')) {
+                if (document.execCommand('copy')) {
                     showToast(`コピーしたわ。(${type})`);
                 } else {
                     showToast("コピーに失敗したみたいね。");
@@ -1508,18 +1974,18 @@
         }
 
         window.addEventListener('click', () => {
-             document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
+            document.querySelectorAll('.copy-dropdown-content').forEach(el => el.classList.remove('show'));
         });
 
         function renderActionBar(container, markdownText, plainText, requestData) {
             const uid = "drop-" + Date.now();
-            
+
             const goodBtn = document.createElement('button');
             goodBtn.className = 'action-btn btn-good';
             goodBtn.title = '高評価（いいね）';
             goodBtn.innerHTML = '<i class="far fa-thumbs-up"></i>';
             goodBtn.onclick = () => toggleFeedback(goodBtn, 'good');
-            
+
             const badBtn = document.createElement('button');
             badBtn.className = 'action-btn btn-bad';
             badBtn.title = '低評価（いまいち）';
@@ -1534,19 +2000,19 @@
             copyBtn.title = 'コピー';
             copyBtn.innerHTML = '<i class="far fa-copy"></i>';
             copyBtn.onclick = (e) => toggleCopyDropdown(e, uid);
-            
+
             const dropContent = document.createElement('div');
             dropContent.id = uid;
             dropContent.className = 'copy-dropdown-content';
-            
+
             const btnMd = document.createElement('button');
             btnMd.innerText = 'Markdownのままコピー';
             btnMd.onclick = (e) => { e.stopPropagation(); copyContent(markdownText, 'Markdown'); };
-            
+
             const btnPlain = document.createElement('button');
             btnPlain.innerText = 'プレーンテキストでコピー';
             btnPlain.onclick = (e) => { e.stopPropagation(); copyContent(plainText, 'テキスト'); };
-            
+
             dropContent.appendChild(btnMd);
             dropContent.appendChild(btnPlain);
             copyDir.appendChild(copyBtn);
@@ -1569,42 +2035,42 @@
             const btnLink = document.createElement('button');
             btnLink.innerHTML = '<i class="fas fa-link" style="margin-right:8px; color:var(--text-accent);"></i> この会話の共有リンクを作成';
             btnLink.onclick = (e) => {
-                 e.stopPropagation();
-                 shareContent.classList.remove('show');
-                 triggerShareLink(markdownText, plainText, requestData);
+                e.stopPropagation();
+                shareContent.classList.remove('show');
+                triggerShareLink(markdownText, plainText, requestData);
             };
 
             const btnX = document.createElement('button');
             btnX.innerHTML = '<i class="fab fa-twitter" style="margin-right:8px; color:#1DA1F2;"></i> X (Twitter) で投稿';
             btnX.onclick = async (e) => {
-                 e.stopPropagation();
-                 shareContent.classList.remove('show');
-                 showToast("共有リンクを準備しているわ……");
-                 const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
-                 let preview = plainText.substring(0, 100).replace(/\n/g, ' ') + "...";
-                 let shareText = "運命の境界を覗き見たわ……\n\n" + preview + "\n#幻想郷ジェネレーター\n";
-                 handleXShare(shareText, sUrl);
+                e.stopPropagation();
+                shareContent.classList.remove('show');
+                showToast("共有リンクを準備しているわ……");
+                const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
+                let preview = plainText.substring(0, 100).replace(/\n/g, ' ') + "...";
+                let shareText = "運命の境界を覗き見たわ……\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                handleXShare(shareText, sUrl);
             };
 
             const btnInsta = document.createElement('button');
             btnInsta.innerHTML = '<i class="fab fa-instagram" style="margin-right:8px; color:#E4405F;"></i> Instagram用にコピー';
             btnInsta.onclick = async (e) => {
-                 e.stopPropagation();
-                 shareContent.classList.remove('show');
-                 showToast("共有リンクを準備しているわ……");
-                 const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
-                 let shareText = "幻想郷での私の運命はこれよ……！\n\n" + plainText + "\n" + sUrl + "\n#幻想郷ジェネレーター";
-                 handleInstaShare(shareText);
+                e.stopPropagation();
+                shareContent.classList.remove('show');
+                showToast("共有リンクを準備しているわ……");
+                const sUrl = await triggerShareLink(markdownText, plainText, requestData, true);
+                let shareText = "幻想郷での私の運命はこれよ……！\n\n" + plainText + "\n" + sUrl + "\n#幻想郷ジェネレーター";
+                handleInstaShare(shareText);
             };
 
             const btnNative = document.createElement('button');
             btnNative.innerHTML = '<i class="fas fa-external-link-alt" style="margin-right:8px;"></i> 他のアプリで共有';
             btnNative.onclick = (e) => {
-                 e.stopPropagation();
-                 shareContent.classList.remove('show');
-                 let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
-                 let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
-                 handleShare(shareText);
+                e.stopPropagation();
+                shareContent.classList.remove('show');
+                let preview = plainText.substring(0, 40).replace(/\n/g, '') + "...";
+                let shareText = "運命の境界を覗き見たわ…\n\n" + preview + "\n#幻想郷ジェネレーター\n";
+                handleShare(shareText);
             };
 
             shareContent.appendChild(btnLink);
@@ -1629,13 +2095,13 @@
             menuBtn.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
             const muid = "menu-" + Date.now();
             menuBtn.onclick = (e) => toggleCopyDropdown(e, muid);
-            
+
             const menuContent = document.createElement('div');
             menuContent.id = muid;
             menuContent.className = 'copy-dropdown-content';
             menuContent.style.left = 'auto';
-            menuContent.style.right = '0'; 
-            
+            menuContent.style.right = '0';
+
             const regenBtn = document.createElement('button');
             regenBtn.innerHTML = '<i class="fas fa-sync-alt" style="margin-right:8px;"></i> 再生成する';
             regenBtn.onclick = (e) => {
@@ -1643,7 +2109,7 @@
                 menuContent.classList.remove('show');
                 triggerRegenerate(requestData);
             };
-            
+
             menuContent.appendChild(regenBtn);
             menuDir.appendChild(menuBtn);
             menuDir.appendChild(menuContent);
@@ -1662,9 +2128,9 @@
             document.getElementById('item').value = data.i;
             document.getElementById('companion').value = data.c;
             document.getElementById('enemy').value = data.e === "なし" ? "" : data.e;
-            
+
             const submitBtn = document.getElementById('submitBtn');
-            if(!submitBtn.disabled) {
+            if (!submitBtn.disabled) {
                 showToast("同じ条件で別の運命を垣間見るわ…");
                 storyForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             }
@@ -1674,6 +2140,16 @@
             const id = "b" + Date.now();
             const div = document.createElement('div');
             div.className = "botContainer"; div.id = id;
+
+            // 話者名を取得 (動的マップがあればそれを使用、なければフォールバック)
+            let speakerName = "四国めたん";
+            if (speakerMap && speakerMap[currentSpeakerId]) {
+                speakerName = speakerMap[currentSpeakerId].name;
+            } else {
+                const fallbackNames = { "2": "四国めたん", "3": "ずんだもん" };
+                speakerName = fallbackNames[currentSpeakerId] || "四国めたん";
+            }
+
             const src = localStorage.getItem(STORAGE_KEY_ICON);
             div.innerHTML = `
       <div class="icon-wrapper" onclick="triggerFileSelect()" title="私の姿を書き換えるというの？ うふふ、いいわよ。">
@@ -1682,6 +2158,10 @@
       <div class="msg-body">
         <div class="botText">${t}</div>
         <div class="action-bar" id="action-${id}"></div>
+        <div class="msg-info">
+            <span class="voicevox-credit">VOICEVOX: ${speakerName}</span>
+            <span>${getNowTime()}</span>
+        </div>
       </div>
     `;
             chatContainer.appendChild(div);
@@ -1692,7 +2172,14 @@
         function pushUserMsg(t) {
             const div = document.createElement('div');
             div.className = "userContainer";
-            div.innerHTML = `<div class="userBubble">${t}</div>`;
+            div.innerHTML = `
+                <div class="msg-body">
+                    <div class="userBubble">${t}</div>
+                    <div class="msg-info">
+                        <span>${getNowTime()}</span>
+                    </div>
+                </div>
+            `;
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
