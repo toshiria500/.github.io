@@ -38,6 +38,10 @@
             --font-serif: 'Hiragino Mincho ProN', 'Noto Serif JP', 'Yu Mincho', serif;
         }
 
+        html {
+            --app-height: 100dvh;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -49,7 +53,7 @@
             font-family: var(--font-serif);
             background-color: var(--bg-color);
             color: var(--text-main);
-            height: 100dvh;
+            height: var(--app-height);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -67,6 +71,7 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.8);
+            flex: 0 0 auto;
         }
 
         header h1 {
@@ -92,8 +97,10 @@
 
         /* --- メインコンテンツ（チャット） --- */
         #chat-container {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 0;
             overflow-y: auto;
+            overscroll-behavior: contain;
             padding: 20px 15px;
             display: flex;
             flex-direction: column;
@@ -341,6 +348,7 @@
             border-top: 1px solid var(--purple-main);
             padding: 10px 15px calc(10px + env(safe-area-inset-bottom, 0px));
             backdrop-filter: blur(15px);
+            flex: 0 0 auto;
         }
 
         #input-container {
@@ -384,6 +392,7 @@
             -ms-overflow-style: none;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 4px;
+            touch-action: pan-x;
         }
 
         .input-tabs::-webkit-scrollbar {
@@ -443,6 +452,7 @@
         .input-field-wrapper {
             position: relative;
             flex: 1;
+            min-width: 0;
         }
 
         #storyForm input[type="text"] {
@@ -532,11 +542,41 @@
         /* --- フッター --- */
         .site-footer {
             background: #050208;
-            padding: 10px 15px calc(10px + env(safe-area-inset-bottom, 0px));
+            padding: 10px 15px;
             text-align: center;
             color: rgba(255, 255, 255, 0.3);
             font-size: 0.72rem;
             border-top: 1px solid rgba(157, 78, 221, 0.1);
+            flex: 0 0 auto;
+        }
+
+        .site-footer[hidden] {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .input-tabs {
+                flex-wrap: wrap;
+                overflow: visible;
+                gap: 2px 14px;
+                padding-bottom: 6px;
+            }
+
+            .tab-item {
+                display: flex;
+                align-items: center;
+                min-height: 32px;
+                padding: 5px 0;
+            }
+
+            #storyForm {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+
+            #storyForm input[type="text"] {
+                font-size: 16px;
+            }
         }
 
         .site-footer a {
@@ -980,9 +1020,8 @@
                 幻想郷ジェネレーターはAIによる結果を出すため、不正確の可能性があります。
             </div>
         </div>
-    </div>
 
-    <footer class="site-footer">
+        <footer class="site-footer" id="site-footer" hidden>
         <div style="color: var(--red-eye); margin-bottom: 8px; font-weight: bold; font-size: 0.8rem;">
             ⚠️ 留意点：『東方錦上京』のボスのネタバレを含む内容が出力されることがあります。
         </div>
@@ -1017,7 +1056,8 @@
             <a href="./privacy_policy" style="opacity: 0.8;">プライバシーポリシー</a>
         </div>
         <div>Copyright © toshiria 2025 - <span id="year"></span> All Rights Reserved.</div>
-    </footer>
+        </footer>
+    </div>
 
     <input type="file" id="fileInput" accept="image/*" style="display:none">
 
@@ -1069,10 +1109,59 @@
         const zoomSlider = document.getElementById('zoomSlider');
         const cropViewport = document.getElementById('cropViewport');
         const toast = document.getElementById('toast');
+        const siteFooter = document.getElementById('site-footer');
 
         let currentApiKey = "";
 
         let currentTtsBtn = null;
+        let footerRevealed = false;
+        let footerScrollIntent = false;
+        let touchStartY = 0;
+
+        function updateAppHeight() {
+            const viewportHeight = window.visualViewport
+                ? window.visualViewport.height
+                : window.innerHeight;
+            document.documentElement.style.setProperty('--app-height', `${viewportHeight}px`);
+        }
+
+        function revealFooterAtBottom() {
+            if (footerRevealed || !footerScrollIntent) return;
+            const atBottom = chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight - 2;
+            if (atBottom) {
+                footerRevealed = true;
+                siteFooter.hidden = false;
+            }
+        }
+
+        function markFooterScrollIntent() {
+            footerScrollIntent = true;
+            setTimeout(() => {
+                footerScrollIntent = false;
+            }, 150);
+        }
+
+        updateAppHeight();
+        window.addEventListener('resize', updateAppHeight);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateAppHeight);
+        }
+        chatContainer.addEventListener('scroll', revealFooterAtBottom);
+        chatContainer.addEventListener('wheel', (event) => {
+            if (event.deltaY > 0) {
+                markFooterScrollIntent();
+                requestAnimationFrame(revealFooterAtBottom);
+            }
+        });
+        chatContainer.addEventListener('touchstart', (event) => {
+            touchStartY = event.touches[0].clientY;
+        }, { passive: true });
+        chatContainer.addEventListener('touchend', (event) => {
+            if (event.changedTouches[0].clientY < touchStartY) {
+                markFooterScrollIntent();
+                requestAnimationFrame(revealFooterAtBottom);
+            }
+        }, { passive: true });
 
         function getNowTime() {
             const now = new Date();
@@ -1533,20 +1622,28 @@
         // --- アクションバーUIのロジック ---
         function toggleTTS(btn, text) {
             const icon = btn.querySelector('i');
-            const isPlaying = icon.classList.contains('fa-stop');
-
-            if (window.speechSynthesis && speechSynthesis.speaking) {
+            if (currentTtsBtn === btn && icon.classList.contains('fa-stop')) {
                 speechSynthesis.cancel();
+                icon.classList.remove('fa-stop');
+                icon.classList.add('fa-volume-up');
+                btn.classList.remove('active');
+                currentTtsBtn = null;
+                return;
             }
 
             if (currentTtsBtn) {
-                currentTtsBtn.querySelector('i').classList.remove('fa-stop');
-                currentTtsBtn.querySelector('i').classList.add('fa-volume-up');
+                const previousIcon = currentTtsBtn.querySelector('i');
+                previousIcon.classList.remove('fa-stop');
+                previousIcon.classList.add('fa-volume-up');
                 currentTtsBtn.classList.remove('active');
+                speechSynthesis.cancel();
+                currentTtsBtn = null;
+            } else if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) {
+                speechSynthesis.cancel();
             }
 
-            if (isPlaying && currentTtsBtn === btn) {
-                currentTtsBtn = null;
+            if (!('speechSynthesis' in window)) {
+                showToast("読み上げ機能が使えないみたいね。");
                 return;
             }
 
@@ -1554,15 +1651,6 @@
             icon.classList.remove('fa-volume-up');
             icon.classList.add('fa-stop');
             btn.classList.add('active');
-
-            if (!('speechSynthesis' in window)) {
-                showToast("読み上げ機能が使えないみたいね。");
-                btn.classList.remove('active');
-                icon.classList.remove('fa-stop');
-                icon.classList.add('fa-volume-up');
-                currentTtsBtn = null;
-                return;
-            }
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ja-JP';
