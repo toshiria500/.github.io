@@ -466,11 +466,12 @@
                 locationUnavailable: "Could not determine location. Please try again.",
                 locationTimeout: "Location request timed out. Please try again.",
                 locationReady: "Sunrise and sunset are calculated using your device's local time.",
-                fontLabel: "DEVICE FONT:", fontPlaceholder: "e.g. Arial", fontApply: "CHECK & APPLY",
+                fontLabel: "DEVICE FONT:", fontPlaceholder: "e.g. Hiragino Sans / Noto Sans", fontApply: "APPLY FONT",
                 fontFileButton: "CHOOSE SAVED FONT",
-                fontNote: "On phones, choose a .ttf / .otf / .woff / .woff2 file from Files or Downloads. The file is used only in this page and is not uploaded. Select it again after reloading.",
+                fontNote: "Enter a system font such as Hiragino Sans (iPhone) or Noto Sans (Android) and apply it without a permission prompt. If unavailable, the OS default is used. You can also choose a saved font file.",
                 fontPrompt: "Enter an installed font name.", fontUnsupported: "This browser cannot check installed fonts.",
                 fontNotFound: "No exact match. Choose the installed font name from the input suggestions; no file extension is needed.", fontApplied: "Font applied.",
+                fontAppliedUnverified: "Font preference applied. If unavailable, the OS default is used.",
                 fontFilePrompt: "Choose a saved font file to use it on this page.",
                 fontFileApplied: "Font file loaded and applied.",
                 fontFileError: "Could not load this font file. Choose a valid TTF, OTF, WOFF, or WOFF2 font.",
@@ -492,11 +493,12 @@
                 locationUnavailable: "現在地を取得できませんでした。もう一度お試しください。",
                 locationTimeout: "位置情報の取得がタイムアウトしました。もう一度お試しください。",
                 locationReady: "日の出・日の入りを端末のローカル時刻で表示しています。",
-                fontLabel: "端末内フォント:", fontPlaceholder: "例: 游ゴシック", fontApply: "確認して適用",
+                fontLabel: "端末内フォント:", fontPlaceholder: "例: Hiragino Sans / Noto Sans", fontApply: "フォントを適用",
                 fontFileButton: "端末に保存したフォントを選択",
-                fontNote: "スマホでは「ファイル」アプリやダウンロードから .ttf / .otf / .woff / .woff2 を選べます。選択したファイルはこのページ内だけで使用し、送信しません。再読み込み後は再選択してください。",
+                fontNote: "「Hiragino Sans」（iPhone）や「Noto Sans」（Android）などのフォント名を入力して適用できます。権限確認は不要です。端末にない場合は OS 標準フォントに切り替わります。保存したフォントファイルも選択できます。",
                 fontPrompt: "端末にあるフォント名を入力してください。", fontUnsupported: "このブラウザーは端末フォントの確認に対応していません。",
                 fontNotFound: "入力名と一致するフォントがありません。入力欄の候補から端末のフォント名を選んでください（拡張子は不要です）。", fontApplied: "フォントを適用しました。",
+                fontAppliedUnverified: "フォント名を設定しました。端末にない場合は OS 標準フォントに切り替わります。",
                 fontFilePrompt: "保存済みのフォントファイルを選択すると、このページで使用できます。",
                 fontFileApplied: "フォントファイルを読み込んで適用しました。",
                 fontFileError: "フォントファイルを読み込めませんでした。有効な TTF / OTF / WOFF / WOFF2 ファイルを選択してください。",
@@ -620,6 +622,22 @@
                 .toLowerCase();
         }
 
+        function applyFontFamily(family) {
+            const cssFamily = [
+                JSON.stringify(family),
+                'system-ui',
+                '-apple-system',
+                'BlinkMacSystemFont',
+                '"Segoe UI"',
+                '"Yu Gothic UI"',
+                'Meiryo',
+                'sans-serif'
+            ].join(', ');
+            document.documentElement.style.setProperty('--app-font', cssFamily);
+            document.documentElement.style.setProperty('--clock-font', cssFamily);
+            activeFontName = family;
+        }
+
         function readFontFile(file) {
             if (typeof file.arrayBuffer === 'function') return file.arrayBuffer();
 
@@ -674,35 +692,39 @@
                 return;
             }
 
-            if (typeof window.queryLocalFonts !== 'function') {
-                status.textContent = messages.fontUnsupported;
-                return;
-            }
-
             button.disabled = true;
             try {
-                const fonts = await window.queryLocalFonts();
-                const datalist = document.getElementById('installed-fonts');
-                const familyNames = [...new Set(fonts.map(font => font.family).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-                datalist.replaceChildren(...familyNames.map(name => new Option(name, name)));
-                const normalizedInput = normalizeFontName(family);
-                const matchedFont = fonts.find(font => [
-                    font.family,
-                    font.fullName,
-                    font.postscriptName
-                ].some(name => typeof name === 'string' && normalizeFontName(name) === normalizedInput));
-                if (!matchedFont) {
-                    status.textContent = messages.fontNotFound;
-                    return;
+                let selectedFamily = family;
+                let verified = false;
+
+                if (typeof window.queryLocalFonts === 'function') {
+                    try {
+                        const fonts = await window.queryLocalFonts();
+                        const datalist = document.getElementById('installed-fonts');
+                        const familyNames = [...new Set(fonts.map(font => font.family).filter(Boolean))]
+                            .sort((a, b) => a.localeCompare(b));
+                        datalist.replaceChildren(...familyNames.map(name => new Option(name, name)));
+                        const normalizedInput = normalizeFontName(family);
+                        const matchedFont = fonts.find(font => [
+                            font.family,
+                            font.fullName,
+                            font.postscriptName
+                        ].some(name => typeof name === 'string' && normalizeFontName(name) === normalizedInput));
+                        if (matchedFont) {
+                            selectedFamily = matchedFont.family;
+                            verified = true;
+                        }
+                    } catch (error) {
+                        if (!error || error.name !== 'NotAllowedError') throw error;
+                    }
                 }
 
-                const cssFamily = `${JSON.stringify(matchedFont.family)}, sans-serif`;
-                document.documentElement.style.setProperty('--app-font', cssFamily);
-                document.documentElement.style.setProperty('--clock-font', cssFamily);
-                activeFontName = matchedFont.family;
-                status.textContent = `${matchedFont.family}: ${messages.fontApplied}`;
+                applyFontFamily(selectedFamily);
+                status.textContent = verified
+                    ? `${selectedFamily}: ${messages.fontApplied}`
+                    : `${selectedFamily}: ${messages.fontAppliedUnverified}`;
             } catch (error) {
-                status.textContent = error && error.name === 'NotAllowedError' ? messages.fontDenied : messages.fontError;
+                status.textContent = messages.fontError;
             } finally {
                 button.disabled = false;
             }
@@ -723,9 +745,7 @@
                 await fontFace.load();
                 document.fonts.add(fontFace);
 
-                const cssFamily = `${JSON.stringify(family)}, sans-serif`;
-                document.documentElement.style.setProperty('--app-font', cssFamily);
-                document.documentElement.style.setProperty('--clock-font', cssFamily);
+                applyFontFamily(family);
                 activeFontName = fontName || file.name;
                 status.textContent = `${activeFontName}: ${messages.fontFileApplied}`;
             } catch (error) {
